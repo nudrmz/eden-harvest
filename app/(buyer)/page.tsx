@@ -2,6 +2,8 @@
 
 import { Bell, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useAuth } from "@/lib/supabase/hooks";
@@ -18,8 +20,10 @@ import {
 } from "@/lib/mockData";
 
 export default function BuyerHomePage() {
+  const router = useRouter();
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
+  const [activeCategory, setActiveCategory] = useState("All");
   const displayName = user?.full_name ?? buyerLocation.userName;
   const greetingName = authLoading ? "…" : displayName.split(" ")[0] ?? displayName;
 
@@ -95,7 +99,11 @@ export default function BuyerHomePage() {
             placeholder="Search crayfish, ogiri, palm oil..."
             readOnly
           />
-          <button className="flex items-center gap-1 rounded-xl bg-eden-primary px-3 py-1.5 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => router.push("/browse?filters=open")}
+            className="flex items-center gap-1 rounded-xl bg-eden-primary px-3 py-1.5 text-xs font-medium text-white"
+          >
             <SlidersHorizontal size={14} />
             Filter
           </button>
@@ -104,18 +112,30 @@ export default function BuyerHomePage() {
 
       <section className="mt-4 px-4">
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-          {categoryChips.map((chip, index) => (
-            <button
-              key={chip}
-              className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs ${
-                index === 0
-                  ? "border-eden-primary bg-eden-primary text-white"
-                  : "border-[#F0EDE6] bg-[#F0EDE6] text-[#444441]"
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
+          {categoryChips.map((chip) => {
+            const isActive = activeCategory === chip;
+            return (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(chip);
+                  if (chip === "All") {
+                    router.push("/browse");
+                  } else {
+                    router.push(`/browse?category=${encodeURIComponent(chip)}`);
+                  }
+                }}
+                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition ${
+                  isActive
+                    ? "border-eden-primary bg-eden-primary text-white"
+                    : "border-[#F0EDE6] bg-[#F0EDE6] text-[#444441]"
+                }`}
+              >
+                {chip}
+              </button>
+            );
+          })}
         </div>
       </section>
 

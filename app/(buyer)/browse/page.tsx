@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, List, Map, Search, SlidersHorizontal } from "lucide-react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -29,7 +30,8 @@ const sortPills: Array<{ key: SortKey; label: string }> = [
   { key: "price_high_low", label: "Price: high-low" }
 ];
 
-export default function BrowsePage() {
+function BrowsePageContent() {
+  const searchParams = useSearchParams();
   const { theme } = useTheme();
   const [isMapView, setIsMapView] = useState(false);
   const [query, setQuery] = useState("");
@@ -43,6 +45,12 @@ export default function BrowsePage() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [maxPrice, setMaxPrice] = useState(50);
   const [minOrder, setMinOrder] = useState(1);
+
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category) setSelectedCategory(category);
+    if (searchParams.get("filters") === "open") setFiltersOpen(true);
+  }, [searchParams]);
 
   const activeFilterCount = [
     selectedCountry,
@@ -368,5 +376,13 @@ export default function BrowsePage() {
 
       <MobileBottomNav active="browse" />
     </main>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={null}>
+      <BrowsePageContent />
+    </Suspense>
   );
 }

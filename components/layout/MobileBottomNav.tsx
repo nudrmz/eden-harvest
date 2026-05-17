@@ -13,7 +13,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ active }: MobileBottomNavProps) {
   const { theme } = useTheme();
-  const { isBuyer, isSeller, loading } = useAuth();
+  const { user, isBuyer, isSeller, loading } = useAuth();
   const showSell = loading || isSeller || !isBuyer;
   const sellHref = isSeller ? "/dashboard" : "/register?role=seller";
   const inactiveTone = theme === "dark" ? "text-white/55" : "text-[#9C9C95]";
@@ -92,10 +92,24 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
           <span className={inactiveLabel}>Saved</span>
         </button>
 
-        <button type="button" className={`${inactive} cursor-default`}>
+        <Link
+          href={user ? "/settings" : "/login"}
+          className={`relative flex flex-col items-center gap-1 ${active === "profile" ? "text-[#1D9E75]" : inactive}`}
+        >
           <User size={18} />
-          <span className={inactiveLabel}>Profile</span>
-        </button>
+          <span
+            className={
+              active === "profile"
+                ? "text-[10px] font-medium text-[#1D9E75]"
+                : inactiveLabel
+            }
+          >
+            Profile
+          </span>
+          {active === "profile" ? (
+            <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#1D9E75]" />
+          ) : null}
+        </Link>
       </div>
     </nav>
   );

@@ -64,7 +64,7 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative z-[60]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -116,15 +116,15 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
             </Link>
           </li>
           <li>
-            <button
-              type="button"
+            <Link
+              href="/settings"
               role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
               onClick={() => setOpen(false)}
             >
               <Settings size={16} className="text-[var(--text-tertiary)]" />
               Settings
-            </button>
+            </Link>
           </li>
           <li className="border-t border-[var(--card-border)]">
             <button

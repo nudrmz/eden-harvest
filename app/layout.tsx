@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import { ThemeProvider } from "@/components/layout/ThemeProvider";
-import { AuthProvider } from "@/lib/supabase/hooks";
+import { Providers } from "@/components/layout/Providers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -26,11 +25,12 @@ export default function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="dark">
-      <body className={`${plusJakarta.variable} ${dmSans.variable} font-body`}>
-        <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <body
+        className={`${plusJakarta.variable} ${dmSans.variable} font-body`}
+        suppressHydrationWarning
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
