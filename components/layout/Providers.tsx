@@ -5,9 +5,12 @@ import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { AuthProvider } from "@/lib/supabase/hooks";
 
 /** Remove stale PWA service workers that can block JS chunks on Vercel. */
+const SW_CLEANUP_KEY = "eden_harvest_sw_cleaned_v2";
+
 function ServiceWorkerCleanup() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    if (localStorage.getItem(SW_CLEANUP_KEY) === "1") return;
 
     void (async () => {
       const registrations = await navigator.serviceWorker.getRegistrations();
@@ -17,6 +20,8 @@ function ServiceWorkerCleanup() {
         const keys = await caches.keys();
         await Promise.all(keys.map((key) => caches.delete(key)));
       }
+
+      localStorage.setItem(SW_CLEANUP_KEY, "1");
     })();
   }, []);
 

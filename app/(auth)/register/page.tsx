@@ -11,7 +11,7 @@ import { PasswordField } from "@/components/auth/PasswordField";
 import { DarkSelect } from "@/components/ui/DarkSelect";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
-import { createUserProfile } from "@/lib/auth/profile";
+import { createUserProfile, fetchUserProfile } from "@/lib/auth/profile";
 import { BUYER_COUNTRY_OPTIONS } from "@/lib/utils/constants";
 import { getPasswordStrength } from "@/lib/utils/helpers";
 import type { UserRole } from "@/lib/types/user";
@@ -32,6 +32,24 @@ function RegisterForm() {
 
   useEffect(() => {
     if (searchParams.get("role") === "seller") setRole("seller");
+  }, [searchParams]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const profile = await fetchUserProfile(supabase, session.user.id);
+      const wantsSeller = searchParams.get("role") === "seller";
+      if (profile?.role === "seller") {
+        window.location.replace("/dashboard");
+        return;
+      }
+      if (wantsSeller) {
+        window.location.replace("/onboarding");
+        return;
+      }
+      window.location.replace("/");
+    });
   }, [searchParams]);
 
   const passwordStrength = getPasswordStrength(password);
@@ -93,8 +111,8 @@ function RegisterForm() {
       return;
     }
 
-    router.push(role === "seller" ? "/onboarding" : "/");
-    router.refresh();
+    setSubmitting(false);
+    window.location.assign(role === "seller" ? "/onboarding" : "/");
   }
 
   return (

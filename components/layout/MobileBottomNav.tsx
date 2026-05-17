@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, Home, PlusCircle, Search, User } from "lucide-react";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { useAuth } from "@/lib/supabase/hooks";
+import { getSellHref } from "@/lib/navigation/sell";
 
 export type BottomNavActive = "home" | "browse" | "sell" | "saved" | "profile";
 
@@ -13,9 +14,8 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ active }: MobileBottomNavProps) {
   const { theme } = useTheme();
-  const { user, isBuyer, isSeller, loading } = useAuth();
-  const showSell = loading || isSeller || !isBuyer;
-  const sellHref = isSeller ? "/dashboard" : "/register?role=seller";
+  const { user, loading, isAuthenticated } = useAuth();
+  const sellHref = getSellHref({ isAuthenticated, profile: user });
   const inactiveTone = theme === "dark" ? "text-white/55" : "text-[#9C9C95]";
   const inactive = `flex flex-col items-center gap-1 ${inactiveTone}`;
   const inactiveLabel = `text-[10px] ${inactiveTone}`;
@@ -61,31 +61,26 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
           ) : null}
         </Link>
 
-        {showSell ? (
-          <Link
-            href={sellHref}
-            className={`relative flex flex-col items-center gap-1 ${active === "sell" ? "text-[#1D9E75]" : inactive}`}
+        <Link
+          href={loading ? "/register?role=seller" : sellHref}
+          prefetch={!loading}
+          className={`relative flex flex-col items-center gap-1 ${active === "sell" ? "text-[#1D9E75]" : inactive} ${loading ? "pointer-events-none opacity-60" : ""}`}
+          aria-label={loading ? "Loading sell" : "Sell"}
+        >
+          <PlusCircle size={18} />
+          <span
+            className={
+              active === "sell"
+                ? "text-[10px] font-medium text-[#1D9E75]"
+                : inactiveLabel
+            }
           >
-            <PlusCircle size={18} />
-            <span
-              className={
-                active === "sell"
-                  ? "text-[10px] font-medium text-[#1D9E75]"
-                  : inactiveLabel
-              }
-            >
-              Sell
-            </span>
-            {active === "sell" ? (
-              <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#1D9E75]" />
-            ) : null}
-          </Link>
-        ) : (
-          <span className={`${inactive} cursor-default opacity-40`} aria-hidden>
-            <PlusCircle size={18} />
-            <span className={inactiveLabel}>Sell</span>
+            Sell
           </span>
-        )}
+          {active === "sell" ? (
+            <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#1D9E75]" />
+          ) : null}
+        </Link>
 
         <button type="button" className={`${inactive} cursor-default`}>
           <Heart size={18} />

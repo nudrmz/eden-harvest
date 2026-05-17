@@ -28,6 +28,7 @@ function LoginForm() {
     setInfo(null);
     setSubmitting(true);
 
+    try {
     const supabase = createClient();
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
@@ -65,8 +66,12 @@ function LoginForm() {
           ? "/dashboard"
           : "/";
 
-    router.push(destination);
-    router.refresh();
+    setSubmitting(false);
+    window.location.assign(destination);
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   return (
