@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useAuth } from "@/lib/supabase/hooks";
@@ -48,16 +49,7 @@ export default function BuyerHomePage() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <button
-                className={`relative flex h-11 w-11 items-center justify-center rounded-full border ${
-                  theme === "dark"
-                    ? "border-white/20 bg-white/10"
-                    : "border-white/65 bg-white/95 shadow-sm"
-                }`}
-              >
-                <Bell size={18} style={{ color: theme === "dark" ? "#ffffff" : "#1A1A18" }} />
-              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-eden-gold" />
-              </button>
+              <NotificationBell variant="hero" />
             </div>
           </div>
 

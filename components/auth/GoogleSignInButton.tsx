@@ -1,5 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { GlassToast } from "@/components/ui/GlassToast";
+
+const GOOGLE_COMING_SOON_MESSAGE =
+  "Google sign-in coming soon. Please use email and password for now.";
+
 interface GoogleSignInButtonProps {
   onClick?: () => void;
   disabled?: boolean;
@@ -29,16 +35,29 @@ function GoogleIcon() {
 }
 
 export function GoogleSignInButton({ onClick, disabled }: GoogleSignInButtonProps) {
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  function handleClick() {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    setToastMessage(GOOGLE_COMING_SOON_MESSAGE);
+  }
+
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <GoogleIcon />
-      Continue with Google
-    </button>
+    <>
+      <GlassToast message={toastMessage} onDismiss={() => setToastMessage(null)} />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={handleClick}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <GoogleIcon />
+        Continue with Google
+      </button>
+    </>
   );
 }
 

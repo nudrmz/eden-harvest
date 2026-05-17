@@ -239,10 +239,7 @@ function RegisterForm() {
 
       <AuthDivider />
 
-      <GoogleSignInButton
-        disabled={submitting}
-        onClick={() => setInfo("Google sign-in will be available soon.")}
-      />
+      <GoogleSignInButton disabled={submitting} />
 
       <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
         Already have an account?{" "}

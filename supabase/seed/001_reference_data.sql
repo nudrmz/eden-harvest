@@ -5,37 +5,37 @@ values
   (
     'Nigeria', 'NG', 'NGN', '₦', '🇳🇬', '+234',
     array['NIN', 'CAC'],
-    '["Lagos","Kano","Kaduna","Rivers","Oyo","FCT"]'::jsonb
+    '["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT Abuja","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"]'::jsonb
   ),
   (
     'Ghana', 'GH', 'GHS', 'GH₵', '🇬🇭', '+233',
     array['TIN', 'RGD'],
-    '["Greater Accra","Ashanti","Northern","Western","Eastern","Volta"]'::jsonb
+    '["Ahafo","Ashanti","Bono","Bono East","Central","Eastern","Greater Accra","North East","Northern","Oti","Savannah","Upper East","Upper West","Volta","Western","Western North"]'::jsonb
   ),
   (
     'Kenya', 'KE', 'KES', 'KSh', '🇰🇪', '+254',
     array['KRA_PIN', 'BRS'],
-    '["Nairobi","Mombasa","Nakuru","Kiambu","Kisumu","Uasin Gishu"]'::jsonb
+    '["Baringo","Bomet","Bungoma","Busia","Elgeyo-Marakwet","Embu","Garissa","Homa Bay","Isiolo","Kajiado","Kakamega","Kericho","Kiambu","Kilifi","Kirinyaga","Kisii","Kisumu","Kitui","Kwale","Laikipia","Lamu","Machakos","Makueni","Mandera","Marsabit","Meru","Migori","Mombasa","Murang''a","Nairobi","Nakuru","Nandi","Narok","Nyamira","Nyandarua","Nyeri","Samburu","Siaya","Taita-Taveta","Tana River","Tharaka-Nithi","Trans Nzoia","Turkana","Uasin Gishu","Vihiga","Wajir","West Pokot"]'::jsonb
   ),
   (
     'Ethiopia', 'ET', 'ETB', 'Br', '🇪🇹', '+251',
     array['TIN', 'Trade License'],
-    '["Addis Ababa","Oromia","Amhara","Tigray","Sidama","SNNPR"]'::jsonb
+    '["Addis Ababa","Afar","Amhara","Benishangul-Gumuz","Dire Dawa","Gambela","Harari","Oromia","Sidama","Somali","South West Ethiopia","Tigray","SNNPR"]'::jsonb
   ),
   (
     'South Africa', 'ZA', 'ZAR', 'R', '🇿🇦', '+27',
     array['Tax Number', 'CIPC'],
-    '["Gauteng","Western Cape","KwaZulu-Natal","Eastern Cape","Limpopo","Free State"]'::jsonb
+    '["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","North West","Northern Cape","Western Cape"]'::jsonb
   ),
   (
     'Tanzania', 'TZ', 'TZS', 'TSh', '🇹🇿', '+255',
     array['TIN', 'BRELA'],
-    '["Dar es Salaam","Arusha","Mwanza","Dodoma","Mbeya","Morogoro"]'::jsonb
+    '["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mbeya","Morogoro","Mtwara","Mwanza","Njombe","Pemba North","Pemba South","Pwani","Rukwa","Ruvuma","Shinyanga","Simiyu","Singida","Songwe","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar West"]'::jsonb
   ),
   (
     'Uganda', 'UG', 'UGX', 'USh', '🇺🇬', '+256',
     array['TIN', 'URSB'],
-    '["Kampala","Wakiso","Gulu","Mbarara","Jinja","Mbale"]'::jsonb
+    '["Buganda","Busoga","Acholi","Ankole","Bunyoro","Elgon","Karamoja","Lango","Tooro","Teso"]'::jsonb
   ),
   (
     'Ivory Coast', 'CI', 'XOF', 'CFA', '🇨🇮', '+225',
@@ -75,7 +75,7 @@ values
   (
     'Rwanda', 'RW', 'RWF', 'RF', '🇷🇼', '+250',
     array['TIN', 'RDB Registration'],
-    '["Kigali","Northern","Southern","Eastern","Western","Gasabo"]'::jsonb
+    '["Eastern","Kigali","Northern","Southern","Western"]'::jsonb
   )
 on conflict (code) do update
 set

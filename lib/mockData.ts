@@ -66,6 +66,8 @@ export interface SellerMock {
   borderColor: string;
 }
 
+import { statesForCountry } from "@/lib/data/african-states";
+
 export interface AfricanCountryMock {
   code: string;
   name: string;
@@ -77,21 +79,63 @@ export interface AfricanCountryMock {
 
 /** Top 15 agricultural markets — same order as seeded reference data */
 export const sellerOnboardingCountries: AfricanCountryMock[] = [
-  { code: "NG", name: "Nigeria", flag: "🇳🇬", phoneCode: "+234", states: ["Lagos", "Kano", "Kaduna", "Rivers", "Oyo", "Anambra"] },
-  { code: "GH", name: "Ghana", flag: "🇬🇭", phoneCode: "+233", states: ["Greater Accra", "Ashanti", "Northern", "Western", "Eastern", "Volta"] },
-  { code: "KE", name: "Kenya", flag: "🇰🇪", phoneCode: "+254", states: ["Nairobi", "Mombasa", "Nakuru", "Kiambu", "Kisumu", "Kericho"] },
-  { code: "ET", name: "Ethiopia", flag: "🇪🇹", phoneCode: "+251", states: ["Addis Ababa", "Oromia", "Amhara", "Tigray", "Sidama"] },
-  { code: "ZA", name: "South Africa", flag: "🇿🇦", phoneCode: "+27", states: ["Gauteng", "Western Cape", "KwaZulu-Natal", "Limpopo", "Eastern Cape"] },
-  { code: "TZ", name: "Tanzania", flag: "🇹🇿", phoneCode: "+255", states: ["Dar es Salaam", "Arusha", "Dodoma", "Mwanza", "Mbeya"] },
-  { code: "UG", name: "Uganda", flag: "🇺🇬", phoneCode: "+256", states: ["Kampala", "Wakiso", "Gulu", "Mbarara", "Jinja"] },
-  { code: "CI", name: "Ivory Coast", flag: "🇨🇮", phoneCode: "+225", states: ["Abidjan", "Yamoussoukro", "Bouake", "San-Pedro", "Korhogo"] },
-  { code: "CM", name: "Cameroon", flag: "🇨🇲", phoneCode: "+237", states: ["Littoral", "Centre", "West", "Northwest", "Southwest"] },
-  { code: "SN", name: "Senegal", flag: "🇸🇳", phoneCode: "+221", states: ["Dakar", "Thies", "Saint-Louis", "Kaolack", "Ziguinchor"] },
-  { code: "MZ", name: "Mozambique", flag: "🇲🇿", phoneCode: "+258", states: ["Maputo", "Sofala", "Nampula", "Zambezia", "Tete"] },
-  { code: "ZM", name: "Zambia", flag: "🇿🇲", phoneCode: "+260", states: ["Lusaka", "Copperbelt", "Southern", "Central", "Eastern"] },
-  { code: "ZW", name: "Zimbabwe", flag: "🇿🇼", phoneCode: "+263", states: ["Harare", "Bulawayo", "Manicaland", "Midlands", "Masvingo"] },
-  { code: "MW", name: "Malawi", flag: "🇲🇼", phoneCode: "+265", states: ["Lilongwe", "Blantyre", "Mzuzu", "Zomba", "Kasungu"] },
-  { code: "RW", name: "Rwanda", flag: "🇷🇼", phoneCode: "+250", states: ["Kigali", "Northern", "Southern", "Eastern", "Western"] }
+  { code: "NG", name: "Nigeria", flag: "🇳🇬", phoneCode: "+234", states: statesForCountry("NG") },
+  { code: "GH", name: "Ghana", flag: "🇬🇭", phoneCode: "+233", states: statesForCountry("GH") },
+  { code: "KE", name: "Kenya", flag: "🇰🇪", phoneCode: "+254", states: statesForCountry("KE") },
+  { code: "ET", name: "Ethiopia", flag: "🇪🇹", phoneCode: "+251", states: statesForCountry("ET") },
+  { code: "ZA", name: "South Africa", flag: "🇿🇦", phoneCode: "+27", states: statesForCountry("ZA") },
+  { code: "TZ", name: "Tanzania", flag: "🇹🇿", phoneCode: "+255", states: statesForCountry("TZ") },
+  { code: "UG", name: "Uganda", flag: "🇺🇬", phoneCode: "+256", states: statesForCountry("UG") },
+  {
+    code: "CI",
+    name: "Ivory Coast",
+    flag: "🇨🇮",
+    phoneCode: "+225",
+    states: statesForCountry("CI", ["Abidjan", "Yamoussoukro", "Bouake", "San-Pedro", "Korhogo"])
+  },
+  {
+    code: "CM",
+    name: "Cameroon",
+    flag: "🇨🇲",
+    phoneCode: "+237",
+    states: statesForCountry("CM", ["Littoral", "Centre", "West", "Northwest", "Southwest"])
+  },
+  {
+    code: "SN",
+    name: "Senegal",
+    flag: "🇸🇳",
+    phoneCode: "+221",
+    states: statesForCountry("SN", ["Dakar", "Thies", "Saint-Louis", "Kaolack", "Ziguinchor"])
+  },
+  {
+    code: "MZ",
+    name: "Mozambique",
+    flag: "🇲🇿",
+    phoneCode: "+258",
+    states: statesForCountry("MZ", ["Maputo", "Sofala", "Nampula", "Zambezia", "Tete"])
+  },
+  {
+    code: "ZM",
+    name: "Zambia",
+    flag: "🇿🇲",
+    phoneCode: "+260",
+    states: statesForCountry("ZM", ["Lusaka", "Copperbelt", "Southern", "Central", "Eastern"])
+  },
+  {
+    code: "ZW",
+    name: "Zimbabwe",
+    flag: "🇿🇼",
+    phoneCode: "+263",
+    states: statesForCountry("ZW", ["Harare", "Bulawayo", "Manicaland", "Midlands", "Masvingo"])
+  },
+  {
+    code: "MW",
+    name: "Malawi",
+    flag: "🇲🇼",
+    phoneCode: "+265",
+    states: statesForCountry("MW", ["Lilongwe", "Blantyre", "Mzuzu", "Zomba", "Kasungu"])
+  },
+  { code: "RW", name: "Rwanda", flag: "🇷🇼", phoneCode: "+250", states: statesForCountry("RW") }
 ];
 
 export interface SellerVerificationChoice {
