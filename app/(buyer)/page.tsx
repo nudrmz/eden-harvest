@@ -25,10 +25,19 @@ export default function BuyerHomePage() {
   const { theme } = useTheme();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const showSignIn = !authLoading && !isAuthenticated;
+  const showGreeting = !authLoading && isAuthenticated && Boolean(user?.full_name);
   const [activeCategory, setActiveCategory] = useState("All");
-  const greetingName =
-    !authLoading && user?.full_name
-      ? user.full_name.split(" ")[0] ?? user.full_name
+
+  const timeGreeting = (() => {
+    const hour = new Date().getHours();
+    if (hour <= 11) return "Good morning";
+    if (hour <= 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  const greetingLine =
+    showGreeting && user?.full_name
+      ? `${timeGreeting}, ${user.full_name.split(" ")[0] ?? user.full_name}`
       : null;
 
   return (
@@ -44,28 +53,21 @@ export default function BuyerHomePage() {
           <div className="flex items-start gap-2">
             <FarmLogoAvatar size={72} variant="hero" priority className="mt-0.5" />
 
-            <div className="min-w-0 flex-1 pt-2 text-center">
-              <p
-                className="text-xs font-medium"
-                style={{
-                  color: "rgba(255,255,255,0.9)",
-                  textShadow: "0 1px 4px rgba(0,0,0,0.5)"
-                }}
-              >
-                {buyerLocation.greeting}
-              </p>
-              {greetingName ? (
+            {showGreeting && greetingLine ? (
+              <div className="min-w-0 flex-1 pt-3 text-center">
                 <p
-                  className="font-heading text-base font-semibold"
+                  className="font-heading text-sm font-semibold"
                   style={{
                     color: "#ffffff",
                     textShadow: "0 1px 4px rgba(0,0,0,0.5)"
                   }}
                 >
-                  {greetingName}
+                  {greetingLine}
                 </p>
-              ) : null}
-            </div>
+              </div>
+            ) : (
+              <div className="min-w-0 flex-1" aria-hidden />
+            )}
 
             <div className="flex shrink-0 flex-col items-end gap-1.5">
               <div className="flex items-center gap-2">
@@ -73,8 +75,9 @@ export default function BuyerHomePage() {
                 <NotificationBell variant="hero" />
               </div>
               {showSignIn ? (
-                <Link
-                  href="/login"
+                <button
+                  type="button"
+                  onClick={() => router.push("/login")}
                   className="inline-block rounded-[20px] text-white"
                   style={{
                     background: "rgba(255,255,255,0.15)",
@@ -84,7 +87,7 @@ export default function BuyerHomePage() {
                   }}
                 >
                   Sign in
-                </Link>
+                </button>
               ) : null}
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Camera, CheckCircle2 } from "lucide-react";
+import { Camera, Check, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -19,7 +19,7 @@ const glassCard =
   "rounded-2xl bg-[rgba(10,20,10,0.88)] border border-[rgba(255,255,255,0.12)] shadow-[0_8px_24px_rgba(0,0,0,0.35)]";
 
 const primaryBtn =
-  "eden-btn-primary-solid w-full rounded-xl bg-[#1D9E75] py-3 text-center text-base font-semibold text-white shadow-[0_10px_28px_rgba(29,158,117,0.38)] disabled:cursor-not-allowed disabled:bg-[#178763] disabled:text-white/90 disabled:opacity-80";
+  "eden-btn-primary-solid w-full rounded-xl bg-[#1D9E75] py-3 text-center text-base font-semibold text-white shadow-[0_10px_28px_rgba(29,158,117,0.38)] disabled:cursor-not-allowed disabled:bg-[#178763] disabled:text-white/90 disabled:opacity-50";
 
 export default function SellerOnboardingPage() {
   const { theme } = useTheme();
@@ -191,12 +191,33 @@ export default function SellerOnboardingPage() {
                     key={country.code}
                     type="button"
                     onClick={() => setCountryCode(country.code)}
-                    className={`${glassCard} flex flex-col items-center gap-2 px-2 py-3 text-center transition hover:bg-[rgba(14,26,14,0.92)] ${
-                      selected ? "border-2 border-[#1D9E75]" : ""
+                    className={`relative flex flex-col items-center gap-2 rounded-2xl px-2 py-3 text-center transition ${
+                      selected
+                        ? "border-2 border-[#1D9E75] bg-[rgba(29,158,117,0.15)]"
+                        : "border border-[rgba(255,255,255,0.12)] bg-[rgba(10,20,10,0.88)] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-[rgba(14,26,14,0.92)]"
                     }`}
                   >
-                    <span className="text-3xl leading-none">{country.flag}</span>
-                    <span className={`text-[11px] font-medium leading-tight ${isDark ? "text-[rgba(255,255,255,0.92)]" : "text-[#1A1A18]"}`}>
+                    {selected ? (
+                      <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#1D9E75] text-white">
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                    ) : null}
+                    <span
+                      className={`text-3xl leading-none transition-transform ${
+                        selected ? "scale-110" : "scale-100"
+                      }`}
+                    >
+                      {country.flag}
+                    </span>
+                    <span
+                      className={`text-[11px] font-medium leading-tight ${
+                        selected
+                          ? "text-white"
+                          : isDark
+                            ? "text-[rgba(255,255,255,0.65)]"
+                            : "text-[#1A1A18]"
+                      }`}
+                    >
                       {country.name}
                     </span>
                   </button>
