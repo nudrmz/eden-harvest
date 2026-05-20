@@ -72,7 +72,7 @@ export default function SellerProfilePage() {
       <section className="relative -mt-8 px-4">
         <div className="glass-card p-4">
           <h1 className={`font-heading text-[20px] font-bold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{seller.farmName}</h1>
-          <p className="mt-1 text-xs text-white/65">
+          <p className={`mt-1 text-xs ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
             {seller.flag} {seller.country}, {seller.state}
           </p>
           <div className="mt-3 flex items-center gap-2">
@@ -82,16 +82,16 @@ export default function SellerProfilePage() {
                 Verified seller
               </span>
             ) : (
-              <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] text-white/65">
+              <span className={`rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
                 Unverified
               </span>
             )}
           </div>
-          <p className="mt-2 text-[10px] text-white/45">Member since March 2025</p>
+          <p className={`mt-2 text-[10px] ${theme === "dark" ? "text-white/45" : "text-[#444441]"}`}>Member since March 2025</p>
           <div className="mt-2 flex items-center gap-2">
             <span className="text-2xl font-semibold">{seller.rating.toFixed(1)}</span>
             <div className="flex items-center gap-0.5">{renderStars(seller.rating)}</div>
-            <span className="text-xs text-white/60">({seller.totalReviews} reviews)</span>
+            <span className={`text-xs ${theme === "dark" ? "text-white/60" : "text-[#444441]"}`}>({seller.totalReviews} reviews)</span>
           </div>
         </div>
       </section>
@@ -99,7 +99,7 @@ export default function SellerProfilePage() {
       <section className="px-4 pt-4">
         {!verifiedBuyerView ? (
           <div className="glass-card p-4">
-            <p className="text-sm text-white/75">Upgrade to Verified Access to contact sellers</p>
+            <p className={`text-sm ${theme === "dark" ? "text-white/75" : "text-[#1A1A18]"}`}>Upgrade to Verified Access to contact sellers</p>
             <button className="mt-3 w-full rounded-xl bg-eden-primary py-3 text-sm font-medium">
               Upgrade - £7/month
             </button>
@@ -124,21 +124,21 @@ export default function SellerProfilePage() {
 
       <section className="px-4 pt-4">
         <div className="glass-card p-4">
-          <h2 className={`font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>About this farm</h2>
-          <p className="mt-2 text-sm leading-relaxed text-white/72">{seller.description}</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-            <p className="text-white/75">Location: {seller.state}, {seller.country}</p>
-            <p className="text-white/75">Established: {seller.established}</p>
-            <p className="text-white/75">Speciality: {seller.speciality}</p>
-            <p className="text-white/75">Min orders: {seller.minOrders}</p>
+          <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>About this farm</h2>
+          <p className={`mt-2 text-sm font-medium leading-relaxed ${theme === "dark" ? "text-white/72" : "text-[#444441]"}`}>{seller.description}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium">
+            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>Location: {seller.state}, {seller.country}</p>
+            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>Established: {seller.established}</p>
+            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>Speciality: {seller.speciality}</p>
+            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>Min orders: {seller.minOrders}</p>
           </div>
         </div>
       </section>
 
       <section className="px-4 pt-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className={`font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Available produce</h2>
-          <span className="text-xs text-white/55">{sellerListings.length} listings</span>
+          <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Available produce</h2>
+          <span className={`text-xs ${theme === "dark" ? "text-white/55" : "text-[#444441]"}`}>{sellerListings.length} listings</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {sellerListings.map((item) => (
@@ -149,7 +149,7 @@ export default function SellerProfilePage() {
 
       <section className="px-4 pt-4">
         <div className="glass-card p-4">
-          <h2 className={`font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Seasonal availability</h2>
+          <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Seasonal availability</h2>
           <div className="mt-3 overflow-x-auto no-scrollbar">
             <div className="min-w-[310px]">
               <div className="grid grid-cols-[95px_repeat(12,1fr)] gap-1 text-[10px] text-white/45">
@@ -177,8 +177,8 @@ export default function SellerProfilePage() {
       <section className="px-4 pt-4">
         <div className="glass-card relative p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className={`font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Buyer reviews</h2>
-            <span className="text-xs text-white/55">{seller.totalReviews} reviews</span>
+            <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Buyer reviews</h2>
+            <span className={`text-xs ${theme === "dark" ? "text-white/55" : "text-[#444441]"}`}>{seller.totalReviews} reviews</span>
           </div>
           <div className={`${!verifiedBuyerView ? "blur-[3px]" : ""} space-y-2 transition`}>
             {sellerReviewsMock.map((review) => (
@@ -220,8 +220,8 @@ export default function SellerProfilePage() {
 
       <section className="px-4 pt-4">
         <div className="glass-card p-4">
-          <h2 className="font-heading text-sm font-semibold">This seller rates their buyers</h2>
-          <p className="mt-2 text-xs text-white/65">
+          <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>This seller rates their buyers</h2>
+          <p className={`mt-2 text-xs font-medium ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
             Sellers can rate buyers too. Maintain a good reputation by being reliable and respectful.
           </p>
           <p className="mt-2 text-sm text-eden-gold">Your buyer rating: 4.7 ★</p>

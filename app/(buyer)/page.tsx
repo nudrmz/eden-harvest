@@ -23,7 +23,8 @@ import {
 export default function BuyerHomePage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const showSignIn = !authLoading && !isAuthenticated;
   const [activeCategory, setActiveCategory] = useState("All");
   const greetingName =
     !authLoading && user?.full_name
@@ -39,13 +40,13 @@ export default function BuyerHomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
 
-        <div className="relative flex h-full flex-col px-4 pb-6 pt-5">
-          <div className="flex items-center gap-3">
-            <FarmLogoAvatar size={44} priority />
+        <div className="relative flex h-full flex-col px-4 pb-6 pt-4">
+          <div className="flex items-start gap-2">
+            <FarmLogoAvatar size={72} variant="hero" priority className="mt-0.5" />
 
-            <div className="min-w-0 flex-1 text-center">
+            <div className="min-w-0 flex-1 pt-2 text-center">
               <p
-                className="text-xs"
+                className="text-xs font-medium"
                 style={{
                   color: "rgba(255,255,255,0.9)",
                   textShadow: "0 1px 4px rgba(0,0,0,0.5)"
@@ -66,35 +67,96 @@ export default function BuyerHomePage() {
               ) : null}
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <ThemeToggle />
-              <NotificationBell variant="hero" />
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <NotificationBell variant="hero" />
+              </div>
+              {showSignIn ? (
+                <Link
+                  href="/login"
+                  className="inline-block rounded-[20px] text-white"
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    border: "0.5px solid rgba(255,255,255,0.3)",
+                    fontSize: "12px",
+                    padding: "5px 12px"
+                  }}
+                >
+                  Sign in
+                </Link>
+              ) : null}
             </div>
           </div>
 
           <div className="mt-auto">
-            <p className="text-xs uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.92)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+            <p
+              className="eden-hero-eyebrow"
+              style={{ color: "rgba(255,255,255,0.92)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
+            >
               Africa&apos;s finest, delivered worldwide
             </p>
-            <h1 className="mt-2 font-heading text-[30px] font-bold leading-[1.08]" style={{ color: "#ffffff", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
+            <h1
+              className="eden-hero-headline mt-2"
+              style={{ color: "#ffffff", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+            >
               Source fresh
               <br />
               African produce
             </h1>
             <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className={`rounded-xl p-2.5 backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}>
-                <p className={`text-[10px] ${theme === "dark" ? "text-white/65" : "text-[#6B6B66]"}`}>Active sellers</p>
-                <p className={`mt-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{homeStats.activeSellers}</p>
+              <div
+                className={`rounded-xl backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}
+                style={{ padding: "6px 10px" }}
+              >
+                <p
+                  className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
+                  style={{ fontSize: "10px" }}
+                >
+                  Active sellers
+                </p>
+                <p
+                  className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                  style={{ fontSize: "16px", fontWeight: 600 }}
+                >
+                  {homeStats.activeSellers}
+                </p>
               </div>
-              <div className={`rounded-xl p-2.5 backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}>
-                <p className={`text-[10px] ${theme === "dark" ? "text-white/65" : "text-[#6B6B66]"}`}>Products</p>
-                <p className={`mt-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{homeStats.products}</p>
+              <div
+                className={`rounded-xl backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}
+                style={{ padding: "6px 10px" }}
+              >
+                <p
+                  className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
+                  style={{ fontSize: "10px" }}
+                >
+                  Products
+                </p>
+                <p
+                  className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                  style={{ fontSize: "16px", fontWeight: 600 }}
+                >
+                  {homeStats.products}
+                </p>
               </div>
-              <div className={`rounded-xl p-2.5 backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}>
-                <p className={`text-[10px] ${theme === "dark" ? "text-white/65" : "text-[#6B6B66]"}`}>Your location</p>
-                <p className={`mt-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>
+              <div
+                className={`rounded-xl backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}
+                style={{ padding: "6px 10px" }}
+              >
+                <p
+                  className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
+                  style={{ fontSize: "10px" }}
+                >
+                  Your location
+                </p>
+                <p
+                  className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                  style={{ fontSize: "16px", fontWeight: 600 }}
+                >
                   {buyerLocation.city}
-                  <span className={`ml-1 ${theme === "dark" ? "text-white/65" : "text-[#9C9C95]"}`}>({buyerLocation.currency})</span>
+                  <span className={`ml-1 ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`} style={{ fontSize: "12px", fontWeight: 500 }}>
+                    ({buyerLocation.currency})
+                  </span>
                 </p>
               </div>
             </div>
@@ -137,7 +199,7 @@ export default function BuyerHomePage() {
                     router.push(`/browse?category=${encodeURIComponent(chip)}`);
                   }
                 }}
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition ${
+                className={`eden-category-chip whitespace-nowrap rounded-full border px-3 py-1.5 transition ${
                   isActive
                     ? "border-eden-primary bg-eden-primary text-white"
                     : "border-[#F0EDE6] bg-[#F0EDE6] text-[#444441]"
@@ -185,8 +247,8 @@ export default function BuyerHomePage() {
 
       <section className="px-4 pt-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className={`font-heading text-lg font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>In stock now</h3>
-          <button className="text-xs text-white/70">See all</button>
+          <h3 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>In stock now</h3>
+          <button className={`text-xs ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>See all</button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {listings.map((listing) => (
@@ -197,7 +259,7 @@ export default function BuyerHomePage() {
 
       <section className="px-4 pt-5">
         <div className="glass-card p-3.5">
-          <h3 className={`font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Platform trust scores</h3>
+          <h3 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Platform trust scores</h3>
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div className={`rounded-xl border p-2 text-center ${theme === "dark" ? "border-white/10 bg-[#0b160b]" : "border-[#1D9E75] bg-[#1D9E75]"}`}>
               <p className={`text-lg font-semibold ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>4.8</p>
@@ -220,8 +282,8 @@ export default function BuyerHomePage() {
 
       <section className="px-4 pb-6 pt-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className={`font-heading text-lg font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Top verified sellers</h3>
-          <button className="text-xs text-white/70">View map</button>
+          <h3 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Top verified sellers</h3>
+          <button className={`text-xs ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>View map</button>
         </div>
         <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
           {topVerifiedSellers.map((seller) => (

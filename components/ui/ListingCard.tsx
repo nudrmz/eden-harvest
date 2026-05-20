@@ -77,8 +77,8 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         </div>
       </div>
       <div className="space-y-1 p-2.5">
-        <p className={`text-[12px] font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{listing.productName}</p>
-        <p className={`text-[9px] ${theme === "dark" ? "text-white/60" : "text-[#6B6B66]"}`}>
+        <p className={`eden-listing-product ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{listing.productName}</p>
+        <p className={`eden-listing-farm ${theme === "dark" ? "text-white/60" : "text-[#444441]"}`}>
           <Link href={`/seller/${listing.sellerId ?? "seller-1"}`} className="underline-offset-2 hover:underline">
             {listing.farmName}
           </Link>{" "}
@@ -90,7 +90,7 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         >
           View profile
         </Link>
-        <p className={`text-[13px] font-semibold ${theme === "dark" ? "text-[#5DCAA5]" : "text-[#1D9E75]"}`}>{listing.buyerPrice}</p>
+        <p className={`eden-price ${theme === "dark" ? "text-[#5DCAA5]" : "text-[#1D9E75]"}`}>{listing.buyerPrice}</p>
         <p className={`text-[10px] ${theme === "dark" ? "text-white/40" : "text-[#9C9C95]"}`}>{listing.sellerPrice}</p>
         <p className={`text-[10px] ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}>{listing.minOrder}</p>
         {showSeasonBar ? (

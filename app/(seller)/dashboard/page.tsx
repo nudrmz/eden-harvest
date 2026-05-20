@@ -30,7 +30,7 @@ export default function SellerDashboardPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const textPrimary = isDark ? "text-white" : "text-[#1A1A18]";
-  const textSecondary = isDark ? "text-[rgba(255,255,255,0.6)]" : "text-[#6B6B66]";
+  const textSecondary = isDark ? "text-[rgba(255,255,255,0.6)]" : "text-[#444441]";
   const textTertiary = isDark ? "text-[rgba(255,255,255,0.5)]" : "text-[#9C9C95]";
   const [profile, setProfile] = useState(MOCK_FALLBACK);
 
@@ -119,21 +119,21 @@ export default function SellerDashboardPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(29,158,117,0.2)] text-[#1D9E75]">
             <Plus size={28} strokeWidth={2.25} />
           </div>
-          <p className={`font-heading text-base font-semibold ${textPrimary}`}>Add your first listing</p>
+          <p className={`eden-section-title ${textPrimary}`}>Add your first listing</p>
           <p className={`text-xs ${textTertiary}`}>
             Photos, pricing in local currency, stock status
           </p>
         </Link>
 
         <section className={`${glass} p-4`}>
-          <h2 className={`font-heading text-sm font-semibold ${textPrimary}`}>Recent enquiries</h2>
+          <h2 className={`eden-section-title ${textPrimary}`}>Recent enquiries</h2>
           <p className={`mt-4 text-center text-sm ${textSecondary}`}>
             No enquiries yet. Once buyers contact you, they&apos;ll appear here.
           </p>
         </section>
 
         <section className={`${glass} p-4`}>
-          <h2 className={`font-heading text-sm font-semibold ${textPrimary}`}>Sale stories</h2>
+          <h2 className={`eden-section-title ${textPrimary}`}>Sale stories</h2>
           <p className={`mt-1 text-xs ${textTertiary}`}>
             Share what&apos;s happening on your farm
           </p>

@@ -189,7 +189,7 @@ function BrowsePageContent() {
             >
               <ArrowLeft size={16} />
             </Link>
-            <h1 className={`font-heading text-lg font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Browse produce</h1>
+            <h1 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>Browse produce</h1>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -232,7 +232,7 @@ function BrowsePageContent() {
         >
           <div className="glass-card mt-3 space-y-3 p-3">
             <div>
-              <p className="mb-1.5 text-[11px] text-white/70">African country</p>
+              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>African country</p>
               <input
                 value={countrySearch}
                 onChange={(event) => setCountrySearch(event.target.value)}
@@ -248,7 +248,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className="mb-1.5 text-[11px] text-white/70">State/region</p>
+              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>State/region</p>
               <DarkSelect
                 value={selectedState}
                 options={stateSelectOptions}
@@ -259,7 +259,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className="mb-1.5 text-[11px] text-white/70">Category</p>
+              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Category</p>
               <DarkSelect
                 value={selectedCategory}
                 options={categorySelectOptions}
@@ -288,7 +288,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className="mb-1 text-[11px] text-white/70">
+              <p className={`mb-1 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>
                 Price range (GBP): £0 – £{maxPrice}
               </p>
               <input
@@ -303,7 +303,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className="mb-1.5 text-[11px] text-white/70">Min order (kg/units)</p>
+              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Min order (kg/units)</p>
               <DarkSelect
                 value={String(minOrder)}
                 options={minOrderOptions}
@@ -339,7 +339,7 @@ function BrowsePageContent() {
               type="button"
               key={pill.key}
               onClick={() => setSortBy(pill.key)}
-              className={`whitespace-nowrap rounded-full border-[0.5px] px-3 py-1.5 text-xs transition ${
+              className={`eden-category-chip whitespace-nowrap rounded-full border-[0.5px] px-3 py-1.5 transition ${
                 sortBy === pill.key
                   ? "border-[#1D9E75] bg-[#1D9E75] text-white shadow-[0_6px_16px_rgba(29,158,117,0.35)]"
                   : "border-white/12 bg-[rgba(10,20,10,0.88)] text-white/78 shadow-[0_4px_14px_rgba(0,0,0,0.28)]"

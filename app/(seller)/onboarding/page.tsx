@@ -25,9 +25,9 @@ export default function SellerOnboardingPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const textPrimary = isDark ? "text-white" : "text-[#1A1A18]";
-  const textSecondary = isDark ? "text-[rgba(255,255,255,0.65)]" : "text-[#6B6B66]";
+  const textSecondary = isDark ? "text-[rgba(255,255,255,0.65)]" : "text-[#444441]";
   const textTertiary = isDark ? "text-[rgba(255,255,255,0.5)]" : "text-[#9C9C95]";
-  const labelTone = isDark ? "text-[rgba(255,255,255,0.7)]" : "text-[#6B6B66]";
+  const labelTone = isDark ? "text-[rgba(255,255,255,0.7)]" : "text-[#444441]";
   const inputClass = isDark
     ? "eden-field-input w-full rounded-xl border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)] text-sm text-white placeholder:text-[rgba(255,255,255,0.35)] focus:border-[#1D9E75] focus:outline-none"
     : "eden-field-input w-full rounded-xl border border-[rgba(0,0,0,0.1)] bg-white text-sm text-[#1A1A18] placeholder:text-[#9C9C95] focus:border-[#1D9E75] focus:outline-none";

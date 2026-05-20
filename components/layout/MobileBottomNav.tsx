@@ -21,7 +21,8 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
   });
   const inactiveTone = theme === "dark" ? "text-white/55" : "text-[#9C9C95]";
   const inactive = `flex flex-col items-center gap-1 ${inactiveTone}`;
-  const inactiveLabel = `text-[10px] ${inactiveTone}`;
+  const inactiveLabel = `eden-nav-label ${inactiveTone}`;
+  const activeLabel = "eden-nav-label font-semibold text-[#1D9E75]";
 
   return (
     <nav className="themed-nav fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 backdrop-blur-lg">
@@ -32,11 +33,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         >
           <Home size={18} />
           <span
-            className={
-              active === "home"
-                ? "text-[10px] font-medium text-[#1D9E75]"
-                : inactiveLabel
-            }
+            className={active === "home" ? activeLabel : inactiveLabel}
           >
             Home
           </span>
@@ -51,11 +48,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         >
           <Search size={18} />
           <span
-            className={
-              active === "browse"
-                ? "text-[10px] font-medium text-[#1D9E75]"
-                : inactiveLabel
-            }
+            className={active === "browse" ? activeLabel : inactiveLabel}
           >
             Browse
           </span>
@@ -71,11 +64,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         >
           <PlusCircle size={18} />
           <span
-            className={
-              active === "sell"
-                ? "text-[10px] font-medium text-[#1D9E75]"
-                : inactiveLabel
-            }
+            className={active === "sell" ? activeLabel : inactiveLabel}
           >
             Sell
           </span>
@@ -95,11 +84,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         >
           <User size={18} />
           <span
-            className={
-              active === "profile"
-                ? "text-[10px] font-medium text-[#1D9E75]"
-                : inactiveLabel
-            }
+            className={active === "profile" ? activeLabel : inactiveLabel}
           >
             Profile
           </span>
