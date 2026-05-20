@@ -26,15 +26,20 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
 
+  const signInClass =
+    variant === "hero"
+      ? "border-white/30 bg-white/10 text-white"
+      : "border-[var(--card-border)] bg-[var(--glass-bg)] text-[var(--text-primary)]";
+
   if (loading) {
     return (
-      <span
-        className={`flex h-11 w-11 items-center justify-center rounded-full border ${
-          variant === "hero" ? "border-white/25 bg-white/10" : "border-[var(--card-border)] bg-[var(--glass-bg)]"
-        }`}
+      <Link
+        href="/login"
+        className={`rounded-full border px-3 py-2 text-xs font-semibold ${signInClass}`}
+        style={variant === "hero" ? { textShadow: "0 1px 4px rgba(0,0,0,0.45)" } : undefined}
       >
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#1D9E75] border-t-transparent" />
-      </span>
+        Sign in
+      </Link>
     );
   }
 
@@ -42,11 +47,7 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
     return (
       <Link
         href="/login"
-        className={`rounded-full border px-3 py-2 text-xs font-semibold ${
-          variant === "hero"
-            ? "border-white/30 bg-white/10 text-white"
-            : "border-[var(--card-border)] bg-[var(--glass-bg)] text-[var(--text-primary)]"
-        }`}
+        className={`rounded-full border px-3 py-2 text-xs font-semibold ${signInClass}`}
         style={variant === "hero" ? { textShadow: "0 1px 4px rgba(0,0,0,0.45)" } : undefined}
       >
         Sign in

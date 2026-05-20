@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 import { ensureUserProfile } from "@/lib/auth/profile";
 import type { EdenUser } from "@/lib/types/user";
 
+const AUTH_LOADING_TIMEOUT_MS = 2000;
+
 interface AuthContextValue {
   user: EdenUser | null;
   loading: boolean;
@@ -31,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<EdenUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const finishLoading = useCallback(() => {
+    setLoading(false);
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     const {
       data: { user: authUser }
@@ -47,21 +53,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let resolved = false;
+
+    const timeoutId = window.setTimeout(() => {
+      if (!mounted || resolved) return;
+      resolved = true;
+      setUser(null);
+      setLoading(false);
+    }, AUTH_LOADING_TIMEOUT_MS);
 
     async function init() {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted || resolved) return;
 
-      if (session?.user) {
-        const { profile } = await ensureUserProfile(supabase, session.user);
-        if (mounted) setUser(profile);
-      } else {
-        setUser(null);
+        if (session?.user) {
+          const { profile } = await ensureUserProfile(supabase, session.user);
+          if (mounted && !resolved) setUser(profile);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        if (mounted && !resolved) setUser(null);
+      } finally {
+        if (mounted && !resolved) {
+          resolved = true;
+          setLoading(false);
+        }
       }
-      if (mounted) setLoading(false);
     }
 
     void init();
@@ -73,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (event === "SIGNED_OUT") {
         setUser(null);
-        setLoading(false);
+        finishLoading();
         return;
       }
 
@@ -83,14 +105,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (event === "INITIAL_SESSION") {
         setUser(null);
       }
-      if (mounted) setLoading(false);
+      if (mounted) finishLoading();
     });
 
     return () => {
       mounted = false;
+      window.clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, finishLoading]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();

@@ -15,6 +15,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
+  const bannerMessage = searchParams.get("message");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,6 +80,12 @@ function LoginForm() {
       <h1 className="font-heading text-center text-2xl font-semibold text-[var(--text-primary)]">
         Welcome back
       </h1>
+
+      {bannerMessage ? (
+        <p className="mt-4 rounded-xl border border-[#1D9E7540] bg-[#1D9E7518] px-3 py-2.5 text-center text-sm text-[#5DCAA5]">
+          {bannerMessage}
+        </p>
+      ) : null}
 
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-4">
         {error ? (

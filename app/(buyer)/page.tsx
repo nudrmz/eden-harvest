@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { EdenHarvestLogo } from "@/components/ui/EdenHarvestLogo";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -23,10 +24,10 @@ import {
 export default function BuyerHomePage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState("All");
   const displayName = user?.full_name ?? buyerLocation.userName;
-  const greetingName = authLoading ? "…" : displayName.split(" ")[0] ?? displayName;
+  const greetingName = displayName.split(" ")[0] ?? displayName;
 
   return (
     <main className="app-shell mx-auto min-h-screen w-full max-w-md overflow-x-hidden pb-24 no-scrollbar">
@@ -37,7 +38,11 @@ export default function BuyerHomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
 
-        <div className="relative flex h-full flex-col px-4 pb-6 pt-5">
+        <div className="relative flex h-full flex-col px-4 pb-6 pt-4">
+          <div className="mb-3 flex justify-center">
+            <EdenHarvestLogo height={40} priority />
+          </div>
+
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <UserMenu variant="hero" />

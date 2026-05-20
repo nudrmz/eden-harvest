@@ -14,7 +14,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ active }: MobileBottomNavProps) {
   const { theme } = useTheme();
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const sellHref = getSellHref({ isAuthenticated, profile: user });
   const inactiveTone = theme === "dark" ? "text-white/55" : "text-[#9C9C95]";
   const inactive = `flex flex-col items-center gap-1 ${inactiveTone}`;
@@ -62,10 +62,9 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         </Link>
 
         <Link
-          href={loading ? "/register?role=seller" : sellHref}
-          prefetch={!loading}
-          className={`relative flex flex-col items-center gap-1 ${active === "sell" ? "text-[#1D9E75]" : inactive} ${loading ? "pointer-events-none opacity-60" : ""}`}
-          aria-label={loading ? "Loading sell" : "Sell"}
+          href={sellHref}
+          className={`relative flex flex-col items-center gap-1 ${active === "sell" ? "text-[#1D9E75]" : inactive}`}
+          aria-label="Sell"
         >
           <PlusCircle size={18} />
           <span

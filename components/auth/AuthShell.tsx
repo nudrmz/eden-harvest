@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { EdenHarvestLogo } from "@/components/ui/EdenHarvestLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface AuthShellProps {
@@ -17,14 +17,7 @@ export function AuthShell({ children }: AuthShellProps) {
 
       <div className="flex w-full flex-col items-center pt-4">
         <Link href="/" className="mb-6 block max-w-full">
-          <Image
-            src="/images/Eden-Harvest_Logo.png"
-            alt="Eden Harvest"
-            width={320}
-            height={110}
-            priority
-            className="mx-auto h-[110px] w-auto max-w-full object-contain"
-          />
+          <EdenHarvestLogo height={100} priority />
         </Link>
       </div>
 
