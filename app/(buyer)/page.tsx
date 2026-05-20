@@ -4,9 +4,8 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { EdenHarvestLogo } from "@/components/ui/EdenHarvestLogo";
+import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
-import { UserMenu } from "@/components/layout/UserMenu";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useAuth } from "@/lib/supabase/hooks";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -24,10 +23,12 @@ import {
 export default function BuyerHomePage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeCategory, setActiveCategory] = useState("All");
-  const displayName = user?.full_name ?? buyerLocation.userName;
-  const greetingName = displayName.split(" ")[0] ?? displayName;
+  const greetingName =
+    !authLoading && user?.full_name
+      ? user.full_name.split(" ")[0] ?? user.full_name
+      : null;
 
   return (
     <main className="app-shell mx-auto min-h-screen w-full max-w-md overflow-x-hidden pb-24 no-scrollbar">
@@ -38,21 +39,34 @@ export default function BuyerHomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
 
-        <div className="relative flex h-full flex-col px-4 pb-6 pt-4">
-          <div className="mb-3 flex justify-center">
-            <EdenHarvestLogo height={40} priority />
-          </div>
+        <div className="relative flex h-full flex-col px-4 pb-6 pt-5">
+          <div className="flex items-center gap-3">
+            <FarmLogoAvatar size={44} priority />
 
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <UserMenu variant="hero" />
-              <div>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.9)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{buyerLocation.greeting}</p>
-                <p className="font-heading text-base font-semibold" style={{ color: "#ffffff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{greetingName}</p>
-              </div>
+            <div className="min-w-0 flex-1 text-center">
+              <p
+                className="text-xs"
+                style={{
+                  color: "rgba(255,255,255,0.9)",
+                  textShadow: "0 1px 4px rgba(0,0,0,0.5)"
+                }}
+              >
+                {buyerLocation.greeting}
+              </p>
+              {greetingName ? (
+                <p
+                  className="font-heading text-base font-semibold"
+                  style={{
+                    color: "#ffffff",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.5)"
+                  }}
+                >
+                  {greetingName}
+                </p>
+              ) : null}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <ThemeToggle />
               <NotificationBell variant="hero" />
             </div>

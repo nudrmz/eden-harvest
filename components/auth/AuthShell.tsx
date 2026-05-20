@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EdenHarvestLogo } from "@/components/ui/EdenHarvestLogo";
+import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface AuthShellProps {
@@ -16,8 +16,8 @@ export function AuthShell({ children }: AuthShellProps) {
       </div>
 
       <div className="flex w-full flex-col items-center pt-4">
-        <Link href="/" className="mb-6 block max-w-full">
-          <EdenHarvestLogo height={100} priority />
+        <Link href="/" className="mb-6 block">
+          <FarmLogoAvatar size={100} priority />
         </Link>
       </div>
 

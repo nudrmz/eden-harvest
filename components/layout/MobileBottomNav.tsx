@@ -14,8 +14,11 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ active }: MobileBottomNavProps) {
   const { theme } = useTheme();
-  const { user, isAuthenticated } = useAuth();
-  const sellHref = getSellHref({ isAuthenticated, profile: user });
+  const { user, loading, isAuthenticated } = useAuth();
+  const sellHref = getSellHref({
+    isAuthenticated: loading ? false : isAuthenticated,
+    profile: loading ? null : user
+  });
   const inactiveTone = theme === "dark" ? "text-white/55" : "text-[#9C9C95]";
   const inactive = `flex flex-col items-center gap-1 ${inactiveTone}`;
   const inactiveLabel = `text-[10px] ${inactiveTone}`;
