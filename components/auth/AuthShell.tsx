@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
@@ -14,18 +15,20 @@ export function AuthShell({ children }: AuthShellProps) {
         <ThemeToggle />
       </div>
 
-      <div className="flex flex-col items-center pt-4">
-        <Link href="/" className="text-center">
-          <p className="font-heading text-2xl font-bold tracking-tight text-[#1D9E75]">
-            Eden Harvest
-          </p>
-          <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-            Africa&apos;s finest, worldwide
-          </p>
+      <div className="flex w-full flex-col items-center pt-4">
+        <Link href="/" className="mb-6 block max-w-full">
+          <Image
+            src="/images/Eden-Harvest_Logo.png"
+            alt="Eden Harvest"
+            width={320}
+            height={110}
+            priority
+            className="mx-auto h-[110px] w-auto max-w-full object-contain"
+          />
         </Link>
       </div>
 
-      <div className="mt-8">{children}</div>
+      <div>{children}</div>
     </main>
   );
 }
