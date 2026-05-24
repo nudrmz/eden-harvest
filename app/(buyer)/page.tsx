@@ -84,13 +84,25 @@ export default function BuyerHomePage() {
                 <button
                   type="button"
                   onClick={() => router.push("/login")}
-                  className="inline-block rounded-[20px] text-white"
-                  style={{
-                    background: "rgba(255,255,255,0.15)",
-                    border: "0.5px solid rgba(255,255,255,0.3)",
-                    fontSize: "12px",
-                    padding: "5px 12px"
-                  }}
+                  className={`inline-block rounded-[20px] ${theme === "dark" ? "text-white" : ""}`}
+                  style={
+                    theme === "light"
+                      ? {
+                          background: "rgba(255,255,255,0.95)",
+                          color: "#1D9E75",
+                          fontWeight: 600,
+                          border: "none",
+                          padding: "6px 16px",
+                          borderRadius: "20px",
+                          fontSize: "13px"
+                        }
+                      : {
+                          background: "rgba(255,255,255,0.15)",
+                          border: "0.5px solid rgba(255,255,255,0.3)",
+                          fontSize: "12px",
+                          padding: "5px 12px"
+                        }
+                  }
                 >
                   Sign in
                 </button>
