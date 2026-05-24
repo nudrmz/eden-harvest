@@ -14,7 +14,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ active }: MobileBottomNavProps) {
   const { theme } = useTheme();
-  const { user, loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
   const sellHref = getSellHref({
     isAuthenticated: loading ? false : isAuthenticated,
     profile: loading ? null : user
@@ -79,7 +79,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
         </button>
 
         <Link
-          href={user ? "/settings" : "/login"}
+          href="/profile"
           className={`relative flex flex-col items-center gap-1 ${active === "profile" ? "text-[#1D9E75]" : inactive}`}
         >
           <User size={18} />
