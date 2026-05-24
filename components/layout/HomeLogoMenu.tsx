@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogOut, User } from "lucide-react";
 import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
+import { useTheme } from "@/components/layout/ThemeProvider";
 import { useAuth } from "@/lib/supabase/hooks";
 
 export function HomeLogoMenu() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -50,11 +52,11 @@ export function HomeLogoMenu() {
             <Link
               href="/profile"
               role="menuitem"
-              className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-white hover:bg-[rgba(29,158,117,0.15)]"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-[rgba(29,158,117,0.15)]"
               onClick={() => setOpen(false)}
             >
               <User size={16} className="text-[#1D9E75]" />
-              My Profile
+              <span className={theme === "dark" ? "text-white" : "text-[#1A1A18]"}>My Profile</span>
             </Link>
           </li>
           <li className="border-t border-[rgba(255,255,255,0.1)]">
