@@ -57,8 +57,9 @@ export default function ProfilePage() {
       </header>
 
       {loading ? (
-        <div className="flex items-center justify-center px-4 py-16">
-          <p className="text-sm text-[var(--text-secondary)]">Loading profile…</p>
+        <div className="flex flex-col items-center px-4 pt-12 text-center">
+          <div className="h-[72px] w-[72px] animate-pulse rounded-full bg-[#1D9E75]/30" />
+          <p className="mt-6 text-sm text-[var(--text-secondary)]">Loading profile…</p>
         </div>
       ) : user ? (
         <div className="px-4 pt-6">
@@ -66,7 +67,7 @@ export default function ProfilePage() {
             <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#1D9E75] text-2xl font-bold text-white">
               {getInitials(user.full_name)}
             </span>
-            <p className="mt-4 font-heading text-lg font-bold text-white">
+            <p className="mt-4 font-heading text-lg font-bold text-[var(--text-primary)]">
               {user.full_name ?? "Eden Harvest member"}
             </p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{user.email}</p>

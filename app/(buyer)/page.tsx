@@ -4,7 +4,6 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { HomeLogoMenu } from "@/components/layout/HomeLogoMenu";
 import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -26,8 +25,7 @@ export default function BuyerHomePage() {
   const { theme } = useTheme();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const showSignIn = !authLoading && !isAuthenticated;
-  const showLogoMenu = !authLoading && isAuthenticated;
-  const showGreeting = showLogoMenu && Boolean(user?.full_name);
+  const showGreeting = !authLoading && isAuthenticated && Boolean(user?.full_name);
   const [activeCategory, setActiveCategory] = useState("All");
 
   const timeGreeting = (() => {
@@ -53,11 +51,7 @@ export default function BuyerHomePage() {
 
         <div className="relative flex h-full flex-col px-4 pb-6 pt-4">
           <div className="flex items-start gap-2">
-            {showLogoMenu ? (
-              <HomeLogoMenu />
-            ) : (
-              <FarmLogoAvatar size={72} variant="hero" priority className="mt-0.5" />
-            )}
+            <FarmLogoAvatar size={72} variant="hero" priority className="mt-0.5" />
 
             {showGreeting && greetingLine ? (
               <div className="min-w-0 flex-1 pt-3 text-center">

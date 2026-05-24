@@ -80,6 +80,7 @@ export function MobileBottomNav({ active }: MobileBottomNavProps) {
 
         <Link
           href="/profile"
+          prefetch
           className={`relative flex flex-col items-center gap-1 ${active === "profile" ? "text-[#1D9E75]" : inactive}`}
         >
           <User size={18} />
