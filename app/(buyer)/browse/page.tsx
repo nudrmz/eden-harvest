@@ -48,7 +48,9 @@ function BrowsePageContent() {
 
   useEffect(() => {
     const category = searchParams.get("category");
+    const q = searchParams.get("q");
     if (category) setSelectedCategory(category);
+    if (q) setQuery(q);
     if (searchParams.get("filters") === "open") setFiltersOpen(true);
   }, [searchParams]);
 
@@ -207,8 +209,12 @@ function BrowsePageContent() {
         <div className="glass-card themed-search mt-3 flex items-center gap-2 rounded-[16px] px-3 py-2.5">
           <Search size={16} className="shrink-0 text-[var(--text-tertiary)]" />
           <input
+            type="text"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            autoComplete="off"
+            autoCorrect="off"
+            enterKeyHint="search"
             className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[#9C9C95] focus:outline-none"
             placeholder="Search by product, farm, or country..."
           />

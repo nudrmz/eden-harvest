@@ -27,6 +27,16 @@ export default function BuyerHomePage() {
   const showSignIn = !authLoading && !isAuthenticated;
   const showGreeting = !authLoading && isAuthenticated && Boolean(user?.full_name);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  function goToBrowseSearch(term?: string) {
+    const q = (term ?? searchQuery).trim();
+    if (q) {
+      router.push(`/browse?q=${encodeURIComponent(q)}`);
+    } else {
+      router.push("/browse");
+    }
+  }
 
   const timeGreeting = (() => {
     const hour = new Date().getHours();
@@ -179,23 +189,40 @@ export default function BuyerHomePage() {
         </div>
       </section>
 
-      <div className="relative z-10 -mt-5 px-4">
-        <div className="glass-card themed-search flex items-center gap-2 rounded-[16px] px-3 py-2.5">
-          <Search size={16} className="text-[var(--text-tertiary)]" />
+      <div className="relative z-20 -mt-5 px-4">
+        <form
+          className="glass-card themed-search flex items-center gap-2 rounded-[16px] px-3 py-2.5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            goToBrowseSearch();
+          }}
+        >
+          <button
+            type="submit"
+            aria-label="Search"
+            className="shrink-0 text-[var(--text-tertiary)]"
+          >
+            <Search size={16} />
+          </button>
           <input
-            className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[#9C9C95] focus:outline-none"
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            autoComplete="off"
+            autoCorrect="off"
+            enterKeyHint="search"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[#9C9C95] focus:outline-none"
             placeholder="Search crayfish, ogiri, palm oil..."
-            readOnly
           />
           <button
             type="button"
             onClick={() => router.push("/browse?filters=open")}
-            className="flex items-center gap-1 rounded-xl bg-eden-primary px-3 py-1.5 text-xs font-medium text-white"
+            className="flex shrink-0 items-center gap-1 rounded-xl bg-eden-primary px-3 py-1.5 text-xs font-medium text-white"
           >
             <SlidersHorizontal size={14} />
             Filter
           </button>
-        </div>
+        </form>
       </div>
 
       <section className="mt-4 px-4">
