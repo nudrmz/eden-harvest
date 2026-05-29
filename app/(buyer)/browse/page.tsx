@@ -3,15 +3,16 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, List, Map, Search, SlidersHorizontal } from "lucide-react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { DarkSelect } from "@/components/ui/DarkSelect";
 import { ListingCard } from "@/components/ui/ListingCard";
-import { africanCountries, browseCategories, listings } from "@/lib/mockData";
+import { africanCountries, browseCategories } from "@/lib/mockData";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import type { CountrySellerCluster, ListingDisplay } from "@/lib/types/listing";
 
 const BrowseMap = dynamic(() => import("@/components/ui/BrowseMap"), { ssr: false });
 
@@ -35,6 +36,9 @@ function BrowsePageContent() {
   const { theme } = useTheme();
   const [isMapView, setIsMapView] = useState(false);
   const [query, setQuery] = useState("");
+  const [listingsList, setListingsList] = useState<ListingDisplay[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [countryClusters, setCountryClusters] = useState<CountrySellerCluster[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>("newest");
 
@@ -53,6 +57,42 @@ function BrowsePageContent() {
     if (q) setQuery(q);
     if (searchParams.get("filters") === "open") setFiltersOpen(true);
   }, [searchParams]);
+
+  const loadListings = useCallback(async () => {
+    setListingsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set("q", query.trim());
+      if (selectedCountry) params.set("country", selectedCountry);
+      if (selectedCategory) params.set("category", selectedCategory);
+      if (verifiedOnly) params.set("verified", "true");
+      if (sortBy) params.set("sort", sortBy);
+      if (maxPrice < 50) params.set("maxPrice", String(maxPrice));
+      if (minOrder > 1) params.set("minOrder", String(minOrder));
+      params.set("limit", "20");
+
+      const response = await fetch(`/api/listings?${params.toString()}`);
+      const payload = (await response.json()) as { listings?: ListingDisplay[] };
+      setListingsList(payload.listings ?? []);
+    } catch {
+      setListingsList([]);
+    } finally {
+      setListingsLoading(false);
+    }
+  }, [query, selectedCountry, selectedCategory, verifiedOnly, sortBy, maxPrice, minOrder]);
+
+  useEffect(() => {
+    void loadListings();
+  }, [loadListings]);
+
+  useEffect(() => {
+    void fetch("/api/map-sellers")
+      .then((response) => response.json())
+      .then((payload: { clusters?: CountrySellerCluster[] }) => {
+        setCountryClusters(payload.clusters ?? []);
+      })
+      .catch(() => setCountryClusters([]));
+  }, []);
 
   const activeFilterCount = [
     selectedCountry,
@@ -75,54 +115,6 @@ function BrowsePageContent() {
     const country = africanCountries.find((item) => item.name === selectedCountry);
     return country?.states ?? [];
   }, [selectedCountry]);
-
-  const filteredListings = useMemo(() => {
-    let data = [...listings];
-    const cleanedQuery = query.trim().toLowerCase();
-    if (cleanedQuery) {
-      data = data.filter(
-        (listing) =>
-          listing.productName.toLowerCase().includes(cleanedQuery) ||
-          listing.farmName.toLowerCase().includes(cleanedQuery) ||
-          listing.country.toLowerCase().includes(cleanedQuery) ||
-          listing.countryName.toLowerCase().includes(cleanedQuery)
-      );
-    }
-
-    if (selectedCountry) {
-      data = data.filter((listing) => listing.countryName === selectedCountry);
-    }
-    if (selectedState) {
-      data = data.filter((listing) => listing.stateRegion === selectedState);
-    }
-    if (selectedCategory) {
-      data = data.filter((listing) => listing.category === selectedCategory);
-    }
-    if (verifiedOnly) {
-      data = data.filter((listing) => listing.verifiedSeller);
-    }
-    data = data.filter((listing) => listing.buyerPriceValue <= maxPrice);
-    data = data.filter((listing) => listing.minOrderValue >= minOrder);
-
-    data.sort((a, b) => {
-      if (sortBy === "newest") return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-      if (sortBy === "most_enquired") return b.enquiriesCount - a.enquiriesCount;
-      if (sortBy === "highest_rated") return b.rating - a.rating;
-      if (sortBy === "price_low_high") return a.buyerPriceValue - b.buyerPriceValue;
-      return b.buyerPriceValue - a.buyerPriceValue;
-    });
-
-    return data.slice(0, 8);
-  }, [
-    maxPrice,
-    minOrder,
-    query,
-    selectedCategory,
-    selectedCountry,
-    selectedState,
-    sortBy,
-    verifiedOnly
-  ]);
 
   const clearAllFilters = () => {
     setSelectedCountry("");
@@ -359,20 +351,29 @@ function BrowsePageContent() {
 
       {!isMapView ? (
         <section className="px-4 pb-4 pt-3">
-          <div className="grid grid-cols-2 gap-3">
-            {filteredListings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
-          </div>
-          {filteredListings.length === 0 && (
-            <div className="glass-card mt-4 p-4 text-center text-sm text-[var(--text-secondary)]">
-              No listings match your current filters.
+          {listingsLoading ? (
+            <div className="glass-card p-6 text-center text-sm text-[var(--text-secondary)]">
+              Loading listings…
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {listingsList.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+              {listingsList.length === 0 && (
+                <div className="glass-card mt-4 p-4 text-center text-sm text-[var(--text-secondary)]">
+                  No listings match your current filters.
+                </div>
+              )}
+            </>
           )}
         </section>
       ) : (
         <section className="px-4 pb-4 pt-3">
           <BrowseMap
+            countryClusters={countryClusters}
             selectedCountryCode={
               africanCountries.find((country) => country.name === selectedCountry)?.code ?? ""
             }

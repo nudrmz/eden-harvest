@@ -1,14 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { Link as LinkIcon } from "lucide-react";
 import L, { DivIcon } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
-import { sellerCountryClusters, sellerStateMarkers } from "@/lib/mockData";
+import type { CountrySellerCluster } from "@/lib/types/listing";
 
 interface BrowseMapProps {
   selectedCountryCode: string;
+  countryClusters: CountrySellerCluster[];
 }
 
 function ZoomWatcher({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
@@ -27,27 +26,13 @@ function clusterIcon(count: number): DivIcon {
   });
 }
 
-function sellerIcon(): DivIcon {
-  return L.divIcon({
-    className: "",
-    html: `<div style="height:18px;width:18px;border-radius:9999px;background:#1D9E75;border:2px solid #0f1f0f;box-shadow:0 4px 10px rgba(0,0,0,.4);"></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
-  });
-}
-
-export default function BrowseMap({ selectedCountryCode }: BrowseMapProps) {
+export default function BrowseMap({ selectedCountryCode, countryClusters }: BrowseMapProps) {
   const [zoomThreshold, setZoomThreshold] = useState(4);
 
   const visibleCountryClusters = useMemo(() => {
-    if (!selectedCountryCode) return sellerCountryClusters;
-    return sellerCountryClusters.filter((cluster) => cluster.countryCode === selectedCountryCode);
-  }, [selectedCountryCode]);
-
-  const visibleStateMarkers = useMemo(() => {
-    if (!selectedCountryCode) return sellerStateMarkers;
-    return sellerStateMarkers.filter((marker) => marker.countryCode === selectedCountryCode);
-  }, [selectedCountryCode]);
+    if (!selectedCountryCode) return countryClusters;
+    return countryClusters.filter((cluster) => cluster.countryCode === selectedCountryCode);
+  }, [countryClusters, selectedCountryCode]);
 
   return (
     <div className="h-[calc(100vh-210px)] overflow-hidden rounded-2xl border border-white/10">
@@ -82,31 +67,6 @@ export default function BrowseMap({ selectedCountryCode }: BrowseMapProps) {
             </Marker>
           ))}
 
-        {zoomThreshold >= 5 &&
-          visibleStateMarkers.map((marker) => (
-            <Marker key={marker.id} position={[marker.lat, marker.lng]} icon={sellerIcon()}>
-              <Popup>
-                <div className="min-w-[190px] text-[#0f1f0f]">
-                  <p className="font-semibold">
-                    {marker.farmName} {marker.flag}
-                  </p>
-                  <p className="text-xs">{marker.state}, {marker.countryName}</p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {marker.topProducts.slice(0, 3).map((product) => (
-                      <span key={product} className="rounded-full bg-[#1D9E751F] px-2 py-0.5 text-[10px]">
-                        {product}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-1 text-xs text-[#8d6d13]">★ {marker.rating.toFixed(1)}</p>
-                  <Link href="/seller/seller-1" className="mt-2 inline-flex items-center gap-1 text-xs text-[#1D9E75]">
-                    <LinkIcon size={12} />
-                    View profile
-                  </Link>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
       </MapContainer>
     </div>
   );
