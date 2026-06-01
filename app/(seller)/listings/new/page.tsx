@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const CATEGORIES = [
-  "Dried goods", "Grains", "Spices", "Seafood", 
-  "Oils", "Fresh produce", "Livestock", "Beverages", 
+  "Dried goods", "Grains", "Spices", "Seafood",
+  "Oils", "Fresh produce", "Livestock", "Beverages",
   "Nuts & Seeds", "Roots & Tubers"
 ];
 
@@ -17,14 +17,15 @@ export default function NewListingPage() {
   const supabase = createClient();
 
   const [form, setForm] = useState({
-    name: "",
+    product_name: "",
     category: "",
-    price: "",
-    currency: "NGN",
+    price_local: "",
+    price_currency_code: "NGN",
     unit: "kg",
-    min_order: "",
+    min_order_quantity: "",
+    min_order_unit: "kg",
     description: "",
-    in_stock: true,
+    stock_status: "in_stock",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +35,7 @@ export default function NewListingPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.category || !form.price) {
+    if (!form.product_name || !form.category || !form.price_local) {
       setError("Please fill in produce name, category and price.");
       return;
     }
@@ -46,14 +47,16 @@ export default function NewListingPage() {
 
     const { error: insertError } = await supabase.from("listings").insert({
       seller_id: user.id,
-      product_name: form.name,
+      product_name: form.product_name,
       category: form.category,
-      price: parseFloat(form.price),
-      currency: form.currency,
+      price_local: parseFloat(form.price_local),
+      price_currency_code: form.price_currency_code,
       unit: form.unit,
-      min_order: form.min_order ? parseInt(form.min_order) : 1,
+      min_order_quantity: form.min_order_quantity ? parseFloat(form.min_order_quantity) : 1,
+      min_order_unit: form.min_order_unit,
       description: form.description,
-      in_stock: form.in_stock,
+      stock_status: form.stock_status,
+      is_active: true,
     });
 
     if (insertError) {
@@ -76,7 +79,7 @@ export default function NewListingPage() {
         <div className="space-y-4">
           <div>
             <label className="text-sm text-gray-300 mb-1 block">Produce name</label>
-            <input name="name" value={form.name} onChange={handleChange}
+            <input name="product_name" value={form.product_name} onChange={handleChange}
               placeholder="e.g. Crayfish, Palm oil, Ogiri"
               className="w-full bg-[#1a2e1f] rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none" />
           </div>
@@ -93,13 +96,13 @@ export default function NewListingPage() {
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-sm text-gray-300 mb-1 block">Price</label>
-              <input name="price" value={form.price} onChange={handleChange}
+              <input name="price_local" value={form.price_local} onChange={handleChange}
                 type="number" placeholder="0.00"
                 className="w-full bg-[#1a2e1f] rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none" />
             </div>
             <div>
               <label className="text-sm text-gray-300 mb-1 block">Currency</label>
-              <select name="currency" value={form.currency} onChange={handleChange}
+              <select name="price_currency_code" value={form.price_currency_code} onChange={handleChange}
                 className="bg-[#1a2e1f] rounded-xl px-4 py-3 text-white outline-none">
                 <option value="NGN">NGN</option>
                 <option value="GHS">GHS</option>
@@ -120,7 +123,7 @@ export default function NewListingPage() {
             </div>
             <div className="flex-1">
               <label className="text-sm text-gray-300 mb-1 block">Min order</label>
-              <input name="min_order" value={form.min_order} onChange={handleChange}
+              <input name="min_order_quantity" value={form.min_order_quantity} onChange={handleChange}
                 type="number" placeholder="1"
                 className="w-full bg-[#1a2e1f] rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none" />
             </div>
@@ -136,9 +139,9 @@ export default function NewListingPage() {
 
           <div className="flex items-center justify-between bg-[#1a2e1f] rounded-xl px-4 py-3">
             <span className="text-sm text-gray-300">In stock</span>
-            <button onClick={() => setForm({ ...form, in_stock: !form.in_stock })}
-              className={`w-12 h-6 rounded-full transition-colors ${form.in_stock ? "bg-green-500" : "bg-gray-600"}`}>
-              <div className={`w-5 h-5 bg-white rounded-full mx-0.5 transition-transform ${form.in_stock ? "translate-x-6" : "translate-x-0"}`} />
+            <button onClick={() => setForm({ ...form, stock_status: form.stock_status === "in_stock" ? "out_of_stock" : "in_stock" })}
+              className={`w-12 h-6 rounded-full transition-colors ${form.stock_status === "in_stock" ? "bg-green-500" : "bg-gray-600"}`}>
+              <div className={`w-5 h-5 bg-white rounded-full mx-0.5 transition-transform ${form.stock_status === "in_stock" ? "translate-x-6" : "translate-x-0"}`} />
             </button>
           </div>
         </div>
