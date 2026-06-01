@@ -25,7 +25,7 @@ export default function NewListingPage() {
     min_order_quantity: "",
     min_order_unit: "kg",
     description: "",
-    stock_status: "in_stock",
+    stock_status: "in_season",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -139,7 +139,7 @@ export default function NewListingPage() {
 
           <div className="flex items-center justify-between bg-[#1a2e1f] rounded-xl px-4 py-3">
             <span className="text-sm text-gray-300">In stock</span>
-            <button onClick={() => setForm({ ...form, stock_status: form.stock_status === "in_stock" ? "out_of_stock" : "in_stock" })}
+            <button onClick={() => setForm({ ...form, stock_status: form.stock_status === "in_season" ? "out_of_stock" : "in_season" })}
               className={`w-12 h-6 rounded-full transition-colors ${form.stock_status === "in_stock" ? "bg-green-500" : "bg-gray-600"}`}>
               <div className={`w-5 h-5 bg-white rounded-full mx-0.5 transition-transform ${form.stock_status === "in_stock" ? "translate-x-6" : "translate-x-0"}`} />
             </button>
