@@ -46,7 +46,7 @@ export default function NewListingPage() {
 
     const { error: insertError } = await supabase.from("listings").insert({
       seller_id: user.id,
-      name: form.name,
+      product_name: form.name,
       category: form.category,
       price: parseFloat(form.price),
       currency: form.currency,
