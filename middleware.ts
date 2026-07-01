@@ -9,6 +9,5 @@ export const config = {
   matcher: [
     "/seller/:path*",
     "/buyer/:path*",
-    "/auth/:path*",
   ]
 };
