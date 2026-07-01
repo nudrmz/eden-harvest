@@ -113,7 +113,7 @@ export default function SellerDashboardPage() {
         </section>
 
         <Link
-          href="/listings/new"
+          href="/seller/listings/new"
           className={`${glass} flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#1D9E75]/55 p-6 text-center transition hover:border-[#1D9E75] hover:bg-[rgba(12,26,14,0.55)]`}
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(29,158,117,0.2)] text-[#1D9E75]">
