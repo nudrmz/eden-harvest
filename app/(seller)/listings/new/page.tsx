@@ -42,30 +42,46 @@ export default function NewListingPage() {
     setLoading(true);
     setError("");
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Not logged in."); setLoading(false); return; }
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) { setError("Auth error: " + userError.message); setLoading(false); return; }
+      if (!user) { setError("Not logged in."); setLoading(false); return; }
 
-    const { error: insertError } = await supabase.from("listings").insert({
-      seller_id: user.id,
-      product_name: form.product_name,
-      category: form.category,
-      price_local: parseFloat(form.price_local),
-      price_currency_code: form.price_currency_code,
-      unit: form.unit,
-      min_order_quantity: form.min_order_quantity ? parseFloat(form.min_order_quantity) : 1,
-      min_order_unit: form.min_order_unit,
-      description: form.description,
-      stock_status: form.stock_status,
-      is_active: true,
-    });
+      const payload = {
+        seller_id: user.id,
+        product_name: form.product_name,
+        category: form.category,
+        price_local: parseFloat(form.price_local),
+        price_currency_code: form.price_currency_code,
+        unit: form.unit,
+        min_order_quantity: form.min_order_quantity ? parseFloat(form.min_order_quantity) : 1,
+        min_order_unit: form.min_order_unit,
+        description: form.description,
+        stock_status: form.stock_status,
+        is_active: true,
+      };
 
-    if (insertError) {
-      setError(insertError.message);
+      console.log("Inserting payload:", payload);
+
+      const { data, error: insertError } = await supabase
+        .from("listings")
+        .insert(payload)
+        .select();
+
+      console.log("Insert result:", data, insertError);
+
+      if (insertError) {
+        setError(insertError.message);
+        setLoading(false);
+        return;
+      }
+
+      router.push("/seller/dashboard");
+    } catch (err: any) {
+      setError("Unexpected error: " + err.message);
       setLoading(false);
-      return;
     }
-
-    router.push("/seller/dashboard");
   };
 
   return (
