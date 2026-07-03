@@ -12,6 +12,8 @@ import {
   sellerOnboardingCountries
 } from "@/lib/mockData";
 import { SELLER_PROFILE_STORAGE_KEY } from "@/lib/utils/constants";
+import { createClient } from "@/lib/supabase/client";
+import { ensureSellerProfile } from "@/lib/auth/seller";
 
 const TOTAL_STEPS = 5;
 
@@ -45,6 +47,8 @@ export default function SellerOnboardingPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [verificationChoiceId, setVerificationChoiceId] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,8 +103,9 @@ export default function SellerOnboardingPage() {
   const goNext = () => setStep((s) => Math.min(TOTAL_STEPS, s + 1));
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
-  const handleSubmit = () => {
-    if (!selectedCountry || !canSubmitStep5) return;
+  const handleSubmit = async () => {
+    if (!selectedCountry || !canSubmitStep5 || submitting) return;
+
     const payload = {
       farmName: farmName.trim(),
       flag: selectedCountry.flag,
@@ -114,11 +119,36 @@ export default function SellerOnboardingPage() {
       documentNumber: documentNumber.trim(),
       submittedAt: Date.now()
     };
+
+    setSubmitting(true);
+    setSubmitError(null);
+
     try {
       sessionStorage.setItem(SELLER_PROFILE_STORAGE_KEY, JSON.stringify(payload));
     } catch {
       /* ignore quota */
     }
+
+    const supabase = createClient();
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      setSubmitError("Please sign in before submitting your seller application.");
+      setSubmitting(false);
+      return;
+    }
+
+    const { error: profileError } = await ensureSellerProfile(supabase, session.user.id);
+
+    if (profileError) {
+      setSubmitError(profileError);
+      setSubmitting(false);
+      return;
+    }
+
+    setSubmitting(false);
     setShowSuccess(true);
   };
 
@@ -423,6 +453,11 @@ export default function SellerOnboardingPage() {
             <p className={`mt-4 text-[11px] ${textTertiary}`}>
               Your verification will be reviewed within 48 hours
             </p>
+            {submitError ? (
+              <p className="mt-4 rounded-xl border border-[#F0959540] bg-[#F0959518] px-3 py-2.5 text-sm text-[#F09595]">
+                {submitError}
+              </p>
+            ) : null}
           </>
         ) : null}
       </div>
@@ -460,11 +495,11 @@ export default function SellerOnboardingPage() {
             ) : (
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={!canSubmitStep5}
+                onClick={() => void handleSubmit()}
+                disabled={!canSubmitStep5 || submitting}
                 className={primaryBtn}
               >
-                Submit application
+                {submitting ? "Submitting…" : "Submit application"}
               </button>
             )}
           </div>

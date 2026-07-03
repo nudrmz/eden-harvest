@@ -7,7 +7,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/seller/:path*",
-    "/buyer/:path*",
+    /*
+     * Refresh Supabase sessions on app pages only — skip static assets and API
+     * routes to avoid timeouts. Route groups like (buyer)/(seller) are not in URLs.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|api/|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"
   ]
 };

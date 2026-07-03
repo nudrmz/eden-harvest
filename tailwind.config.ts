@@ -7,8 +7,8 @@ const root = process.cwd();
 const sellerRoutes = [
   path.join(root, "app", "(seller)", "onboarding", "page.tsx"),
   path.join(root, "app", "(seller)", "dashboard", "page.tsx"),
-  path.join(root, "app", "(seller)", "listings", "new", "page.tsx"),
-  path.join(root, "app", "(seller)", "listings", "[id]", "edit", "page.tsx")
+  path.join(root, "app", "seller", "listings", "new", "page.tsx"),
+  path.join(root, "app", "seller", "listings", "[id]", "edit", "page.tsx")
 ].map((absFile) => absFile.replace(/\\/g, "/"));
 
 const config: Config = {

@@ -9,7 +9,6 @@ import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInB
 import { PasswordField } from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
-import { ensureUserProfile } from "@/lib/auth/profile";
 
 function LoginForm() {
   const router = useRouter();
@@ -48,26 +47,16 @@ function LoginForm() {
       return;
     }
 
-    const { profile, error: profileError } = await ensureUserProfile(supabase, data.user);
-
-    if (profileError || !profile) {
-      setError(
-        profileError
-          ? mapAuthError(profileError)
-          : "Could not set up your account. Please try again or contact support."
-      );
-      setSubmitting(false);
-      return;
-    }
+    const metadata = (data.user.user_metadata ?? {}) as Record<string, unknown>;
+    const isSeller = metadata.role === "seller";
 
     const destination =
       redirectTo && redirectTo.startsWith("/")
         ? redirectTo
-        : profile.role === "seller"
+        : isSeller
           ? "/dashboard"
           : "/";
 
-    setSubmitting(false);
     window.location.assign(destination);
     } catch {
       setError("Something went wrong. Please try again.");

@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT") {
@@ -99,13 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (session?.user) {
-        const { profile } = await ensureUserProfile(supabase, session.user);
-        if (mounted) setUser(profile);
-      } else if (event === "INITIAL_SESSION") {
-        setUser(null);
-      }
-      if (mounted) finishLoading();
+      // Defer async work — awaiting inside this callback deadlocks signInWithPassword.
+      setTimeout(() => {
+        void (async () => {
+          if (!mounted) return;
+
+          if (session?.user) {
+            const { profile } = await ensureUserProfile(supabase, session.user);
+            if (mounted) setUser(profile);
+          } else if (event === "INITIAL_SESSION") {
+            setUser(null);
+          }
+          if (mounted) finishLoading();
+        })();
+      }, 0);
     });
 
     return () => {

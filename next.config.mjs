@@ -1,7 +1,21 @@
 import withPWA from "next-pwa";
 
 const nextConfig = {
-  reactStrictMode: true
+  reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/listings/new",
+        destination: "/seller/listings/new",
+        permanent: false
+      },
+      {
+        source: "/listings/:id/edit",
+        destination: "/seller/listings/:id/edit",
+        permanent: false
+      }
+    ];
+  }
 };
 
 /** PWA is dev-disabled only. On Vercel, next-pwa SW has caused stale/cached JS chunks and dead clicks. */
