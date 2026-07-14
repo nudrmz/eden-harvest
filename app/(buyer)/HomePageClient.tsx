@@ -350,20 +350,42 @@ export default function HomePageClient({
         ) : (
           <div className="glass-card flex flex-col items-center px-6 py-10 text-center">
             <FarmLogoAvatar size={80} priority />
-            <p
-              className={`mt-5 font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
-            >
-              Be the first to list your produce on Eden Harvest
-            </p>
-            <p className={`mt-2 text-sm ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
-              No listings yet. Check back soon or browse our verified sellers.
-            </p>
-            <Link
-              href="/onboarding"
-              className="mt-6 w-full max-w-xs rounded-xl bg-[#1D9E75] py-3 text-center text-sm font-semibold text-white shadow-[0_10px_28px_rgba(29,158,117,0.38)]"
-            >
-              List your produce
-            </Link>
+            {stats.products > 0 ? (
+              <>
+                <p
+                  className={`mt-5 font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                >
+                  Listings are loading slowly
+                </p>
+                <p className={`mt-2 text-sm ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
+                  We found {stats.products} product{stats.products === 1 ? "" : "s"} in the database.
+                  Open Browse to see them, or refresh this page.
+                </p>
+                <Link
+                  href="/browse"
+                  className="mt-6 w-full max-w-xs rounded-xl bg-[#1D9E75] py-3 text-center text-sm font-semibold text-white shadow-[0_10px_28px_rgba(29,158,117,0.38)]"
+                >
+                  Open browse
+                </Link>
+              </>
+            ) : (
+              <>
+                <p
+                  className={`mt-5 font-heading text-base font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                >
+                  Be the first to list your produce on Eden Harvest
+                </p>
+                <p className={`mt-2 text-sm ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}>
+                  No listings yet. Check back soon or browse our verified sellers.
+                </p>
+                <Link
+                  href="/onboarding"
+                  className="mt-6 w-full max-w-xs rounded-xl bg-[#1D9E75] py-3 text-center text-sm font-semibold text-white shadow-[0_10px_28px_rgba(29,158,117,0.38)]"
+                >
+                  List your produce
+                </Link>
+              </>
+            )}
           </div>
         )}
       </section>

@@ -17,39 +17,6 @@ import type {
 } from "@/lib/types/listing";
 import { getInitials } from "@/lib/utils/helpers";
 
-const LISTING_SELECT = `
-  id,
-  seller_id,
-  product_name,
-  category,
-  price_local,
-  price_currency_code,
-  unit,
-  min_order_quantity,
-  min_order_unit,
-  photo_url,
-  stock_status,
-  seasonal_months,
-  is_featured,
-  featured_until,
-  created_at,
-  seller_profiles!inner (
-    id,
-    farm_name,
-    state_region,
-    is_verified,
-    average_rating,
-    african_countries!inner (
-      id,
-      name,
-      code,
-      flag_emoji,
-      currency_code,
-      currency_symbol
-    )
-  )
-`;
-
 interface RawCountry {
   id: string;
   name: string;
@@ -65,7 +32,7 @@ interface RawSellerProfile {
   state_region: string;
   is_verified: boolean;
   average_rating: number | string;
-  african_countries: RawCountry;
+  african_countries: RawCountry | RawCountry[] | null;
 }
 
 interface RawListingRow {
@@ -84,7 +51,7 @@ interface RawListingRow {
   is_featured: boolean;
   featured_until: string | null;
   created_at: string;
-  seller_profiles: RawSellerProfile;
+  seller_profiles: RawSellerProfile | RawSellerProfile[] | null;
 }
 
 export interface BrowseListingsParams {
@@ -136,9 +103,12 @@ function mapListingRow(
   row: RawListingRow,
   buyerCurrency: string,
   rates: Record<string, number>
-): ListingDisplay {
-  const seller = row.seller_profiles;
-  const country = seller.african_countries;
+): ListingDisplay | null {
+  const seller = unwrapRelation(row.seller_profiles);
+  if (!seller) return null;
+  const country = unwrapRelation(seller.african_countries);
+  if (!country) return null;
+
   const priceLocal = Number(row.price_local);
   const buyerPriceValue = convertCurrency(
     priceLocal,
@@ -192,6 +162,7 @@ function toFeatured(listing: ListingDisplay): FeaturedListingDisplay {
   };
 }
 
+/** Fetch listings then attach seller + country in app code (more reliable than nested !inner). */
 async function fetchRawListings(options: {
   limit?: number;
   featuredOnly?: boolean;
@@ -202,10 +173,32 @@ async function fetchRawListings(options: {
   sortBy?: BrowseListingsParams["sortBy"];
 }): Promise<RawListingRow[]> {
   const supabase = createClient();
+  const fetchLimit = Math.max((options.limit ?? 20) * 4, 40);
+
   let query = supabase
     .from("listings")
-    .select(LISTING_SELECT)
-    .eq("is_active", true);
+    .select(
+      `
+      id,
+      seller_id,
+      product_name,
+      category,
+      price_local,
+      price_currency_code,
+      unit,
+      min_order_quantity,
+      min_order_unit,
+      photo_url,
+      stock_status,
+      seasonal_months,
+      is_featured,
+      featured_until,
+      created_at
+    `
+    )
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(fetchLimit);
 
   if (options.featuredOnly) {
     query = query.eq("is_featured", true).gt("featured_until", new Date().toISOString());
@@ -215,41 +208,137 @@ async function fetchRawListings(options: {
     query = query.ilike("product_name", `%${options.search.trim()}%`);
   }
 
-  if (options.category) {
+  if (options.category && options.category !== "All") {
     query = query.eq("category", options.category);
   }
 
-  if (options.sortBy !== "highest_rated") {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  if (options.limit) {
-    query = query.limit(options.limit * 3);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    console.error("listings fetch error:", error.message);
+  const { data: listingData, error: listingError } = await query;
+  if (listingError) {
+    console.error("listings fetch error:", listingError.message);
     return [];
   }
 
-  let rows = (data ?? []) as unknown as RawListingRow[];
+  const listings = listingData ?? [];
+  if (!listings.length) return [];
+
+  const sellerIds = [...new Set(listings.map((row) => row.seller_id as string))];
+  const { data: sellersData, error: sellersError } = await supabase
+    .from("seller_profiles")
+    .select(
+      `
+      id,
+      farm_name,
+      state_region,
+      is_verified,
+      average_rating,
+      african_country_id
+    `
+    )
+    .in("id", sellerIds);
+
+  if (sellersError) {
+    console.error("seller_profiles fetch error:", sellersError.message);
+    return [];
+  }
+
+  let sellers = sellersData ?? [];
+
+  // Repair older rows where seller_id was wrongly stored as auth user_id.
+  const foundSellerIds = new Set(sellers.map((s) => s.id as string));
+  const missingSellerIds = sellerIds.filter((id) => !foundSellerIds.has(id));
+  if (missingSellerIds.length) {
+    const { data: byUserId } = await supabase
+      .from("seller_profiles")
+      .select(
+        `
+        id,
+        user_id,
+        farm_name,
+        state_region,
+        is_verified,
+        average_rating,
+        african_country_id
+      `
+      )
+      .in("user_id", missingSellerIds);
+
+    if (byUserId?.length) {
+      sellers = [...sellers, ...byUserId];
+    }
+  }
+
+  const countryIds = [
+    ...new Set(sellers.map((s) => s.african_country_id as string).filter(Boolean))
+  ];
+
+  let countries: RawCountry[] = [];
+  if (countryIds.length) {
+    const { data: countriesData, error: countriesError } = await supabase
+      .from("african_countries")
+      .select("id, name, code, flag_emoji, currency_code, currency_symbol")
+      .in("id", countryIds);
+
+    if (countriesError) {
+      console.error("african_countries fetch error:", countriesError.message);
+    } else {
+      countries = (countriesData ?? []) as RawCountry[];
+    }
+  }
+
+  const countryById = new Map(countries.map((c) => [c.id, c]));
+  const sellerById = new Map<string, RawSellerProfile>();
+  const sellerByUserId = new Map<string, RawSellerProfile>();
+
+  for (const seller of sellers) {
+    const country = countryById.get(seller.african_country_id as string) ?? null;
+    const profile: RawSellerProfile = {
+      id: seller.id as string,
+      farm_name: seller.farm_name as string,
+      state_region: seller.state_region as string,
+      is_verified: Boolean(seller.is_verified),
+      average_rating: seller.average_rating as number | string,
+      african_countries: country
+    };
+    sellerById.set(seller.id as string, profile);
+    if ("user_id" in seller && seller.user_id) {
+      sellerByUserId.set(seller.user_id as string, profile);
+    }
+  }
+
+  let rows: RawListingRow[] = listings
+    .map((listing) => {
+      const sellerId = listing.seller_id as string;
+      const seller = sellerById.get(sellerId) ?? sellerByUserId.get(sellerId) ?? null;
+      if (!seller || !unwrapRelation(seller.african_countries)) return null;
+      return {
+        ...(listing as Omit<RawListingRow, "seller_profiles">),
+        seller_id: seller.id,
+        seller_profiles: seller
+      } as RawListingRow;
+    })
+    .filter((row): row is RawListingRow => row !== null);
 
   if (options.countryId) {
-    rows = rows.filter(
-      (row) => row.seller_profiles.african_countries.id === options.countryId
-    );
+    rows = rows.filter((row) => {
+      const seller = unwrapRelation(row.seller_profiles);
+      const country = unwrapRelation(seller?.african_countries);
+      return country?.id === options.countryId;
+    });
   }
 
   if (options.verifiedOnly) {
-    rows = rows.filter((row) => row.seller_profiles.is_verified);
+    rows = rows.filter((row) => {
+      const seller = unwrapRelation(row.seller_profiles);
+      return Boolean(seller?.is_verified);
+    });
   }
 
   if (options.sortBy === "highest_rated") {
-    rows.sort(
-      (a, b) =>
-        Number(b.seller_profiles.average_rating) - Number(a.seller_profiles.average_rating)
-    );
+    rows.sort((a, b) => {
+      const ratingA = Number(unwrapRelation(a.seller_profiles)?.average_rating) || 0;
+      const ratingB = Number(unwrapRelation(b.seller_profiles)?.average_rating) || 0;
+      return ratingB - ratingA;
+    });
   } else {
     rows.sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -261,6 +350,16 @@ async function fetchRawListings(options: {
   }
 
   return rows;
+}
+
+function mapRows(
+  rows: RawListingRow[],
+  currency: string,
+  rates: Record<string, number>
+): ListingDisplay[] {
+  return rows
+    .map((row) => mapListingRow(row, currency, rates))
+    .filter((listing): listing is ListingDisplay => listing !== null);
 }
 
 export async function fetchListingsForBrowse(
@@ -279,7 +378,7 @@ export async function fetchListingsForBrowse(
     limit: params.limit ?? 20
   });
 
-  let listings = rows.map((row) => mapListingRow(row, currency, rates));
+  let listings = mapRows(rows, currency, rates);
 
   if (params.maxPriceGbp !== undefined && params.maxPriceGbp < 50) {
     listings = listings.filter(
@@ -305,7 +404,7 @@ export async function fetchHomeListings(limit = 8): Promise<ListingDisplay[]> {
   const buyerCurrency = await getBuyerCurrency();
   const rates = await getExchangeRates();
   const rows = await fetchRawListings({ limit });
-  return rows.map((row) => mapListingRow(row, buyerCurrency, rates));
+  return mapRows(rows, buyerCurrency, rates);
 }
 
 export async function fetchFeaturedListing(): Promise<FeaturedListingDisplay | null> {
@@ -318,7 +417,8 @@ export async function fetchFeaturedListing(): Promise<FeaturedListingDisplay | n
   }
   if (!rows.length) return null;
 
-  return toFeatured(mapListingRow(rows[0], buyerCurrency, rates));
+  const listing = mapListingRow(rows[0], buyerCurrency, rates);
+  return listing ? toFeatured(listing) : null;
 }
 
 export async function fetchHomeStats(): Promise<HomeStatsDisplay> {
@@ -327,8 +427,7 @@ export async function fetchHomeStats(): Promise<HomeStatsDisplay> {
   const [sellersResult, productsResult] = await Promise.all([
     supabase
       .from("seller_profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("is_verified", true),
+      .select("id", { count: "exact", head: true }),
     supabase
       .from("listings")
       .select("id", { count: "exact", head: true })
@@ -351,44 +450,66 @@ export async function fetchTopVerifiedSellers(limit = 5): Promise<VerifiedSeller
       farm_name,
       state_region,
       average_rating,
-      african_countries!inner ( name, flag_emoji )
+      african_country_id
     `
     )
     .eq("is_verified", true)
     .order("average_rating", { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
+  if (error || !data?.length) return [];
+
+  const countryIds = [
+    ...new Set(data.map((row) => row.african_country_id as string).filter(Boolean))
+  ];
+  const { data: countriesData } = await supabase
+    .from("african_countries")
+    .select("id, name, flag_emoji")
+    .in("id", countryIds);
+  const countryById = new Map(
+    (countriesData ?? []).map((c) => [c.id as string, c] as const)
+  );
 
   const borderColors = ["#1D9E75", "#F5C442", "#5DCAA5", "#FAC775", "#9FE1CB"];
 
-  return data.map((row, index) => {
-    const country = unwrapRelation(row.african_countries as { name: string; flag_emoji: string } | { name: string; flag_emoji: string }[]);
-    if (!country) return null;
-    return {
-      id: row.id as string,
-      initials: getInitials(row.farm_name as string),
-      farmName: row.farm_name as string,
-      countryState: `${country.flag_emoji} ${country.name}, ${row.state_region}`,
-      rating: Number(row.average_rating) || 0,
-      borderColor: borderColors[index % borderColors.length]
-    };
-  }).filter((seller): seller is VerifiedSellerCard => seller !== null);
+  return data
+    .map((row, index) => {
+      const country = countryById.get(row.african_country_id as string);
+      if (!country) return null;
+      return {
+        id: row.id as string,
+        initials: getInitials(row.farm_name as string),
+        farmName: row.farm_name as string,
+        countryState: `${country.flag_emoji} ${country.name}, ${row.state_region}`,
+        rating: Number(row.average_rating) || 0,
+        borderColor: borderColors[index % borderColors.length]
+      };
+    })
+    .filter((seller): seller is VerifiedSellerCard => seller !== null);
 }
 
 export async function fetchCountrySellerClusters(): Promise<CountrySellerCluster[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("seller_profiles")
-    .select(
-      `
-      id,
-      african_countries!inner ( id, name, code, flag_emoji )
-    `
-    )
+    .select("id, african_country_id")
     .eq("is_verified", true);
 
   if (error || !data) return [];
+
+  const countryIds = [
+    ...new Set(data.map((row) => row.african_country_id as string).filter(Boolean))
+  ];
+  if (!countryIds.length) return [];
+
+  const { data: countriesData } = await supabase
+    .from("african_countries")
+    .select("id, name, code, flag_emoji")
+    .in("id", countryIds);
+
+  const countryById = new Map(
+    (countriesData ?? []).map((c) => [c.id as string, c] as const)
+  );
 
   const counts = new Map<
     string,
@@ -396,20 +517,16 @@ export async function fetchCountrySellerClusters(): Promise<CountrySellerCluster
   >();
 
   for (const row of data) {
-    const country = unwrapRelation(
-      row.african_countries as
-        | { name: string; code: string; flag_emoji: string }
-        | { name: string; code: string; flag_emoji: string }[]
-    );
+    const country = countryById.get(row.african_country_id as string);
     if (!country) continue;
-    const existing = counts.get(country.code);
+    const existing = counts.get(country.code as string);
     if (existing) {
       existing.sellers += 1;
     } else {
-      counts.set(country.code, {
-        countryCode: country.code,
-        countryName: country.name,
-        flag: country.flag_emoji,
+      counts.set(country.code as string, {
+        countryCode: country.code as string,
+        countryName: country.name as string,
+        flag: country.flag_emoji as string,
         sellers: 1
       });
     }
