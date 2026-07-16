@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useTheme } from "@/components/layout/ThemeProvider";
-import { useAuth } from "@/lib/supabase/hooks";
 import type { ListingMock } from "@/lib/mockData";
 import type { ListingDisplay } from "@/lib/types/listing";
 
@@ -38,7 +37,6 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps) {
   const { theme } = useTheme();
-  const { isVerifiedAccess } = useAuth();
   const statusStyles: Record<string, string> =
     theme === "dark"
       ? {
@@ -57,58 +55,83 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         };
 
   const photoUrl = "photoUrl" in listing ? listing.photoUrl : null;
+  const listingHref = `/listing/${listing.id}`;
+  const profileHref = `/seller/${listing.sellerId ?? listing.id}`;
 
   return (
-    <article className={`overflow-hidden rounded-2xl border ${theme === "dark" ? "border-white/10 bg-[#112112]" : "border-[rgba(0,0,0,0.06)] bg-white shadow-sm"}`}>
-      <div
-        className="relative h-[110px] overflow-hidden p-2"
-        style={{
-          background: photoUrl
-            ? undefined
-            : `linear-gradient(135deg, ${listing.accentFrom}, ${listing.accentTo})`
-        }}
-      >
-        {photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photoUrl}
-            alt={listing.productName}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : null}
-        <span
-          className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wide ${statusStyles[listing.stockStatus]}`}
+    <article
+      className={`overflow-hidden rounded-2xl border ${theme === "dark" ? "border-white/10 bg-[#112112]" : "border-[rgba(0,0,0,0.06)] bg-white shadow-sm"}`}
+    >
+      <Link href={listingHref} className="block">
+        <div
+          className="relative h-[110px] overflow-hidden p-2"
+          style={{
+            background: photoUrl
+              ? undefined
+              : `linear-gradient(135deg, ${listing.accentFrom}, ${listing.accentTo})`
+          }}
         >
-          {statusLabels[listing.stockStatus]}
-        </span>
-        <button
-          type="button"
-          className="absolute right-2 top-2 rounded-full bg-black/20 p-1.5 text-white/80"
-          aria-label="Save listing"
-        >
-          <Heart size={12} />
-        </button>
-        <div className="absolute bottom-0 left-0 right-0 h-[70px]">
-          {!photoUrl ? <ProductGlyph /> : null}
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt={listing.productName}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : null}
+          <span
+            className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wide ${statusStyles[listing.stockStatus]}`}
+          >
+            {statusLabels[listing.stockStatus]}
+          </span>
+          <span
+            className="absolute right-2 top-2 rounded-full bg-black/20 p-1.5 text-white/80"
+            aria-hidden
+          >
+            <Heart size={12} />
+          </span>
+          <div className="absolute bottom-0 left-0 right-0 h-[70px]">
+            {!photoUrl ? <ProductGlyph /> : null}
+          </div>
         </div>
-      </div>
+      </Link>
       <div className="space-y-1 p-2.5">
-        <p className={`eden-listing-product ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>{listing.productName}</p>
+        <Link
+          href={listingHref}
+          className={`eden-listing-product block underline-offset-2 hover:underline ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+        >
+          {listing.productName}
+        </Link>
         <p className={`eden-listing-farm ${theme === "dark" ? "text-white/60" : "text-[#444441]"}`}>
-          <Link href={`/seller/${listing.sellerId ?? listing.id}`} className="underline-offset-2 hover:underline">
+          <Link href={profileHref} className="underline-offset-2 hover:underline">
             {listing.farmName}
           </Link>{" "}
           - {listing.flag} {listing.country}
         </p>
-        <Link
-          href={`/seller/${listing.sellerId ?? listing.id}`}
-          className={`inline-block text-[10px] underline-offset-2 hover:underline ${theme === "dark" ? "text-eden-gold/90" : "text-[#1D9E75]"}`}
-        >
-          View profile
-        </Link>
-        <p className={`eden-price ${theme === "dark" ? "text-[#5DCAA5]" : "text-[#1D9E75]"}`}>{listing.buyerPrice}</p>
-        <p className={`text-[10px] ${theme === "dark" ? "text-white/40" : "text-[#9C9C95]"}`}>{listing.sellerPrice}</p>
-        <p className={`text-[10px] ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}>{listing.minOrder}</p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <Link
+            href={listingHref}
+            className={`text-[10px] underline-offset-2 hover:underline ${theme === "dark" ? "text-eden-gold/90" : "text-[#1D9E75]"}`}
+          >
+            View listing
+          </Link>
+          <span className="text-[10px] text-white/25">·</span>
+          <Link
+            href={profileHref}
+            className={`text-[10px] underline-offset-2 hover:underline ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}
+          >
+            View profile
+          </Link>
+        </div>
+        <p className={`eden-price ${theme === "dark" ? "text-[#5DCAA5]" : "text-[#1D9E75]"}`}>
+          {listing.buyerPrice}
+        </p>
+        <p className={`text-[10px] ${theme === "dark" ? "text-white/40" : "text-[#9C9C95]"}`}>
+          {listing.sellerPrice}
+        </p>
+        <p className={`text-[10px] ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}>
+          {listing.minOrder}
+        </p>
         {showSeasonBar ? (
           <div className="flex gap-1 pt-0.5">
             {(listing.seasonalMonths ?? Array(12).fill(0)).map((month, index) => (
@@ -119,29 +142,16 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
             ))}
           </div>
         ) : null}
-        {isVerifiedAccess ? (
-          <button
-            type="button"
-            className={`w-full rounded-lg py-1.5 text-[10px] font-medium ${
-              theme === "dark"
-                ? "border border-[#2faf7e99] bg-[#25D3661f] text-[#6BE79E]"
-                : "border border-[#1D9E75] bg-[#1D9E75] text-white"
-            }`}
-          >
-            Contact on WhatsApp
-          </button>
-        ) : (
-          <Link
-            href="/upgrade"
-            className={`block w-full rounded-lg py-1.5 text-center text-[10px] font-medium ${
-              theme === "dark"
-                ? "border border-[#2faf7e99] bg-[#25D3661f] text-[#6BE79E]"
-                : "border border-[#1D9E75] bg-transparent text-[#1D9E75]"
-            }`}
-          >
-            Upgrade to contact
-          </Link>
-        )}
+        <Link
+          href={listingHref}
+          className={`mt-1 block w-full rounded-lg py-1.5 text-center text-[10px] font-medium ${
+            theme === "dark"
+              ? "border border-[#2faf7e99] bg-[#25D3661f] text-[#6BE79E]"
+              : "border border-[#1D9E75] bg-[#1D9E75] text-white"
+          }`}
+        >
+          View listing
+        </Link>
       </div>
     </article>
   );

@@ -42,6 +42,7 @@ export interface FeaturedListingDisplay {
   sellerPrice: string;
   seasonalMonths: number[];
   sellerId: string;
+  listingId: string;
 }
 
 export interface HomeStatsDisplay {

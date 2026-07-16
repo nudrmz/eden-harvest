@@ -308,14 +308,14 @@ export default function SellerProfilePage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {listings.map((item) => (
-              <div key={item.id} className="glass-card p-3">
+              <Link key={item.id} href={`/listing/${item.id}`} className="glass-card block p-3">
                 <p className="text-sm font-semibold">{item.product_name}</p>
                 <p className="mt-1 text-xs text-white/55">{item.category}</p>
                 <p className="mt-2 text-sm font-bold text-eden-gold">
                   {item.price_currency_code} {Number(item.price_local).toLocaleString()}
                   <span className="text-xs font-normal text-white/50"> / {item.unit}</span>
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

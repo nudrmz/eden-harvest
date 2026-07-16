@@ -158,7 +158,8 @@ function toFeatured(listing: ListingDisplay): FeaturedListingDisplay {
     buyerPrice: listing.buyerPrice,
     sellerPrice: listing.sellerPrice,
     seasonalMonths: listing.seasonalMonths,
-    sellerId: listing.sellerId ?? listing.id
+    sellerId: listing.sellerId ?? listing.id,
+    listingId: listing.id
   };
 }
 

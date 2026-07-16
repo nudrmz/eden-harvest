@@ -317,7 +317,7 @@ export default function HomePageClient({
                   </div>
                 </div>
                 <Link
-                  href={`/seller/${featured.sellerId}`}
+                  href={`/listing/${featured.listingId}`}
                   className="rounded-xl border border-[#2faf7e99] bg-[#25D36622] px-3 py-2 text-xs font-medium text-[#6BE79E]"
                   style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
                 >
