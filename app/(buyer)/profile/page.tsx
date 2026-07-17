@@ -90,8 +90,8 @@ export default function ProfilePage() {
               Account
             </p>
             <div className="glass-card px-4">
-              <ProfileRow label="Edit profile" href="/settings" />
-              <ProfileRow label="Notification preferences" href="/settings" />
+              <ProfileRow label="Edit profile" href="/settings#profile" />
+              <ProfileRow label="Notification preferences" href="/settings#notifications" />
               {!isVerifiedAccess ? (
                 <ProfileRow label="Upgrade to Verified Access" href="/upgrade" goldArrow />
               ) : null}
@@ -103,10 +103,10 @@ export default function ProfilePage() {
               Support
             </p>
             <div className="glass-card px-4">
-              <ProfileRow label="Help & FAQ" href="/settings" />
-              <ProfileRow label="Contact us" href="/settings" />
-              <ProfileRow label="Privacy Policy" href="/settings" />
-              <ProfileRow label="Terms of Service" href="/settings" />
+              <ProfileRow label="Help & FAQ" href="/settings#support" />
+              <ProfileRow label="Contact us" href="/settings#support" />
+              <ProfileRow label="Privacy Policy" href="/settings#legal" />
+              <ProfileRow label="Terms of Service" href="/settings#legal" />
             </div>
           </section>
 
