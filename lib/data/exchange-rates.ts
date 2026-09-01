@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -107,7 +108,7 @@ async function fetchAndStoreRates(): Promise<ExchangeRateMap> {
   return rates;
 }
 
-export async function getExchangeRates(): Promise<ExchangeRateMap> {
+async function getExchangeRatesUncached(): Promise<ExchangeRateMap> {
   try {
     const { rates, fetchedAt } = await readStoredRates();
     const isFresh =
@@ -125,7 +126,9 @@ export async function getExchangeRates(): Promise<ExchangeRateMap> {
   }
 }
 
-export async function getBuyerCurrency(): Promise<string> {
+export const getExchangeRates = cache(getExchangeRatesUncached);
+
+async function getBuyerCurrencyUncached(): Promise<string> {
   try {
     const supabase = createClient();
     const {
@@ -144,3 +147,5 @@ export async function getBuyerCurrency(): Promise<string> {
     return "GBP";
   }
 }
+
+export const getBuyerCurrency = cache(getBuyerCurrencyUncached);

@@ -8,9 +8,16 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Refresh Supabase sessions on app pages only — skip static assets and API
-     * routes to avoid timeouts. Route groups like (buyer)/(seller) are not in URLs.
+     * Refresh sessions only on auth-sensitive routes. Public pages (/, /browse,
+     * /listing/*, /seller/*) skip middleware so first paint is not blocked by
+     * a Supabase getUser() round trip on every visit.
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"
+    "/dashboard/:path*",
+    "/onboarding/:path*",
+    "/seller/listings/:path*",
+    "/login",
+    "/register",
+    "/settings",
+    "/profile"
   ]
 };

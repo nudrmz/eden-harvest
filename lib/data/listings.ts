@@ -558,12 +558,25 @@ export async function resolveCountryIdByName(countryName: string): Promise<strin
 }
 
 export async function fetchHomePageData() {
-  const [listings, featured, stats, topVerifiedSellers] = await Promise.all([
-    fetchHomeListings(8),
-    fetchFeaturedListing(),
+  const [buyerCurrency, rates, stats, topVerifiedSellers] = await Promise.all([
+    getBuyerCurrency(),
+    getExchangeRates(),
     fetchHomeStats(),
     fetchTopVerifiedSellers(5)
   ]);
+
+  const homeRows = await fetchRawListings({ limit: 8 });
+  const listings = mapRows(homeRows, buyerCurrency, rates);
+
+  let featuredRows = await fetchRawListings({ featuredOnly: true, limit: 1 });
+  if (!featuredRows.length) {
+    featuredRows = homeRows.slice(0, 1);
+  }
+
+  const featuredListing = featuredRows.length
+    ? mapListingRow(featuredRows[0], buyerCurrency, rates)
+    : null;
+  const featured = featuredListing ? toFeatured(featuredListing) : null;
 
   return { listings, featured, stats, topVerifiedSellers };
 }
