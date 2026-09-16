@@ -12,6 +12,7 @@ import { DarkSelect } from "@/components/ui/DarkSelect";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
 import { createUserProfile, fetchUserProfile } from "@/lib/auth/profile";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 import { BUYER_COUNTRY_OPTIONS } from "@/lib/utils/constants";
 import { getPasswordStrength } from "@/lib/utils/helpers";
 import type { UserRole } from "@/lib/types/user";
@@ -71,6 +72,7 @@ function RegisterForm() {
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo: buildAuthCallbackUrl("/login"),
         data: {
           full_name: fullName.trim(),
           role,

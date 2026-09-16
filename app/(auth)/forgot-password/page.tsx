@@ -6,6 +6,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthSpinner } from "@/components/auth/AuthSpinner";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`;
+      const redirectTo = buildAuthCallbackUrl("/reset-password");
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
