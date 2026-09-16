@@ -17,6 +17,12 @@ export function mapAuthError(message: string): string {
     return "Too many attempts. Please wait a moment and try again";
   }
   if (
+    normalized.includes("same password") ||
+    normalized.includes("should be different")
+  ) {
+    return "New password must be different from your current password";
+  }
+  if (
     normalized.includes("could not find the table") &&
     normalized.includes("users")
   ) {

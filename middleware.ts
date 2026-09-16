@@ -17,6 +17,9 @@ export const config = {
     "/seller/listings/:path*",
     "/login",
     "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/auth/callback",
     "/settings",
     "/profile"
   ]
