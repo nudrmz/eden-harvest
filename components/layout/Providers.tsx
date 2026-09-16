@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { AuthProvider } from "@/lib/supabase/hooks";
+import { StreamChatProvider } from "@/lib/stream/hooks";
 
 /** Remove stale PWA service workers that can block JS chunks on Vercel. */
 const SW_CLEANUP_KEY = "eden_harvest_sw_cleaned_v2";
@@ -32,8 +33,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ServiceWorkerCleanup />
-        {children}
+        <StreamChatProvider>
+          <ServiceWorkerCleanup />
+          {children}
+        </StreamChatProvider>
       </AuthProvider>
     </ThemeProvider>
   );

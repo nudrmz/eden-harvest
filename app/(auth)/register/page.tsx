@@ -30,6 +30,8 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("role") === "seller") setRole("seller");
@@ -55,6 +57,37 @@ function RegisterForm() {
 
   const passwordStrength = getPasswordStrength(password);
 
+  async function resendConfirmation(targetEmail: string) {
+    setError(null);
+    setInfo(null);
+    setResending(true);
+
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: targetEmail.trim(),
+        options: {
+          emailRedirectTo: buildAuthCallbackUrl("/login")
+        }
+      });
+
+      if (resendError) {
+        setError(mapAuthError(resendError.message));
+        return;
+      }
+
+      setPendingConfirmEmail(targetEmail.trim());
+      setInfo(
+        "Confirmation email sent. Check inbox and spam. If nothing arrives within a few minutes, wait about an hour — Supabase limits how many auth emails can be sent."
+      );
+    } catch {
+      setError("Could not resend confirmation email. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -67,9 +100,10 @@ function RegisterForm() {
 
     setSubmitting(true);
     const supabase = createClient();
+    const trimmedEmail = email.trim();
 
     const { data, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: trimmedEmail,
       password,
       options: {
         emailRedirectTo: buildAuthCallbackUrl("/login"),
@@ -93,15 +127,33 @@ function RegisterForm() {
       return;
     }
 
+    // Supabase returns a user with empty identities when the email is already registered,
+    // and does not send another confirmation email.
+    const alreadyRegistered =
+      Array.isArray(data.user.identities) && data.user.identities.length === 0;
+
+    if (alreadyRegistered) {
+      setPendingConfirmEmail(trimmedEmail);
+      setError(null);
+      setInfo(
+        "This email is already registered. If you haven't confirmed it yet, resend the confirmation email below. Otherwise log in or reset your password."
+      );
+      setSubmitting(false);
+      return;
+    }
+
     if (!data.session) {
-      setInfo("Check your email to confirm your account, then sign in.");
+      setPendingConfirmEmail(trimmedEmail);
+      setInfo(
+        "Check your email to confirm your account, then sign in. Also check spam. If nothing arrives, use Resend below."
+      );
       setSubmitting(false);
       return;
     }
 
     const { error: profileError } = await createUserProfile(supabase, {
       id: data.user.id,
-      email: data.user.email ?? email.trim(),
+      email: data.user.email ?? trimmedEmail,
       fullName: fullName.trim(),
       role,
       countryCode: role === "buyer" ? buyerCountry : null
@@ -238,6 +290,17 @@ function RegisterForm() {
           {submitting ? <AuthSpinner label="Creating account…" /> : "Create account"}
         </button>
       </form>
+
+      {pendingConfirmEmail ? (
+        <button
+          type="button"
+          disabled={resending || submitting}
+          onClick={() => void resendConfirmation(pendingConfirmEmail)}
+          className="mt-3 flex w-full items-center justify-center rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {resending ? <AuthSpinner label="Sending…" /> : "Resend confirmation email"}
+        </button>
+      ) : null}
 
       <AuthDivider />
 

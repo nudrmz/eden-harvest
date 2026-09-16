@@ -56,6 +56,9 @@ export default function ForgotPasswordPage() {
           <p className="rounded-xl border border-[#1D9E7540] bg-[#1D9E7518] px-3 py-2.5 text-sm text-[#5DCAA5]">
             If an account exists for <strong>{email.trim()}</strong>, you&apos;ll
             receive a password reset link shortly. Check your inbox and spam folder.
+            The link should open <strong>eden-harvest.vercel.app</strong> — if it
+            opens a different vercel.app URL and shows 404, update Site URL in
+            Supabase Auth settings.
           </p>
           <Link
             href="/login"

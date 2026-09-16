@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageCircle, MessageSquare } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/supabase/hooks";
 
 interface ListingDetail {
   id: string;
@@ -46,6 +47,7 @@ export default function ListingDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const listingId = params.id;
+  const { isVerifiedAccess } = useAuth();
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [seller, setSeller] = useState<SellerSummary | null>(null);
@@ -54,6 +56,8 @@ export default function ListingDetailPage() {
   const [contacting, setContacting] = useState(false);
   const [enquirySent, setEnquirySent] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [messaging, setMessaging] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,6 +189,46 @@ export default function ListingDetailPage() {
       `Hi ${seller.farm_name}, I found you on Eden Harvest and I'm interested in ${listing.product_name}.`
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  };
+
+  const handleMessageInApp = async () => {
+    if (!listing || !seller || messaging) return;
+
+    setMessaging(true);
+    setMessageError(null);
+
+    const supabase = createClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessaging(false);
+      router.push(
+        `/login?redirect=${encodeURIComponent(`/listing/${listing.id}`)}&message=${encodeURIComponent("Sign in to message this seller.")}`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/chat/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerProfileId: seller.id, listingId: listing.id })
+      });
+      const data = (await response.json()) as { channelId?: string; error?: string };
+
+      if (!response.ok || !data.channelId) {
+        setMessageError(data.error ?? "Could not start conversation.");
+        return;
+      }
+
+      router.push(`/messages?channel=${data.channelId}`);
+    } catch {
+      setMessageError("Could not start conversation.");
+    } finally {
+      setMessaging(false);
+    }
   };
 
   if (loading) {
@@ -344,6 +388,28 @@ export default function ListingDetailPage() {
         <p className="mt-2 text-center text-[11px] text-white/45">
           Opens WhatsApp with this produce pre-filled. An enquiry is logged for the seller.
         </p>
+
+        <div className="mt-3">
+          {isVerifiedAccess ? (
+            <button
+              type="button"
+              onClick={() => void handleMessageInApp()}
+              disabled={messaging}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75] bg-[#1D9E75]/10 py-3 text-sm font-semibold text-[#1D9E75] disabled:opacity-60"
+            >
+              <MessageSquare size={16} />
+              {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
+            </button>
+          ) : (
+            <Link
+              href="/upgrade"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-semibold text-eden-gold"
+            >
+              Upgrade to message sellers in-app
+            </Link>
+          )}
+          {messageError ? <p className="mt-2 text-center text-[11px] text-[#F09595]">{messageError}</p> : null}
+        </div>
       </section>
 
       <MobileBottomNav active="browse" />

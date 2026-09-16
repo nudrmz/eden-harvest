@@ -13,8 +13,12 @@ export function mapAuthError(message: string): string {
   if (normalized.includes("email not confirmed")) {
     return "Please confirm your email before signing in";
   }
-  if (normalized.includes("rate limit")) {
-    return "Too many attempts. Please wait a moment and try again";
+  if (
+    normalized.includes("rate limit") ||
+    normalized.includes("over_email_send_rate_limit") ||
+    normalized.includes("email rate limit")
+  ) {
+    return "Email sending is temporarily limited (Supabase allows only a few auth emails per hour). Wait about an hour, then try again — or check your inbox for an earlier reset/confirmation email.";
   }
   if (
     normalized.includes("same password") ||

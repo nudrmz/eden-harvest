@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Flag, MessageCircle, Share2, Star, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Flag, MessageCircle, MessageSquare, Share2, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/supabase/hooks";
 
 interface SellerProfile {
   id: string;
@@ -45,6 +46,7 @@ export default function SellerProfilePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const sellerId = params.id;
+  const { isVerifiedAccess } = useAuth();
 
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [listings, setListings] = useState<SellerListing[]>([]);
@@ -54,6 +56,8 @@ export default function SellerProfilePage() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [enquirySent, setEnquirySent] = useState(false);
+  const [messaging, setMessaging] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,6 +182,46 @@ export default function SellerProfilePage() {
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
+  const handleMessageInApp = async () => {
+    if (!seller || messaging) return;
+
+    setMessaging(true);
+    setMessageError(null);
+
+    const supabase = createClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessaging(false);
+      router.push(
+        `/login?redirect=${encodeURIComponent(`/seller/${seller.id}`)}&message=${encodeURIComponent("Sign in to message this seller.")}`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/chat/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerProfileId: seller.id, listingId: listings[0]?.id })
+      });
+      const data = (await response.json()) as { channelId?: string; error?: string };
+
+      if (!response.ok || !data.channelId) {
+        setMessageError(data.error ?? "Could not start conversation.");
+        return;
+      }
+
+      router.push(`/messages?channel=${data.channelId}`);
+    } catch {
+      setMessageError("Could not start conversation.");
+    } finally {
+      setMessaging(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="app-shell mx-auto flex min-h-screen w-full max-w-md items-center justify-center">
@@ -278,6 +322,28 @@ export default function SellerProfilePage() {
           Deals happen directly between you and the seller via WhatsApp. An enquiry is logged on
           Eden Harvest.
         </p>
+
+        <div className="mt-3">
+          {isVerifiedAccess ? (
+            <button
+              type="button"
+              onClick={() => void handleMessageInApp()}
+              disabled={messaging}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75] bg-[#1D9E75]/10 py-3 text-sm font-medium text-[#1D9E75] disabled:opacity-60"
+            >
+              <MessageSquare size={16} />
+              {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
+            </button>
+          ) : (
+            <Link
+              href="/upgrade"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-medium text-eden-gold"
+            >
+              Upgrade to message sellers in-app
+            </Link>
+          )}
+          {messageError ? <p className="mt-2 text-[11px] text-[#F09595]">{messageError}</p> : null}
+        </div>
       </section>
 
       <section className="px-4 pt-4">
