@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthSpinner } from "@/components/auth/AuthSpinner";
 import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -10,10 +10,17 @@ import { PasswordField } from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
 
+const LOGIN_REDIRECT_KEY = "eden_harvest_login_redirect";
+
+function safeRedirectPath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect");
+  const redirectParam = safeRedirectPath(searchParams.get("redirect"));
   const bannerMessage = searchParams.get("message");
 
   const [email, setEmail] = useState("");
@@ -22,6 +29,11 @@ function LoginForm() {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!redirectParam || typeof window === "undefined") return;
+    sessionStorage.setItem(LOGIN_REDIRECT_KEY, redirectParam);
+  }, [redirectParam]);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -29,35 +41,38 @@ function LoginForm() {
     setSubmitting(true);
 
     try {
-    const supabase = createClient();
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password
-    });
+      const supabase = createClient();
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
 
-    if (signInError) {
-      setError(mapAuthError(signInError.message));
-      setSubmitting(false);
-      return;
-    }
+      if (signInError) {
+        setError(mapAuthError(signInError.message));
+        setSubmitting(false);
+        return;
+      }
 
-    if (!data.user) {
-      setError("Could not sign in. Please try again.");
-      setSubmitting(false);
-      return;
-    }
+      if (!data.user) {
+        setError("Could not sign in. Please try again.");
+        setSubmitting(false);
+        return;
+      }
 
-    const metadata = (data.user.user_metadata ?? {}) as Record<string, unknown>;
-    const isSeller = metadata.role === "seller";
+      const storedRedirect =
+        typeof window !== "undefined"
+          ? safeRedirectPath(sessionStorage.getItem(LOGIN_REDIRECT_KEY))
+          : null;
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(LOGIN_REDIRECT_KEY);
+      }
 
-    const destination =
-      redirectTo && redirectTo.startsWith("/")
-        ? redirectTo
-        : isSeller
-          ? "/dashboard"
-          : "/";
+      const metadata = (data.user.user_metadata ?? {}) as Record<string, unknown>;
+      const isSeller = metadata.role === "seller";
 
-    window.location.assign(destination);
+      const destination = redirectParam ?? storedRedirect ?? (isSeller ? "/dashboard" : "/");
+
+      window.location.assign(destination);
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);

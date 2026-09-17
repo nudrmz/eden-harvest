@@ -49,6 +49,18 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
+    const redirectParam = request.nextUrl.searchParams.get("redirect");
+    if (
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      !redirectParam.startsWith("//")
+    ) {
+      // Preserve post-login destination (e.g. /messages, /settings).
+      redirectUrl.pathname = redirectParam;
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+
     const role = user.user_metadata?.role;
     redirectUrl.pathname = role === "seller" ? "/dashboard" : "/";
     redirectUrl.search = "";
