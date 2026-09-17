@@ -76,13 +76,22 @@ export async function POST(request: NextRequest) {
     ]);
 
     const channelId = enquiryChannelId(authUser.id, sellerProfile.user_id);
-    const channel = streamClient.channel("messaging", channelId, {
+    const channelData: Record<string, unknown> = {
       members: [authUser.id, sellerProfile.user_id],
       created_by_id: authUser.id,
-      name: sellerProfile.farm_name,
-      seller_farm_name: sellerProfile.farm_name,
-      ...(listingId ? { listing_id: listingId } : {})
-    });
+      // Custom field for empty-state copy (Stream reserves typed ChannelData fields).
+      seller_farm_name: sellerProfile.farm_name
+    };
+    if (listingId) {
+      channelData.listing_id = listingId;
+    }
+
+    const channel = streamClient.channel(
+      "messaging",
+      channelId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      channelData as any
+    );
     await channel.create();
 
     return NextResponse.json({ channelId });

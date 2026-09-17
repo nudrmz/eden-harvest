@@ -22,11 +22,12 @@ import { useStreamChatContext } from "@/lib/stream/hooks";
 import "stream-chat-react/dist/css/v2/index.css";
 
 function getOtherMemberName(channel: StreamChannel, currentUserId: string): string {
+  const data = channel.data as Record<string, unknown> | undefined;
   const customName =
-    typeof channel.data?.seller_farm_name === "string"
-      ? channel.data.seller_farm_name
-      : typeof channel.data?.name === "string"
-        ? channel.data.name
+    typeof data?.seller_farm_name === "string"
+      ? data.seller_farm_name
+      : typeof data?.name === "string"
+        ? data.name
         : null;
 
   const members = Object.values(channel.state.members ?? {});
