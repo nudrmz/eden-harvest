@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Settings, Shield, User } from "lucide-react";
+import { ChevronDown, ClipboardCheck, LogOut, Settings, Shield, User } from "lucide-react";
 import { useAuth } from "@/lib/supabase/hooks";
 import { getInitials } from "@/lib/utils/helpers";
 
@@ -16,6 +16,7 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
   const router = useRouter();
   const { user, loading, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,6 +26,28 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin/me");
+        const payload = (await response.json()) as { isAdmin?: boolean };
+        if (!cancelled) setIsAdmin(Boolean(payload.isAdmin));
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const signInClass =
     variant === "hero"
@@ -96,7 +119,7 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
         >
           <li>
             <Link
-              href="/"
+              href="/profile"
               role="menuitem"
               className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
               onClick={() => setOpen(false)}
@@ -105,6 +128,19 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
               My account
             </Link>
           </li>
+          {isAdmin ? (
+            <li>
+              <Link
+                href="/admin/verifications"
+                role="menuitem"
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
+                onClick={() => setOpen(false)}
+              >
+                <ClipboardCheck size={16} className="text-eden-gold" />
+                Seller verification
+              </Link>
+            </li>
+          ) : null}
           <li>
             <Link
               href="/upgrade"

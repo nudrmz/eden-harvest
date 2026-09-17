@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -40,6 +41,29 @@ function ProfileRow({ label, href, goldArrow = false }: ProfileRowProps) {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading, isVerifiedAccess, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin/me");
+        const payload = (await response.json()) as { isAdmin?: boolean };
+        if (!cancelled) setIsAdmin(Boolean(payload.isAdmin));
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   async function handleSignOut() {
     await signOut();
@@ -97,6 +121,17 @@ export default function ProfilePage() {
               ) : null}
             </div>
           </section>
+
+          {isAdmin ? (
+            <section className="mt-6">
+              <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                Admin
+              </p>
+              <div className="glass-card px-4">
+                <ProfileRow label="Seller verification" href="/admin/verifications" goldArrow />
+              </div>
+            </section>
+          ) : null}
 
           <section className="mt-6">
             <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
