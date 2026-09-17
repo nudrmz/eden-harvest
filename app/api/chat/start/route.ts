@@ -89,8 +89,7 @@ export async function POST(request: NextRequest) {
     const channel = streamClient.channel(
       "messaging",
       channelId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      channelData as any
+      channelData as never
     );
     await channel.create();
 
