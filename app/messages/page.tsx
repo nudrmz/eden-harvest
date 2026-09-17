@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
+import type { Channel as StreamChannel } from "stream-chat";
 import {
   Chat,
   Channel,
@@ -12,11 +13,44 @@ import {
   ChannelHeader,
   MessageList,
   MessageInput,
-  Thread
+  Thread,
+  useChannelStateContext,
+  useChatContext
 } from "stream-chat-react";
 import { useAuth } from "@/lib/supabase/hooks";
 import { useStreamChatContext } from "@/lib/stream/hooks";
 import "stream-chat-react/dist/css/v2/index.css";
+
+function getOtherMemberName(channel: StreamChannel, currentUserId: string): string {
+  const customName =
+    typeof channel.data?.seller_farm_name === "string"
+      ? channel.data.seller_farm_name
+      : typeof channel.data?.name === "string"
+        ? channel.data.name
+        : null;
+
+  const members = Object.values(channel.state.members ?? {});
+  const other = members.find(
+    (member) => member.user?.id && member.user.id !== currentUserId
+  );
+
+  return other?.user?.name?.trim() || customName?.trim() || "this seller";
+}
+
+function ChannelMessageEmptyState() {
+  const { channel } = useChannelStateContext("ChannelMessageEmptyState");
+  const { client } = useChatContext("ChannelMessageEmptyState");
+  const name = getOtherMemberName(channel, client.userID ?? "");
+
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+      <p className="text-base font-medium text-white/85">Say hello to {name}</p>
+      <p className="mt-2 max-w-xs text-sm text-white/50">
+        Send a message to start the conversation about their produce.
+      </p>
+    </div>
+  );
+}
 
 function MessagesShell({ children }: { children: React.ReactNode }) {
   return (
@@ -105,13 +139,25 @@ function MessagesPageContent() {
             filters={filters}
             sort={sort}
             customActiveChannel={preselectedChannelId}
+            getLatestMessagePreview={(channel) => {
+              const latest =
+                channel.state.latestMessages?.[channel.state.latestMessages.length - 1] ??
+                channel.state.messages?.[channel.state.messages.length - 1];
+
+              if (!latest || latest.deleted_at) {
+                return `Say hello to ${getOtherMemberName(channel, user.id)}`;
+              }
+
+              const text = latest.text?.trim();
+              return text || "Attachment";
+            }}
             EmptyStateIndicator={() => (
               <p className="px-4 py-8 text-center text-sm text-white/50">
                 No conversations yet. Message a seller from a listing to start one.
               </p>
             )}
           />
-          <Channel>
+          <Channel EmptyStateIndicator={ChannelMessageEmptyState}>
             <Window>
               <ChannelHeader />
               <MessageList />

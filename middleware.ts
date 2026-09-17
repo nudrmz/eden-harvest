@@ -15,6 +15,7 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding/:path*",
     "/seller/listings/:path*",
+    "/admin/:path*",
     "/login",
     "/register",
     "/forgot-password",

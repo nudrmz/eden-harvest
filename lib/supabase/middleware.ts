@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminUser } from "@/lib/auth/admin";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/seller/listings"];
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/seller/listings", "/admin"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 export async function updateSession(request: NextRequest) {
@@ -39,11 +40,19 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = AUTH_PAGES.some(
     (page) => pathname === page || pathname.startsWith(`${page}/`)
   );
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (isProtected && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isAdminRoute && user && !isAdminUser(user)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -55,7 +64,6 @@ export async function updateSession(request: NextRequest) {
       redirectParam.startsWith("/") &&
       !redirectParam.startsWith("//")
     ) {
-      // Preserve post-login destination (e.g. /messages, /settings).
       redirectUrl.pathname = redirectParam;
       redirectUrl.search = "";
       return NextResponse.redirect(redirectUrl);

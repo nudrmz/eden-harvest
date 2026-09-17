@@ -79,6 +79,8 @@ export async function POST(request: NextRequest) {
     const channel = streamClient.channel("messaging", channelId, {
       members: [authUser.id, sellerProfile.user_id],
       created_by_id: authUser.id,
+      name: sellerProfile.farm_name,
+      seller_farm_name: sellerProfile.farm_name,
       ...(listingId ? { listing_id: listingId } : {})
     });
     await channel.create();
