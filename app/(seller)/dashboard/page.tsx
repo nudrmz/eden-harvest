@@ -243,7 +243,7 @@ export default function SellerDashboardPage() {
             <p className={`mt-4 text-center text-sm ${textSecondary}`}>Loading…</p>
           ) : enquiries.length === 0 ? (
             <p className={`mt-4 text-center text-sm ${textSecondary}`}>
-              No enquiries yet. Once buyers contact you on WhatsApp, they&apos;ll appear here.
+              No enquiries yet. Buyer messages show up in Messages.
             </p>
           ) : (
             <div className="mt-3 space-y-2">

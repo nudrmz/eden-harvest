@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageCircle, MessageSquare } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageSquare } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -53,9 +53,6 @@ export default function ListingDetailPage() {
   const [seller, setSeller] = useState<SellerSummary | null>(null);
   const [countryLabel, setCountryLabel] = useState("");
   const [loading, setLoading] = useState(true);
-  const [contacting, setContacting] = useState(false);
-  const [enquirySent, setEnquirySent] = useState(false);
-  const [contactError, setContactError] = useState<string | null>(null);
   const [messaging, setMessaging] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
 
@@ -132,64 +129,6 @@ export default function ListingDetailPage() {
       cancelled = true;
     };
   }, [listingId]);
-
-  const handleContact = async () => {
-    if (!listing || !seller || contacting) return;
-
-    setContacting(true);
-    setContactError(null);
-
-    const supabase = createClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setContacting(false);
-      router.push(
-        `/login?redirect=${encodeURIComponent(`/listing/${listing.id}`)}&message=${encodeURIComponent("Sign in to contact this seller.")}`
-      );
-      return;
-    }
-
-    const { error: enquiryError } = await supabase.from("enquiries").insert({
-      buyer_id: user.id,
-      seller_id: seller.id,
-      listing_id: listing.id
-    });
-
-    if (enquiryError) {
-      console.error("enquiry insert:", enquiryError.message);
-    } else {
-      setEnquirySent(true);
-    }
-
-    const { data: whatsapp, error: whatsappError } = await supabase.rpc(
-      "get_seller_whatsapp",
-      { seller_profile_id: seller.id }
-    );
-
-    setContacting(false);
-
-    if (whatsappError || !whatsapp) {
-      setContactError(
-        whatsappError?.message ??
-          "WhatsApp number unavailable. Complete seller onboarding or run the WhatsApp migration."
-      );
-      return;
-    }
-
-    const phone = String(whatsapp).replace(/\D/g, "");
-    if (!phone) {
-      setContactError("Seller WhatsApp number is invalid.");
-      return;
-    }
-
-    const message = encodeURIComponent(
-      `Hi ${seller.farm_name}, I found you on Eden Harvest and I'm interested in ${listing.product_name}.`
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-  };
 
   const handleMessageInApp = async () => {
     if (!listing || !seller || messaging) return;
@@ -371,45 +310,28 @@ export default function ListingDetailPage() {
       </section>
 
       <section className="px-4 pt-4">
-        <button
-          type="button"
-          onClick={() => void handleContact()}
-          disabled={contacting || !seller}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3.5 text-sm font-semibold text-[#092012] disabled:opacity-60"
-        >
-          <MessageCircle size={16} />
-          {contacting
-            ? "Opening WhatsApp…"
-            : enquirySent
-              ? "Contacted on WhatsApp"
-              : "Contact on WhatsApp"}
-        </button>
-        {contactError ? <p className="mt-2 text-[11px] text-[#F09595]">{contactError}</p> : null}
+        {isVerifiedAccess ? (
+          <button
+            type="button"
+            onClick={() => void handleMessageInApp()}
+            disabled={messaging || !seller}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1D9E75] py-3.5 text-sm font-semibold text-[#092012] disabled:opacity-60"
+          >
+            <MessageSquare size={16} />
+            {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
+          </button>
+        ) : (
+          <Link
+            href="/upgrade"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3.5 text-sm font-semibold text-eden-gold"
+          >
+            Upgrade to message sellers in-app
+          </Link>
+        )}
+        {messageError ? <p className="mt-2 text-center text-[11px] text-[#F09595]">{messageError}</p> : null}
         <p className="mt-2 text-center text-[11px] text-white/45">
-          Opens WhatsApp with this produce pre-filled. An enquiry is logged for the seller.
+          Message the seller in Eden Harvest about this produce.
         </p>
-
-        <div className="mt-3">
-          {isVerifiedAccess ? (
-            <button
-              type="button"
-              onClick={() => void handleMessageInApp()}
-              disabled={messaging}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75] bg-[#1D9E75]/10 py-3 text-sm font-semibold text-[#1D9E75] disabled:opacity-60"
-            >
-              <MessageSquare size={16} />
-              {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
-            </button>
-          ) : (
-            <Link
-              href="/upgrade"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-semibold text-eden-gold"
-            >
-              Upgrade to message sellers in-app
-            </Link>
-          )}
-          {messageError ? <p className="mt-2 text-center text-[11px] text-[#F09595]">{messageError}</p> : null}
-        </div>
       </section>
 
       <MobileBottomNav active="browse" />

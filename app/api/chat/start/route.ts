@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
 
   // Re-check entitlement server-side — the client's membership_tier is not
   // trusted for gating, only for UI. This is what actually enforces
-  // "subscription lapsed => in-app conversation access stops," which a raw
-  // WhatsApp number can't do.
+  // "subscription lapsed => in-app conversation access stops."
   const buyerProfile = await fetchUserProfile(supabase, authUser.id);
   if (buyerProfile?.membership_tier !== "verified_access") {
     return NextResponse.json(

@@ -334,7 +334,7 @@ export default function SettingsPage() {
               <div>
                 <p className="font-medium text-[var(--text-primary)]">Help & FAQ</p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  Buyers browse produce, contact sellers on WhatsApp, and complete deals directly.
+                  Buyers browse produce, message sellers in Eden Harvest, and complete deals directly.
                   Sellers publish listings from the Seller hub after onboarding.
                 </p>
               </div>
@@ -361,15 +361,15 @@ export default function SettingsPage() {
               <div>
                 <p className="font-medium text-[var(--text-primary)]">Privacy Policy</p>
                 <p className="mt-1">
-                  We store your account details, listings, and enquiries to run the marketplace. WhatsApp
-                  numbers are only shared when a signed-in buyer contacts a seller.
+                  We store your account details, listings, and messages to run the marketplace. Seller
+                  contact numbers stay on the seller profile.
                 </p>
               </div>
               <div className="border-t border-white/10 pt-3">
                 <p className="font-medium text-[var(--text-primary)]">Terms of Service</p>
                 <p className="mt-1">
                   Eden Harvest connects buyers and sellers. Trades happen between you and the other party
-                  via WhatsApp. Always verify quality and payment terms before completing a deal.
+                  through in-app messages. Always verify quality and payment terms before completing a deal.
                 </p>
               </div>
             </div>

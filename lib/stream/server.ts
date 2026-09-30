@@ -30,9 +30,9 @@ export function getStreamServerClient(): StreamChat {
 
 /**
  * Deterministic channel id for a buyer/seller pair, independent of which
- * listing started the conversation (mirrors how the WhatsApp handoff works
- * today — one ongoing thread per seller, not per listing). Sorting the ids
- * before hashing means it doesn't matter which side calls this first.
+ * listing started the conversation — one ongoing thread per seller, not per
+ * listing. Sorting the ids before hashing means it doesn't matter which side
+ * calls this first.
  */
 export function enquiryChannelId(userIdA: string, userIdB: string): string {
   const sorted = [userIdA, userIdB].sort().join(":");

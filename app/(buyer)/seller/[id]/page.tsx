@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Flag, MessageCircle, MessageSquare, Share2, Star, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Flag, MessageSquare, Share2, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -51,11 +51,8 @@ export default function SellerProfilePage() {
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [listings, setListings] = useState<SellerListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [contactError, setContactError] = useState<string | null>(null);
-  const [contacting, setContacting] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
-  const [enquirySent, setEnquirySent] = useState(false);
   const [messaging, setMessaging] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
 
@@ -116,71 +113,6 @@ export default function SellerProfilePage() {
       cancelled = true;
     };
   }, [sellerId]);
-
-  const handleContact = async () => {
-    if (!seller || contacting) return;
-
-    setContacting(true);
-    setContactError(null);
-
-    const supabase = createClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setContacting(false);
-      router.push(`/login?redirect=${encodeURIComponent(`/seller/${seller.id}`)}&message=${encodeURIComponent("Sign in to contact this seller.")}`);
-      return;
-    }
-
-    const listingId = listings[0]?.id;
-    if (!listingId) {
-      setContactError("This seller has no active listings to enquire about yet.");
-      setContacting(false);
-      return;
-    }
-
-    const { error: enquiryError } = await supabase.from("enquiries").insert({
-      buyer_id: user.id,
-      seller_id: seller.id,
-      listing_id: listingId
-    });
-
-    if (enquiryError) {
-      // Ignore duplicates / already contacted — still open WhatsApp if we can.
-      console.error("enquiry insert:", enquiryError.message);
-    } else {
-      setEnquirySent(true);
-    }
-
-    const { data: whatsapp, error: whatsappError } = await supabase.rpc(
-      "get_seller_whatsapp",
-      { seller_profile_id: seller.id }
-    );
-
-    setContacting(false);
-
-    if (whatsappError || !whatsapp) {
-      setContactError(
-        whatsappError?.message ??
-          "WhatsApp number unavailable. Ask the seller to complete onboarding, or run the latest Supabase migration."
-      );
-      return;
-    }
-
-    const phone = String(whatsapp).replace(/\D/g, "");
-    if (!phone) {
-      setContactError("Seller WhatsApp number is invalid.");
-      return;
-    }
-
-    const product = listings[0]?.product_name ?? "your produce";
-    const message = encodeURIComponent(
-      `Hi ${seller.farm_name}, I found you on Eden Harvest and I'm interested in ${product}.`
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-  };
 
   const handleMessageInApp = async () => {
     if (!seller || messaging) return;
@@ -304,46 +236,28 @@ export default function SellerProfilePage() {
       </section>
 
       <section className="px-4 pt-4">
-        <button
-          type="button"
-          onClick={() => void handleContact()}
-          disabled={contacting}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-medium text-[#092012] disabled:opacity-60"
-        >
-          <MessageCircle size={16} />
-          {contacting
-            ? "Opening WhatsApp…"
-            : enquirySent
-              ? "Contacted on WhatsApp"
-              : "Contact on WhatsApp"}
-        </button>
-        {contactError ? <p className="mt-2 text-[11px] text-[#F09595]">{contactError}</p> : null}
+        {isVerifiedAccess ? (
+          <button
+            type="button"
+            onClick={() => void handleMessageInApp()}
+            disabled={messaging}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1D9E75] py-3 text-sm font-medium text-[#092012] disabled:opacity-60"
+          >
+            <MessageSquare size={16} />
+            {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
+          </button>
+        ) : (
+          <Link
+            href="/upgrade"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-medium text-eden-gold"
+          >
+            Upgrade to message sellers in-app
+          </Link>
+        )}
+        {messageError ? <p className="mt-2 text-[11px] text-[#F09595]">{messageError}</p> : null}
         <p className="mt-2 text-[11px] text-white/45">
-          Deals happen directly between you and the seller via WhatsApp. An enquiry is logged on
-          Eden Harvest.
+          Message this seller in Eden Harvest.
         </p>
-
-        <div className="mt-3">
-          {isVerifiedAccess ? (
-            <button
-              type="button"
-              onClick={() => void handleMessageInApp()}
-              disabled={messaging}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75] bg-[#1D9E75]/10 py-3 text-sm font-medium text-[#1D9E75] disabled:opacity-60"
-            >
-              <MessageSquare size={16} />
-              {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
-            </button>
-          ) : (
-            <Link
-              href="/upgrade"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-medium text-eden-gold"
-            >
-              Upgrade to message sellers in-app
-            </Link>
-          )}
-          {messageError ? <p className="mt-2 text-[11px] text-[#F09595]">{messageError}</p> : null}
-        </div>
       </section>
 
       <section className="px-4 pt-4">
@@ -351,14 +265,9 @@ export default function SellerProfilePage() {
           <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>
             About this farm
           </h2>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-medium">
-            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>
-              Location: {seller.state_region}
-            </p>
-            <p className={theme === "dark" ? "text-white/75" : "text-[#444441]"}>
-              WhatsApp: shared after you tap Contact
-            </p>
-          </div>
+          <p className={`mt-3 text-[11px] font-medium ${theme === "dark" ? "text-white/75" : "text-[#444441]"}`}>
+            Location: {seller.state_region}
+          </p>
         </div>
       </section>
 

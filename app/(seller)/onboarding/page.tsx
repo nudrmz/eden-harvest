@@ -343,7 +343,7 @@ export default function SellerOnboardingPage() {
               Contact & farm photo
             </h1>
             <p className={`mt-1 text-sm ${textSecondary}`}>
-              Buyers reach you on WhatsApp — keep this number active
+              Add a contact number for your seller profile
             </p>
             <div className="mt-6 space-y-4">
               <div>
@@ -367,7 +367,7 @@ export default function SellerOnboardingPage() {
                   />
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-[rgba(159,225,203,0.95)]">
-                  This WhatsApp number is how buyers will reach you
+                  Saved on your seller profile. Buyers message you in Eden Harvest.
                 </p>
               </div>
 
