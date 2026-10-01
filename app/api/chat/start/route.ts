@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Seller not found." }, { status: 404 });
   }
 
+  if (sellerProfile.user_id === authUser.id) {
+    return NextResponse.json({ error: "You can't message your own listing." }, { status: 400 });
+  }
+
   let streamClient;
   try {
     streamClient = getStreamServerClient();
@@ -95,6 +99,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ channelId });
   } catch (error) {
     console.error("Stream channel create failed:", error);
-    return NextResponse.json({ error: "Could not start conversation." }, { status: 500 });
+    const raw = error instanceof Error ? error.message : "";
+    if (raw.includes("Duplicate members")) {
+      return NextResponse.json({ error: "You can't message your own listing." }, { status: 400 });
+    }
+    const detail = raw.replace(/^StreamChat error code \d+:\s*/, "").slice(0, 180);
+    return NextResponse.json(
+      { error: detail || "Could not start conversation." },
+      { status: 500 }
+    );
   }
 }
