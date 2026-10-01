@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchUserProfile } from "@/lib/auth/profile";
@@ -7,6 +8,37 @@ import { enquiryChannelId, getStreamServerClient, upsertStreamUser } from "@/lib
 interface StartChatBody {
   sellerProfileId?: string;
   listingId?: string;
+}
+
+/**
+ * Log the enquiry that used to be recorded by the WhatsApp handoff, so the
+ * seller dashboard's "Recent enquiries" still reflects buyer interest. One row
+ * per buyer/listing pair — tapping Message again reopens the same thread, so a
+ * second row would just inflate the seller's count. Insert runs on the
+ * user-scoped client so the enquiries_insert_buyer RLS policy still applies.
+ */
+async function recordEnquiry(
+  supabase: SupabaseClient,
+  params: { buyerId: string; sellerProfileId: string; listingId: string }
+): Promise<void> {
+  const { data: existing } = await supabase
+    .from("enquiries")
+    .select("id")
+    .eq("buyer_id", params.buyerId)
+    .eq("listing_id", params.listingId)
+    .maybeSingle();
+
+  if (existing) return;
+
+  const { error } = await supabase.from("enquiries").insert({
+    buyer_id: params.buyerId,
+    listing_id: params.listingId,
+    seller_id: params.sellerProfileId
+  });
+
+  if (error) {
+    console.error("enquiry insert:", error.message);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -95,6 +127,14 @@ export async function POST(request: NextRequest) {
       channelData as never
     );
     await channel.create();
+
+    if (listingId) {
+      await recordEnquiry(supabase, {
+        buyerId: authUser.id,
+        sellerProfileId,
+        listingId
+      });
+    }
 
     return NextResponse.json({ channelId });
   } catch (error) {

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
-import type { Channel as StreamChannel } from "stream-chat";
 import {
   Chat,
   Channel,
@@ -19,24 +18,8 @@ import {
 } from "stream-chat-react";
 import { useAuth } from "@/lib/supabase/hooks";
 import { useStreamChatContext } from "@/lib/stream/hooks";
+import { getOtherMemberName } from "@/lib/stream/channel";
 import "stream-chat-react/dist/css/v2/index.css";
-
-function getOtherMemberName(channel: StreamChannel, currentUserId: string): string {
-  const data = channel.data as Record<string, unknown> | undefined;
-  const customName =
-    typeof data?.seller_farm_name === "string"
-      ? data.seller_farm_name
-      : typeof data?.name === "string"
-        ? data.name
-        : null;
-
-  const members = Object.values(channel.state.members ?? {});
-  const other = members.find(
-    (member) => member.user?.id && member.user.id !== currentUserId
-  );
-
-  return other?.user?.name?.trim() || customName?.trim() || "this seller";
-}
 
 function ChannelMessageEmptyState() {
   const { channel } = useChannelStateContext("ChannelMessageEmptyState");
