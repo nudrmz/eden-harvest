@@ -1,5 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+
+const INVALID_LINK = "That email link is invalid or has expired. Please try again.";
+const CONFIRMED_PLEASE_SIGN_IN = "Email confirmed. You can sign in now.";
 
 function resolveNextPath(searchParams: URLSearchParams): string {
   const nextParam = searchParams.get("next");
@@ -15,19 +19,41 @@ function resolveNextPath(searchParams: URLSearchParams): string {
   return "/";
 }
 
+/** Supabase appends its own reason when the token itself was rejected. */
+function providerError(searchParams: URLSearchParams): string | null {
+  if (!searchParams.get("error") && !searchParams.get("error_code")) return null;
+
+  if (searchParams.get("error_code") === "otp_expired") {
+    return "That confirmation link has expired. Request a new one below.";
+  }
+
+  const description = searchParams.get("error_description");
+  return description ? description.replace(/\+/g, " ") : INVALID_LINK;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = resolveNextPath(searchParams);
+  const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
+  const next = resolveNextPath(searchParams);
 
-  if (!code) {
+  // Carry the destination over as ?redirect so signing in by hand still lands
+  // on the step the link was taking them to, instead of the generic home page.
+  const bounceToLogin = (message: string) => {
     const loginUrl = new URL("/login", origin);
-    loginUrl.searchParams.set(
-      "message",
-      "That email link is invalid or has expired. Please try again."
-    );
+    loginUrl.searchParams.set("message", message);
+    if (next !== "/login") {
+      loginUrl.searchParams.set("redirect", next);
+    }
     return NextResponse.redirect(loginUrl);
+  };
+
+  const rejected = providerError(searchParams);
+  if (rejected) return bounceToLogin(rejected);
+
+  if (!code && !tokenHash) {
+    return bounceToLogin(INVALID_LINK);
   }
 
   const destination = new URL(next, origin);
@@ -35,10 +61,7 @@ export async function GET(request: NextRequest) {
     next === "/login" &&
     (type === "signup" || type === "email" || type === "invite" || !type)
   ) {
-    destination.searchParams.set(
-      "message",
-      "Email confirmed. You can sign in now."
-    );
+    destination.searchParams.set("message", CONFIRMED_PLEASE_SIGN_IN);
   }
 
   let response = NextResponse.redirect(destination);
@@ -64,15 +87,27 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  // token_hash verifies against the server and works in any browser. The PKCE
+  // code path needs the verifier cookie signUp wrote, so it only works in the
+  // browser that requested the email.
+  const { error } = tokenHash
+    ? await supabase.auth.verifyOtp({
+        type: (type as EmailOtpType | null) ?? "email",
+        token_hash: tokenHash
+      })
+    : await supabase.auth.exchangeCodeForSession(code as string);
 
   if (error) {
-    const loginUrl = new URL("/login", origin);
-    loginUrl.searchParams.set(
-      "message",
-      "That email link is invalid or has expired. Please try again."
-    );
-    return NextResponse.redirect(loginUrl);
+    console.error("auth callback:", error.message);
+
+    // Reaching here with a code means Supabase already verified the address on
+    // its own /verify endpoint — only the session handoff failed. Say so, so a
+    // mail-app webview opening the link doesn't look like a broken account.
+    if (/code verifier/i.test(error.message)) {
+      return bounceToLogin(CONFIRMED_PLEASE_SIGN_IN);
+    }
+
+    return bounceToLogin(INVALID_LINK);
   }
 
   return response;
