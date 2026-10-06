@@ -57,6 +57,13 @@ function RegisterForm() {
 
   const passwordStrength = getPasswordStrength(password);
 
+  /**
+   * Confirming the email also signs you in, so sending sellers to /login just
+   * bounces them to /dashboard, where listing is blocked until onboarding is
+   * done. Land them on the step they still owe us instead.
+   */
+  const postConfirmPath = role === "seller" ? "/onboarding" : "/login";
+
   async function resendConfirmation(targetEmail: string) {
     setError(null);
     setInfo(null);
@@ -68,7 +75,7 @@ function RegisterForm() {
         type: "signup",
         email: targetEmail.trim(),
         options: {
-          emailRedirectTo: buildAuthCallbackUrl("/login")
+          emailRedirectTo: buildAuthCallbackUrl(postConfirmPath)
         }
       });
 
@@ -106,7 +113,7 @@ function RegisterForm() {
       email: trimmedEmail,
       password,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/login"),
+        emailRedirectTo: buildAuthCallbackUrl(postConfirmPath),
         data: {
           full_name: fullName.trim(),
           role,
@@ -304,7 +311,10 @@ function RegisterForm() {
 
       <AuthDivider />
 
-      <GoogleSignInButton disabled={submitting} />
+      <GoogleSignInButton
+        disabled={submitting}
+        nextPath={role === "seller" ? "/onboarding" : "/"}
+      />
 
       <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
         Already have an account?{" "}

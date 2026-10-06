@@ -13,7 +13,7 @@ import {
 } from "@/lib/mockData";
 import { SELLER_PROFILE_STORAGE_KEY } from "@/lib/utils/constants";
 import { createClient } from "@/lib/supabase/client";
-import { ensureSellerProfile } from "@/lib/auth/seller";
+import { createSellerProfile } from "@/lib/auth/seller";
 
 const TOTAL_STEPS = 5;
 
@@ -140,7 +140,17 @@ export default function SellerOnboardingPage() {
       return;
     }
 
-    const { error: profileError } = await ensureSellerProfile(supabase, session.user.id);
+    // Always posts, even when a profile already exists, so an account left on
+    // the buyer role gets fixed by resubmitting.
+    const { error: profileError } = await createSellerProfile({
+      farmName: payload.farmName,
+      countryCode: payload.countryCode,
+      stateRegion: payload.stateRegion,
+      localArea: payload.localArea,
+      whatsappNumber: payload.phoneE164,
+      verificationDocumentType: payload.verificationType,
+      verificationDocumentValue: payload.documentNumber
+    });
 
     if (profileError) {
       setSubmitError(profileError);

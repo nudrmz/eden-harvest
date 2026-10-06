@@ -150,7 +150,7 @@ function LoginForm() {
 
       <AuthDivider />
 
-      <GoogleSignInButton disabled={submitting} />
+      <GoogleSignInButton disabled={submitting} nextPath={redirectParam ?? "/"} />
 
       <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
         Don&apos;t have an account?{" "}

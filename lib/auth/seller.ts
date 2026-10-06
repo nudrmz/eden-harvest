@@ -31,62 +31,43 @@ export async function fetchSellerProfileByUserId(
   return data as SellerProfileRow;
 }
 
-export async function resolveAfricanCountryId(
-  supabase: SupabaseClient,
-  countryCode: string
-): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("african_countries")
-    .select("id")
-    .eq("code", countryCode)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data.id as string;
-}
-
-export async function createSellerProfile(
-  supabase: SupabaseClient,
-  params: {
-    userId: string;
-    farmName: string;
-    countryCode: string;
-    stateRegion: string;
-    localArea?: string | null;
-    whatsappNumber: string;
-    verificationDocumentType: string;
-    verificationDocumentValue: string;
-  }
-): Promise<{ profile: SellerProfileRow | null; error: string | null }> {
-  const countryId = await resolveAfricanCountryId(supabase, params.countryCode);
-  if (!countryId) {
-    return { profile: null, error: "Could not find country. Please try onboarding again." };
+/**
+ * Creating the profile also promotes users.role to 'seller', which needs the
+ * service-role key, so the write happens in the route rather than here.
+ */
+export async function createSellerProfile(params: {
+  farmName: string;
+  countryCode: string;
+  stateRegion: string;
+  localArea?: string | null;
+  whatsappNumber: string;
+  verificationDocumentType: string;
+  verificationDocumentValue: string;
+}): Promise<{ profile: SellerProfileRow | null; error: string | null }> {
+  let response: Response;
+  try {
+    response = await fetch("/api/seller/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params)
+    });
+  } catch {
+    return { profile: null, error: "Network error. Please try again." };
   }
 
-  const { data, error } = await supabase
-    .from("seller_profiles")
-    .insert({
-      user_id: params.userId,
-      farm_name: params.farmName,
-      african_country_id: countryId,
-      state_region: params.stateRegion,
-      local_area: params.localArea ?? null,
-      whatsapp_number: params.whatsappNumber,
-      verification_document_type: params.verificationDocumentType,
-      verification_document_value: params.verificationDocumentValue
-    })
-    .select("id, farm_name, is_verified")
-    .single();
+  const payload = (await response.json().catch(() => null)) as {
+    profile?: SellerProfileRow;
+    error?: string;
+  } | null;
 
-  if (error) {
-    if (error.code === "23505") {
-      const existing = await fetchSellerProfileByUserId(supabase, params.userId);
-      if (existing) return { profile: existing, error: null };
-    }
-    return { profile: null, error: error.message };
+  if (!response.ok || !payload?.profile) {
+    return {
+      profile: null,
+      error: payload?.error ?? "Could not save your seller profile."
+    };
   }
 
-  return { profile: data as SellerProfileRow, error: null };
+  return { profile: payload.profile, error: null };
 }
 
 function readStoredOnboardingProfile(): StoredOnboardingProfile | null {
@@ -123,8 +104,7 @@ export async function ensureSellerProfile(
     };
   }
 
-  return createSellerProfile(supabase, {
-    userId,
+  return createSellerProfile({
     farmName: stored.farmName,
     countryCode: stored.countryCode,
     stateRegion: stored.stateRegion,

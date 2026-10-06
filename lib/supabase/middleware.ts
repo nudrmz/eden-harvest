@@ -1,9 +1,32 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAdminUser } from "@/lib/auth/admin";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/seller/listings", "/admin"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
+
+/**
+ * Where a signed-in user belongs when they hit an auth page.
+ *
+ * Seller-ness comes from the seller_profiles row, not user_metadata.role:
+ * Google sign-ins carry no role claim, so metadata alone would strand a fully
+ * onboarded Google seller on the buyer home page. A seller who started
+ * onboarding but never finished has no row yet, and /dashboard would only walk
+ * them into the "complete onboarding first" guard on the listing form.
+ */
+async function landingPathFor(supabase: SupabaseClient, user: User): Promise<string> {
+  const { data: profile } = await supabase
+    .from("seller_profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (profile) return "/dashboard";
+
+  // Only email signups record the intended role before onboarding runs.
+  return user.user_metadata?.role === "seller" ? "/onboarding" : "/";
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -69,8 +92,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    const role = user.user_metadata?.role;
-    redirectUrl.pathname = role === "seller" ? "/dashboard" : "/";
+    redirectUrl.pathname = await landingPathFor(supabase, user);
     redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }

@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { GlassToast } from "@/components/ui/GlassToast";
-
-const GOOGLE_COMING_SOON_MESSAGE =
-  "Google sign-in coming soon. Please use email and password for now.";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
+import { mapAuthError } from "@/lib/auth/errors";
+import { createClient } from "@/lib/supabase/client";
 
 interface GoogleSignInButtonProps {
-  onClick?: () => void;
   disabled?: boolean;
+  /**
+   * Path to land on once /auth/callback exchanges the code. Callers pass the
+   * same destination their email flow would use, since the OAuth round trip
+   * loses any query param the page was opened with.
+   */
+  nextPath?: string;
 }
 
 function GoogleIcon() {
@@ -34,15 +39,25 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignInButton({ onClick, disabled }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ disabled, nextPath = "/" }: GoogleSignInButtonProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
-  function handleClick() {
-    if (onClick) {
-      onClick();
-      return;
+  async function handleGoogleSignIn() {
+    setToastMessage(null);
+    setRedirecting(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: buildAuthCallbackUrl(nextPath) }
+    });
+
+    // On success Google takes over the tab, so only failures land back here.
+    if (error) {
+      setToastMessage(mapAuthError(error.message));
+      setRedirecting(false);
     }
-    setToastMessage(GOOGLE_COMING_SOON_MESSAGE);
   }
 
   return (
@@ -50,12 +65,12 @@ export function GoogleSignInButton({ onClick, disabled }: GoogleSignInButtonProp
       <GlassToast message={toastMessage} onDismiss={() => setToastMessage(null)} />
       <button
         type="button"
-        disabled={disabled}
-        onClick={handleClick}
+        disabled={disabled || redirecting}
+        onClick={() => void handleGoogleSignIn()}
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <GoogleIcon />
-        Continue with Google
+        {redirecting ? "Redirecting…" : "Continue with Google"}
       </button>
     </>
   );
