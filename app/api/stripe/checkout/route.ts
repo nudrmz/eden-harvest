@@ -101,8 +101,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("stripe checkout: customer resolve failed:", error);
+    const message = error instanceof Error ? error.message : null;
     return NextResponse.json(
-      { error: "Could not start checkout (customer setup failed)." },
+      {
+        error: message
+          ? `Could not start checkout (customer setup failed): ${message}`
+          : "Could not start checkout (customer setup failed)."
+      },
       { status: 500 }
     );
   }
