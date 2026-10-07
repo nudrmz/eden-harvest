@@ -35,15 +35,23 @@ async function resolveStripeCustomerId(params: {
     metadata: { eden_harvest_user_id: params.userId }
   });
 
-  const admin = createAdminClient();
-  if (admin) {
-    // Best-effort — the webhook also writes this on checkout.session.completed,
-    // so a failure here just means one extra Stripe customer gets created if
-    // the buyer starts checkout again before that webhook lands.
-    await admin
-      .from("users")
-      .update({ stripe_customer_id: customer.id })
-      .eq("id", params.userId);
+  // Best-effort, and genuinely isolated from the caller: the webhook also
+  // writes stripe_customer_id on checkout.session.completed, so a failure
+  // here should never block checkout itself — only risk one extra Stripe
+  // customer if the buyer starts checkout again before that webhook lands.
+  try {
+    const admin = createAdminClient();
+    if (admin) {
+      const { error } = await admin
+        .from("users")
+        .update({ stripe_customer_id: customer.id })
+        .eq("id", params.userId);
+      if (error) {
+        console.error("stripe checkout: stripe_customer_id persist failed:", error.message);
+      }
+    }
+  } catch (error) {
+    console.error("stripe checkout: stripe_customer_id persist threw:", error);
   }
 
   return customer.id;
@@ -84,13 +92,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Checkout is not configured." }, { status: 500 });
   }
 
+  let customerId: string;
   try {
-    const customerId = await resolveStripeCustomerId({
+    customerId = await resolveStripeCustomerId({
       userId: authUser.id,
       email: authUser.email,
       existingCustomerId: buyerProfile?.stripe_customer_id ?? null
     });
+  } catch (error) {
+    console.error("stripe checkout: customer resolve failed:", error);
+    return NextResponse.json(
+      { error: "Could not start checkout (customer setup failed)." },
+      { status: 500 }
+    );
+  }
 
+  try {
     const priceData = verifiedAccessPriceDataForPlan(plan);
 
     const session = await stripe.checkout.sessions.create({
@@ -119,17 +136,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (!session.url) {
+      console.error("stripe checkout: session created with no url", session.id);
       return NextResponse.json(
-        { error: "Could not start checkout." },
+        { error: "Could not start checkout (no redirect URL)." },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Stripe checkout session create failed:", error);
+    console.error("stripe checkout: session create failed:", error);
+    const stripeMessage = error instanceof Error ? error.message : null;
     return NextResponse.json(
-      { error: "Could not start checkout." },
+      {
+        error: stripeMessage
+          ? `Could not start checkout: ${stripeMessage}`
+          : "Could not start checkout (Stripe rejected the request)."
+      },
       { status: 500 }
     );
   }
