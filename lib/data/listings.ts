@@ -425,19 +425,34 @@ export async function fetchFeaturedListing(): Promise<FeaturedListingDisplay | n
 export async function fetchHomeStats(): Promise<HomeStatsDisplay> {
   const supabase = createClient();
 
-  const [sellersResult, productsResult] = await Promise.all([
-    supabase
-      .from("seller_profiles")
-      .select("id", { count: "exact", head: true }),
-    supabase
-      .from("listings")
-      .select("id", { count: "exact", head: true })
-      .eq("is_active", true)
-  ]);
+  // A plain count would include listings whose seller no longer exists, which
+  // the grid drops, so the headline number would exceed what is on screen.
+  // listings.seller_id has no foreign key on the remote database, so this has
+  // to be intersected here rather than by an inner join; once
+  // 20261007020000_listings_seller_fk.sql is applied this can go back to a
+  // head-only count.
+  const [sellersResult, { data: sellerRows }, { data: activeListings }] =
+    await Promise.all([
+      supabase.from("seller_profiles").select("id", { count: "exact", head: true }),
+      supabase.from("seller_profiles").select("id, user_id"),
+      supabase.from("listings").select("seller_id").eq("is_active", true)
+    ]);
+
+  // Mirrors how fetchRawListings resolves a seller, including its fallback for
+  // rows that stored the auth id, so the count tracks what the grid shows.
+  const resolvable = new Set<string>();
+  for (const row of sellerRows ?? []) {
+    resolvable.add(row.id as string);
+    if (row.user_id) resolvable.add(row.user_id as string);
+  }
+
+  const products = (activeListings ?? []).filter((row) =>
+    resolvable.has(row.seller_id as string)
+  ).length;
 
   return {
     activeSellers: sellersResult.count ?? 0,
-    products: productsResult.count ?? 0
+    products
   };
 }
 
