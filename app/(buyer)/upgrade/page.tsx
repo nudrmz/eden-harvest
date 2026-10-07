@@ -27,6 +27,8 @@ function UpgradePageContent() {
   const [plan, setPlan] = useState<VerifiedAccessPlan>("yearly");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [managing, setManaging] = useState(false);
+  const [manageError, setManageError] = useState<string | null>(null);
 
   const checkoutStatus = searchParams.get("checkout");
   const pollAttempts = useRef(0);
@@ -46,6 +48,27 @@ function UpgradePageContent() {
 
     return () => window.clearInterval(interval);
   }, [checkoutStatus, isVerifiedAccess, refreshProfile]);
+
+  async function handleManageSubscription() {
+    setManaging(true);
+    setManageError(null);
+
+    try {
+      const response = await fetch("/api/stripe/portal", { method: "POST" });
+      const payload = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !payload.url) {
+        setManageError(payload.error ?? "Could not open billing portal.");
+        setManaging(false);
+        return;
+      }
+
+      window.location.href = payload.url;
+    } catch {
+      setManageError("Could not open billing portal. Check your connection and try again.");
+      setManaging(false);
+    }
+  }
 
   async function handleContinue() {
     setSubmitting(true);
@@ -102,10 +125,21 @@ function UpgradePageContent() {
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Message sellers and see reviews across Eden Harvest.
             </p>
+            {manageError ? (
+              <p className="mt-3 text-[11px] text-[#F09595]">{manageError}</p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void handleManageSubscription()}
+              disabled={managing}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#1D9E75] py-3 text-sm font-semibold text-[#092012] disabled:opacity-60"
+            >
+              {managing ? "Opening billing portal…" : "Manage subscription"}
+            </button>
             <button
               type="button"
               onClick={() => router.push("/profile")}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#1D9E75] py-3 text-sm font-semibold text-[#092012]"
+              className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-[var(--card-border)] py-3 text-sm font-semibold text-[var(--text-primary)]"
             >
               Back to profile
             </button>

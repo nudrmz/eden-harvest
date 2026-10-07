@@ -38,10 +38,39 @@ function ProfileRow({ label, href, goldArrow = false }: ProfileRowProps) {
   );
 }
 
+interface ProfileActionRowProps {
+  label: string;
+  onClick: () => void;
+  busy?: boolean;
+  goldArrow?: boolean;
+}
+
+/** Same look as ProfileRow, but for an action that needs a round trip (opening
+ * a Stripe portal session) before it has somewhere to send the browser —
+ * a plain href can't do that. */
+function ProfileActionRow({ label, onClick, busy = false, goldArrow = false }: ProfileActionRowProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="flex w-full items-center justify-between border-b border-[rgba(255,255,255,0.08)] py-3.5 text-left last:border-b-0 disabled:opacity-60"
+    >
+      <span className="text-sm font-medium text-[var(--text-primary)]">{label}</span>
+      <ChevronRight
+        size={18}
+        className={goldArrow ? "text-eden-gold" : "text-[var(--text-tertiary)]"}
+      />
+    </button>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading, isVerifiedAccess, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [managingSubscription, setManagingSubscription] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -69,6 +98,27 @@ export default function ProfilePage() {
     await signOut();
     router.push("/");
     router.refresh();
+  }
+
+  async function handleManageSubscription() {
+    setManagingSubscription(true);
+    setPortalError(null);
+
+    try {
+      const response = await fetch("/api/stripe/portal", { method: "POST" });
+      const payload = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !payload.url) {
+        setPortalError(payload.error ?? "Could not open billing portal.");
+        setManagingSubscription(false);
+        return;
+      }
+
+      window.location.href = payload.url;
+    } catch {
+      setPortalError("Could not open billing portal. Check your connection and try again.");
+      setManagingSubscription(false);
+    }
   }
 
   return (
@@ -118,8 +168,18 @@ export default function ProfilePage() {
               <ProfileRow label="Notification preferences" href="/settings#notifications" />
               {!isVerifiedAccess ? (
                 <ProfileRow label="Upgrade to Verified Access" href="/upgrade" goldArrow />
-              ) : null}
+              ) : (
+                <ProfileActionRow
+                  label={managingSubscription ? "Opening billing portal…" : "Manage subscription"}
+                  onClick={() => void handleManageSubscription()}
+                  busy={managingSubscription}
+                  goldArrow
+                />
+              )}
             </div>
+            {portalError ? (
+              <p className="mt-2 px-1 text-[11px] text-[#F09595]">{portalError}</p>
+            ) : null}
           </section>
 
           {isAdmin ? (
