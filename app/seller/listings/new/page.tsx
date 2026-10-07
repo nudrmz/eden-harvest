@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ensureSellerProfile } from "@/lib/auth/seller";
 import type { StockStatus } from "@/lib/types/listing";
+import { uploadPhoto } from "@/lib/storage/photos";
 
 const CATEGORIES = [
   "Dried goods",
@@ -38,7 +40,30 @@ export default function NewListingPage() {
     stock_status: "in_season" as StockStatus
   });
   const [loading, setLoading] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState("Saving...");
   const [error, setError] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // Keeps the uploaded URL so a retry after an insert error doesn't re-upload.
+  const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile]);
+
+  const onPhotoPick = (files: FileList | null) => {
+    const file = files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!file || !file.type.startsWith("image/")) return;
+    setPhotoFile(file);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -77,8 +102,28 @@ export default function NewListingPage() {
         return;
       }
 
+      let photoUrl: string | null = null;
+      if (photoFile) {
+        if (uploadedPhoto?.file === photoFile) {
+          photoUrl = uploadedPhoto.url;
+        } else {
+          setLoadingLabel("Uploading photo...");
+          const { url, error: uploadError } = await uploadPhoto(photoFile, "listing");
+          if (uploadError || !url) {
+            setError(uploadError ?? "Could not upload your photo.");
+            setLoading(false);
+            setLoadingLabel("Saving...");
+            return;
+          }
+          photoUrl = url;
+          setUploadedPhoto({ file: photoFile, url });
+        }
+        setLoadingLabel("Saving...");
+      }
+
       const payload = {
         seller_id: sellerProfile.id,
+        photo_url: photoUrl,
         product_name: form.product_name.trim(),
         category: form.category,
         price_local: parseFloat(form.price_local),
@@ -128,6 +173,51 @@ export default function NewListingPage() {
         ) : null}
 
         <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm text-gray-300">Photo</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => onPhotoPick(e.target.files)}
+            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex min-h-[160px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-white/20 bg-[#1a2e1f] px-4 py-6 transition hover:border-[#1D9E75]/60"
+              >
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photoPreview}
+                    alt="Produce preview"
+                    className="max-h-48 w-full rounded-lg object-cover"
+                  />
+                ) : (
+                  <>
+                    <Camera className="text-white/50" size={28} />
+                    <span className="text-sm font-medium text-white/85">Add a produce photo</span>
+                    <span className="text-xs text-gray-500">
+                      Optional · JPG, PNG or WebP · listings with photos get more enquiries
+                    </span>
+                  </>
+                )}
+              </button>
+              {photoPreview ? (
+                <button
+                  type="button"
+                  onClick={() => setPhotoFile(null)}
+                  aria-label="Remove photo"
+                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                >
+                  <X size={14} strokeWidth={2.5} />
+                </button>
+              ) : null}
+            </div>
+          </div>
+
           <div>
             <label className="mb-1 block text-sm text-gray-300">Produce name</label>
             <input
@@ -255,7 +345,7 @@ export default function NewListingPage() {
           disabled={loading}
           className="mt-8 w-full rounded-2xl bg-green-600 py-4 font-semibold text-white transition-colors hover:bg-green-500 disabled:opacity-50"
         >
-          {loading ? "Saving..." : "Publish listing"}
+          {loading ? loadingLabel : "Publish listing"}
         </button>
       </div>
     </div>

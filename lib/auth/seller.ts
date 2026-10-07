@@ -43,6 +43,7 @@ export async function createSellerProfile(params: {
   whatsappNumber: string;
   verificationDocumentType: string;
   verificationDocumentValue: string;
+  farmPhotoUrl?: string | null;
 }): Promise<{ profile: SellerProfileRow | null; error: string | null }> {
   let response: Response;
   try {

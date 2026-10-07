@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Camera, Check, CheckCircle2 } from "lucide-react";
+import { Camera, Check, CheckCircle2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -14,6 +14,7 @@ import {
 import { SELLER_PROFILE_STORAGE_KEY } from "@/lib/utils/constants";
 import { createClient } from "@/lib/supabase/client";
 import { createSellerProfile } from "@/lib/auth/seller";
+import { uploadPhoto } from "@/lib/storage/photos";
 
 const TOTAL_STEPS = 5;
 
@@ -49,6 +50,9 @@ export default function SellerOnboardingPage() {
   const [documentNumber, setDocumentNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitStage, setSubmitStage] = useState<"photo" | "profile" | null>(null);
+  // Keeps the uploaded URL so a retry after a profile error doesn't re-upload.
+  const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -140,6 +144,28 @@ export default function SellerOnboardingPage() {
       return;
     }
 
+    let farmPhotoUrl: string | null = null;
+    if (photoFile) {
+      if (uploadedPhoto?.file === photoFile) {
+        farmPhotoUrl = uploadedPhoto.url;
+      } else {
+        setSubmitStage("photo");
+        const { url, error: uploadError } = await uploadPhoto(photoFile, "farm");
+        if (uploadError || !url) {
+          setSubmitError(
+            `${uploadError ?? "Could not upload your farm photo."} You can go back and remove the photo to submit without one.`
+          );
+          setSubmitting(false);
+          setSubmitStage(null);
+          return;
+        }
+        farmPhotoUrl = url;
+        setUploadedPhoto({ file: photoFile, url });
+      }
+    }
+
+    setSubmitStage("profile");
+
     // Always posts, even when a profile already exists, so an account left on
     // the buyer role gets fixed by resubmitting.
     const { error: profileError } = await createSellerProfile({
@@ -149,8 +175,11 @@ export default function SellerOnboardingPage() {
       localArea: payload.localArea,
       whatsappNumber: payload.phoneE164,
       verificationDocumentType: payload.verificationType,
-      verificationDocumentValue: payload.documentNumber
+      verificationDocumentValue: payload.documentNumber,
+      farmPhotoUrl
     });
+
+    setSubmitStage(null);
 
     if (profileError) {
       setSubmitError(profileError);
@@ -164,6 +193,7 @@ export default function SellerOnboardingPage() {
 
   const onPhotoPick = (files: FileList | null) => {
     const file = files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file || !file.type.startsWith("image/")) return;
     setPhotoFile(file);
   };
@@ -392,6 +422,7 @@ export default function SellerOnboardingPage() {
                   className="hidden"
                   onChange={(e) => onPhotoPick(e.target.files)}
                 />
+                <div className="relative">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -411,11 +442,27 @@ export default function SellerOnboardingPage() {
                         Upload farm photo
                       </span>
                       <span className={`text-[11px] ${textTertiary}`}>
-                        JPG or PNG — preview only
+                        Optional · JPG, PNG or WebP · shown on your profile
                       </span>
                     </>
                   )}
                 </button>
+                {photoPreview ? (
+                  <button
+                    type="button"
+                    onClick={() => setPhotoFile(null)}
+                    aria-label="Remove farm photo"
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                  >
+                    <X size={14} strokeWidth={2.5} />
+                  </button>
+                ) : null}
+                </div>
+                {photoPreview ? (
+                  <p className={`mt-2 text-[11px] ${textTertiary}`}>
+                    Tap the photo to change it. It uploads when you submit.
+                  </p>
+                ) : null}
               </div>
             </div>
           </>
@@ -509,7 +556,11 @@ export default function SellerOnboardingPage() {
                 disabled={!canSubmitStep5 || submitting}
                 className={primaryBtn}
               >
-                {submitting ? "Submitting…" : "Submit application"}
+                {submitting
+                  ? submitStage === "photo"
+                    ? "Uploading photo…"
+                    : "Submitting…"
+                  : "Submit application"}
               </button>
             )}
           </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isOwnPhotoUrl } from "@/lib/storage/photos";
 
 interface OnboardingBody {
   farmName?: string;
@@ -11,6 +12,7 @@ interface OnboardingBody {
   whatsappNumber?: string;
   verificationDocumentType?: string;
   verificationDocumentValue?: string;
+  farmPhotoUrl?: string | null;
 }
 
 interface SellerProfileRow {
@@ -80,6 +82,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
+  // Only accept photos uploaded by this user via /api/uploads/photo.
+  const farmPhotoUrl = body.farmPhotoUrl?.trim() || null;
+  if (farmPhotoUrl && !isOwnPhotoUrl(farmPhotoUrl, authUser.id)) {
+    return NextResponse.json({ error: "Invalid farm photo." }, { status: 400 });
+  }
+
   const admin = createAdminClient();
   if (!admin) {
     console.error("seller onboarding: SUPABASE_SERVICE_ROLE_KEY not set");
@@ -123,7 +131,8 @@ export async function POST(request: NextRequest) {
         local_area: body.localArea?.trim() || null,
         whatsapp_number: whatsappNumber,
         verification_document_type: documentType,
-        verification_document_value: documentValue
+        verification_document_value: documentValue,
+        farm_photo_url: farmPhotoUrl
       })
       .select(PROFILE_COLUMNS)
       .single();
@@ -134,6 +143,13 @@ export async function POST(request: NextRequest) {
     }
 
     profile = inserted as SellerProfileRow;
+  } else if (farmPhotoUrl) {
+    // Resubmitting onboarding is also how an existing seller adds a photo.
+    const { error: photoError } = await admin
+      .from("seller_profiles")
+      .update({ farm_photo_url: farmPhotoUrl })
+      .eq("id", profile.id);
+    if (photoError) console.error("seller farm photo update:", photoError.message);
   }
 
   // Profile first, then role: a seller row without the role is fixed by
