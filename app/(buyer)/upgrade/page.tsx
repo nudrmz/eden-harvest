@@ -97,7 +97,7 @@ function UpgradePageContent() {
           <div className="glass-card p-5 text-center">
             <ShieldCheck size={32} className="mx-auto text-eden-gold" />
             <h2 className="mt-3 font-heading text-lg font-semibold text-[var(--text-primary)]">
-              You're on Verified Access
+              You&apos;re on Verified Access
             </h2>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Message sellers and see reviews across Eden Harvest.
@@ -186,7 +186,7 @@ function UpgradePageContent() {
               {submitting ? "Redirecting to payment…" : "Continue to payment"}
             </button>
             <p className="mt-2 text-center text-[11px] text-[var(--text-tertiary)]">
-              Cancel anytime from Stripe's billing portal link in your receipt email.
+              Cancel anytime from Stripe&apos;s billing portal link in your receipt email.
             </p>
           </>
         )}
