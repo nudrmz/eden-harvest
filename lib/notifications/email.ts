@@ -1,5 +1,6 @@
 import "server-only";
 import { Resend } from "resend";
+import { siteUrl } from "@/lib/site";
 
 const DEFAULT_FROM = "Eden Harvest <notifications@edenharvest.app>";
 
@@ -20,10 +21,7 @@ function getResend(): Resend | null {
 }
 
 function messagesUrl(channelId: string): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://eden-harvest.vercel.app").replace(
-    /\/$/,
-    ""
-  );
+  const base = siteUrl();
   return `${base}/messages?channel=${encodeURIComponent(channelId)}`;
 }
 

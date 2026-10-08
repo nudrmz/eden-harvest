@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchUserProfile } from "@/lib/auth/profile";
 import { getStripeServerClient } from "@/lib/stripe/server";
+import { siteUrl } from "@/lib/site";
 
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://eden-harvest.vercel.app";
-}
 
 /**
  * Opens Stripe's hosted Billing Portal so a Verified Access subscriber can

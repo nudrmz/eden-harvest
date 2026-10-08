@@ -4,14 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchUserProfile } from "@/lib/auth/profile";
 import { getStripeServerClient } from "@/lib/stripe/server";
 import { verifiedAccessPriceDataForPlan, type VerifiedAccessPlan } from "@/lib/stripe/config";
+import { siteUrl } from "@/lib/site";
 
 interface CheckoutBody {
   plan?: VerifiedAccessPlan;
 }
 
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://eden-harvest.vercel.app";
-}
 
 /**
  * Reuse an existing Stripe customer if this buyer already has one (e.g. a

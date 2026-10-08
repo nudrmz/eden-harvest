@@ -2,7 +2,9 @@
  * Canonical public site origin for auth email redirects.
  * Prefer NEXT_PUBLIC_SITE_URL so emails never target ephemeral Vercel preview URLs.
  */
-const PRODUCTION_ORIGIN = "https://eden-harvest.vercel.app";
+import { DEFAULT_SITE_URL } from "@/lib/site";
+
+const PRODUCTION_ORIGIN = DEFAULT_SITE_URL;
 
 /** Preview hosts look like project-abc123xyz-team.vercel.app — not project.vercel.app */
 function isEphemeralVercelPreview(origin: string): boolean {

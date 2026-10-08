@@ -8,7 +8,7 @@ import { sendNewMessageEmail } from "@/lib/notifications/email";
  * sellers don't have to sit in the app to notice an enquiry.
  *
  * Setup (Stream dashboard → your app → Event hooks, or updateAppSettings):
- *   webhook_url: https://eden-harvest.vercel.app/api/webhooks/stream
+ *   webhook_url: https://edenharvest.app/api/webhooks/stream
  *   event_types: ["message.new", "user.unread_message_reminder"]
  *
  * message.new fires immediately; user.unread_message_reminder (enable "unread

@@ -11,7 +11,7 @@ import { getStripeServerClient } from "@/lib/stripe/server";
  *
  * Setup (Stripe dashboard → Developers → Webhooks, or `stripe listen` for
  * local testing):
- *   endpoint: https://eden-harvest.vercel.app/api/webhooks/stripe
+ *   endpoint: https://edenharvest.app/api/webhooks/stripe
  *   events: checkout.session.completed, customer.subscription.updated,
  *           customer.subscription.deleted
  * The signing secret it gives you goes in STRIPE_WEBHOOK_SECRET.
