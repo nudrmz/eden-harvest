@@ -1,4 +1,36 @@
+import { readFileSync } from "node:fs";
 import withPWA from "next-pwa";
+
+/**
+ * Campaign short links (lib/campaigns/links.json): edenharvest.app/uk etc.
+ * redirect to their destination with UTM tags, which CampaignCapture turns
+ * into a first-touch cookie for sign-up attribution.
+ */
+const RESERVED_SLUGS = new Set([
+  "api", "admin", "auth", "browse", "dashboard", "listing", "listings", "login",
+  "messages", "onboarding", "profile", "register", "seller", "settings", "upgrade",
+  "forgot-password", "reset-password", "icons", "images", "og", "manifest.webmanifest"
+]);
+function campaignRedirects() {
+  const { links } = JSON.parse(
+    readFileSync(new URL("./lib/campaigns/links.json", import.meta.url), "utf8")
+  );
+  return links.map((link) => {
+    if (!/^[a-z0-9-]+$/.test(link.slug) || RESERVED_SLUGS.has(link.slug)) {
+      throw new Error(`Campaign slug "${link.slug}" is invalid or clashes with a page.`);
+    }
+    const [path, query = ""] = link.destination.split("?");
+    const params = new URLSearchParams(query);
+    params.set("utm_source", link.source);
+    params.set("utm_medium", link.medium);
+    params.set("utm_campaign", link.slug);
+    return {
+      source: `/${link.slug}`,
+      destination: `${path}?${params.toString()}`,
+      permanent: false
+    };
+  });
+}
 
 /**
  * Once NEXT_PUBLIC_SITE_URL points at the custom domain, send visitors on the
@@ -30,6 +62,7 @@ const nextConfig = {
   async redirects() {
     return [
       ...canonicalHostRedirects(),
+      ...campaignRedirects(),
       {
         source: "/listings/new",
         destination: "/seller/listings/new",

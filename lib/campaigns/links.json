@@ -1,0 +1,13 @@
+{
+  "_comment": "Short campaign links: edenharvest.app/<slug> redirects to destination with UTM tags. Add a row here and redeploy to create a new link. Slugs must not clash with real pages.",
+  "links": [
+    { "slug": "uk", "label": "UK buyers", "destination": "/", "source": "shortlink", "medium": "link", "audience": "buyers" },
+    { "slug": "us", "label": "US buyers", "destination": "/", "source": "shortlink", "medium": "link", "audience": "buyers" },
+    { "slug": "ca", "label": "Canada buyers", "destination": "/", "source": "shortlink", "medium": "link", "audience": "buyers" },
+    { "slug": "au", "label": "Australia buyers", "destination": "/", "source": "shortlink", "medium": "link", "audience": "buyers" },
+    { "slug": "flyer", "label": "Printed flyers & posters", "destination": "/", "source": "print", "medium": "qr", "audience": "buyers" },
+    { "slug": "wa", "label": "WhatsApp status & groups", "destination": "/", "source": "whatsapp", "medium": "social", "audience": "buyers" },
+    { "slug": "sell", "label": "Farmers — sign up to sell", "destination": "/register?role=seller", "source": "shortlink", "medium": "link", "audience": "sellers" },
+    { "slug": "farm", "label": "Farmers — printed flyers", "destination": "/register?role=seller", "source": "print", "medium": "qr", "audience": "sellers" }
+  ]
+}

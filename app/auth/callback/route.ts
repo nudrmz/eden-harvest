@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { FIRST_TOUCH_COOKIE, firstTouchMetadata, parseFirstTouch } from "@/lib/campaigns";
+
+/** Accounts created within this window count as new sign-ups for attribution. */
+const NEW_ACCOUNT_WINDOW_MS = 15 * 60 * 1000;
 
 const INVALID_LINK = "That email link is invalid or has expired. Please try again.";
 const CONFIRMED_PLEASE_SIGN_IN = "Email confirmed. You can sign in now.";
@@ -108,6 +112,24 @@ export async function GET(request: NextRequest) {
     }
 
     return bounceToLogin(INVALID_LINK);
+  }
+
+  // Email sign-ups carry the campaign in their signUp metadata already; Google
+  // sign-ups arrive here, so credit them now. Only brand-new accounts, so an
+  // existing user clicking a campaign link later isn't re-attributed.
+  const touch = parseFirstTouch(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
+  if (touch) {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+    const isNew =
+      user?.created_at && Date.now() - new Date(user.created_at).getTime() < NEW_ACCOUNT_WINDOW_MS;
+    if (user && isNew && !user.user_metadata?.signup_source) {
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: firstTouchMetadata(touch)
+      });
+      if (metaError) console.error("auth callback: attribution", metaError.message);
+    }
   }
 
   return response;

@@ -16,6 +16,7 @@ import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 import { BUYER_COUNTRY_OPTIONS } from "@/lib/utils/constants";
 import { getPasswordStrength } from "@/lib/utils/helpers";
 import type { UserRole } from "@/lib/types/user";
+import { firstTouchMetadata, readFirstTouchFromDocument } from "@/lib/campaigns";
 
 function RegisterForm() {
   const router = useRouter();
@@ -117,7 +118,8 @@ function RegisterForm() {
         data: {
           full_name: fullName.trim(),
           role,
-          ...(role === "buyer" ? { country_code: buyerCountry } : {})
+          ...(role === "buyer" ? { country_code: buyerCountry } : {}),
+          ...firstTouchMetadata(readFirstTouchFromDocument())
         }
       }
     });

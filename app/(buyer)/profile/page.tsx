@@ -189,6 +189,7 @@ export default function ProfilePage() {
               </p>
               <div className="glass-card px-4">
                 <ProfileRow label="Seller verification" href="/admin/verifications" goldArrow />
+                <ProfileRow label="Campaign links & QR codes" href="/admin/campaigns" goldArrow />
               </div>
             </section>
           ) : null}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ClipboardCheck, LogOut, Settings, Shield, User } from "lucide-react";
+import { ChevronDown, ClipboardCheck, LogOut, Settings, Shield, User, QrCode } from "lucide-react";
 import { useAuth } from "@/lib/supabase/hooks";
 import { getInitials } from "@/lib/utils/helpers";
 
@@ -138,6 +138,19 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
               >
                 <ClipboardCheck size={16} className="text-eden-gold" />
                 Seller verification
+              </Link>
+            </li>
+          ) : null}
+          {isAdmin ? (
+            <li>
+              <Link
+                href="/admin/campaigns"
+                role="menuitem"
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
+                onClick={() => setOpen(false)}
+              >
+                <QrCode size={16} className="text-eden-gold" />
+                Campaign links
               </Link>
             </li>
           ) : null}
