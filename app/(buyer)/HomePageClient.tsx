@@ -7,6 +7,7 @@ import { useState } from "react";
 import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { InstallAppPrompt } from "@/components/layout/InstallAppPrompt";
 import { useAuth } from "@/lib/supabase/hooks";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -239,6 +240,8 @@ export default function HomePageClient({
           </button>
         </form>
       </div>
+
+      <InstallAppPrompt />
 
       <section className="mt-4 px-4">
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
