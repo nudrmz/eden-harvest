@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Plus } from "lucide-react";
+import { Bell, ChevronRight, Package, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -18,7 +18,16 @@ interface SellerListingRow {
   unit: string;
   stock_status: string;
   is_active: boolean;
+  photo_url: string | null;
 }
+
+const STOCK_LABELS: Record<string, string> = {
+  in_season: "In season",
+  bulk_available: "Bulk available",
+  low_stock: "Low stock",
+  out_of_stock: "Out of stock",
+  new_listing: "New listing"
+};
 
 interface EnquiryRow {
   id: string;
@@ -83,7 +92,7 @@ export default function SellerDashboardPage() {
         supabase
           .from("listings")
           .select(
-            "id, product_name, category, price_local, price_currency_code, unit, stock_status, is_active"
+            "id, product_name, category, price_local, price_currency_code, unit, stock_status, is_active, photo_url"
           )
           .eq("seller_id", sellerProfile.id)
           .order("created_at", { ascending: false }),
@@ -209,29 +218,53 @@ export default function SellerDashboardPage() {
           </div>
           {loadingData ? (
             <p className={`text-center text-sm ${textSecondary}`}>Loading listings…</p>
-          ) : activeListings.length === 0 ? (
+          ) : listings.length === 0 ? (
             <p className={`text-center text-sm ${textSecondary}`}>
               No listings yet. Publish one and buyers will see it on the home page.
             </p>
           ) : (
             <div className="space-y-2">
-              {activeListings.map((listing) => (
-                <div
+              {listings.map((listing) => (
+                <Link
                   key={listing.id}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  href={`/seller/listings/${listing.id}/edit`}
+                  className={`flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 transition hover:border-[#1D9E75]/50 ${
+                    listing.is_active ? "" : "opacity-60"
+                  }`}
                 >
-                  <div>
-                    <p className={`text-sm font-semibold ${textPrimary}`}>{listing.product_name}</p>
-                    <p className={`text-[11px] ${textTertiary}`}>{listing.category}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-[#5DCAA5]">
-                    {listing.price_currency_code}{" "}
-                    {Number(listing.price_local).toLocaleString()}
-                    <span className={`text-[11px] font-normal ${textTertiary}`}>
-                      /{listing.unit}
+                  {listing.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={listing.photo_url}
+                      alt=""
+                      className="h-11 w-11 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10">
+                      <Package size={18} className="text-white/50" />
                     </span>
-                  </p>
-                </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-sm font-semibold ${textPrimary}`}>
+                      {listing.product_name}
+                    </p>
+                    <p className={`text-[11px] ${textTertiary}`}>
+                      {listing.is_active ? (
+                        STOCK_LABELS[listing.stock_status] ?? listing.category
+                      ) : (
+                        <span className="font-semibold text-[#F5C442]">Hidden</span>
+                      )}
+                      {" · "}
+                      <span className="text-[#5DCAA5]">
+                        {listing.price_currency_code} {Number(listing.price_local).toLocaleString()}
+                      </span>
+                      /{listing.unit}
+                    </p>
+                  </div>
+                  <span className={`flex shrink-0 items-center text-[11px] ${textSecondary}`}>
+                    Edit <ChevronRight size={14} />
+                  </span>
+                </Link>
               ))}
             </div>
           )}
