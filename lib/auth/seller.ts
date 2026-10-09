@@ -115,3 +115,22 @@ export async function ensureSellerProfile(
     verificationDocumentValue: stored.documentNumber
   });
 }
+
+/** The currency of the seller's farm country (e.g. XOF for Côte d'Ivoire). */
+export async function fetchSellerCurrency(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("seller_profiles")
+    .select("african_countries(currency_code)")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const country = data?.african_countries as
+    | { currency_code: string }
+    | { currency_code: string }[]
+    | null
+    | undefined;
+  const row = Array.isArray(country) ? country[0] : country;
+  return row?.currency_code ?? null;
+}

@@ -117,7 +117,9 @@ function mapListingRow(
     rates
   );
   const buyerSymbol = getCurrencySymbol(buyerCurrency);
-  const sellerSymbol = country.currency_symbol || getCurrencySymbol(row.price_currency_code);
+  // Label the seller's price with the currency it was actually entered in. Using
+  // the farm country's symbol mislabelled e.g. a USD price as "CFA20".
+  const sellerSymbol = getCurrencySymbol(row.price_currency_code);
   const [accentFrom, accentTo] = accentForId(row.id);
 
   return {
@@ -132,7 +134,11 @@ function mapListingRow(
     flag: country.flag_emoji,
     buyerPrice: `${formatMoney(buyerPriceValue, buyerCurrency, buyerSymbol)}/${row.unit}`,
     buyerPriceValue,
-    sellerPrice: `≈ ${formatMoney(priceLocal, row.price_currency_code, sellerSymbol)}/${row.unit}`,
+    // Shown only when it differs from the buyer's currency (otherwise it repeats the price).
+    sellerPrice:
+      row.price_currency_code === buyerCurrency
+        ? ""
+        : `Seller's price: ${formatMoney(priceLocal, row.price_currency_code, sellerSymbol)}/${row.unit}`,
     sellerCurrencyCode: row.price_currency_code,
     sellerPriceValue: priceLocal,
     minOrder: `Min: ${row.min_order_quantity} ${row.min_order_unit}`,

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { fetchSellerProfileByUserId } from "@/lib/auth/seller";
+import { fetchSellerCurrency, fetchSellerProfileByUserId } from "@/lib/auth/seller";
 import type { StockStatus } from "@/lib/types/listing";
 import {
   ListingForm,
@@ -32,7 +32,7 @@ interface ListingRow {
 type LoadState =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; listing: ListingRow };
+  | { kind: "ready"; listing: ListingRow; sellerCurrency: string | null };
 
 function toFormValues(l: ListingRow): ListingFormValues {
   return {
@@ -68,8 +68,9 @@ export default function EditListingPage() {
         return;
       }
 
-      const [profile, { data: listing }] = await Promise.all([
+      const [profile, sellerCurrency, { data: listing }] = await Promise.all([
         fetchSellerProfileByUserId(supabase, session.user.id),
+        fetchSellerCurrency(supabase, session.user.id),
         supabase
           .from("listings")
           .select(
@@ -85,7 +86,7 @@ export default function EditListingPage() {
       } else if (!profile || listing.seller_id !== profile.id) {
         setState({ kind: "error", message: "You can only edit your own listings." });
       } else {
-        setState({ kind: "ready", listing: listing as ListingRow });
+        setState({ kind: "ready", listing: listing as ListingRow, sellerCurrency });
       }
     })();
 
@@ -127,7 +128,7 @@ export default function EditListingPage() {
       setToggleError(error?.message ?? "Couldn't update the listing.");
       return;
     }
-    setState({ kind: "ready", listing: { ...state.listing, is_active: next } });
+    setState({ ...state, listing: { ...state.listing, is_active: next } });
   };
 
   return (
@@ -162,6 +163,7 @@ export default function EditListingPage() {
             <ListingForm
               initial={toFormValues(state.listing)}
               initialPhotoUrl={state.listing.photo_url}
+              sellerCurrency={state.sellerCurrency}
               submitLabel="Save changes"
               onSave={save}
               footer={

@@ -20,7 +20,8 @@ export const LISTING_CATEGORIES = [
 
 export const LISTING_UNITS = ["kg", "bag", "crate", "litre", "piece", "tonne"];
 
-export const LISTING_CURRENCIES = ["NGN", "GHS", "KES", "USD", "GBP"];
+/** Offered alongside the seller's own country currency. */
+export const LISTING_CURRENCIES = ["USD", "GBP", "EUR"];
 
 export const STOCK_OPTIONS: { value: StockStatus; label: string; hint: string }[] = [
   { value: "in_season", label: "In season", hint: "Available now" },
@@ -60,7 +61,7 @@ export const EMPTY_LISTING: ListingFormValues = {
   product_name: "",
   category: "",
   price_local: "",
-  price_currency_code: "NGN",
+  price_currency_code: "USD",
   unit: "kg",
   min_order_quantity: "",
   min_order_unit: "kg",
@@ -80,9 +81,18 @@ interface Props {
   onSave: (payload: ListingSavePayload) => Promise<string | null>;
   /** Extra content under the submit button (e.g. hide/show listing). */
   footer?: React.ReactNode;
+  /** The seller's country currency (e.g. XOF, RWF) — listed first. */
+  sellerCurrency?: string | null;
 }
 
-export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSave, footer }: Props) {
+export function ListingForm({
+  initial,
+  initialPhotoUrl = null,
+  submitLabel,
+  onSave,
+  footer,
+  sellerCurrency = null
+}: Props) {
   const [form, setForm] = useState<ListingFormValues>(initial);
   const [loading, setLoading] = useState(false);
   const [loadingLabel, setLoadingLabel] = useState("Saving...");
@@ -280,8 +290,14 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
               onChange={handleChange}
               className="eden-field-input !w-auto !px-4 !py-3 !text-base"
             >
-              {/* Keep an unusual saved currency selectable when editing. */}
-              {[...new Set([...LISTING_CURRENCIES, form.price_currency_code])].map((c) => (
+              {/* Seller's own currency first; keep a saved currency selectable when editing. */}
+              {[
+                ...new Set(
+                  [sellerCurrency, form.price_currency_code, ...LISTING_CURRENCIES].filter(
+                    (c): c is string => Boolean(c)
+                  )
+                )
+              ].map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
