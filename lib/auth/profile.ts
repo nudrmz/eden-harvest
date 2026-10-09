@@ -1,18 +1,28 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { EdenUser, UserRole } from "@/lib/types/user";
-
-const BUYER_CURRENCY_BY_CODE: Record<string, string> = {
-  GB: "GBP",
-  US: "USD",
-  AU: "AUD",
-  CA: "CAD",
-  DE: "EUR",
-  IE: "EUR",
-  OT: "USD"
-};
+import { currencyForCountryCode } from "@/lib/data/buyer-countries";
 
 export function currencyForBuyerCountry(countryCode: string): string {
-  return BUYER_CURRENCY_BY_CODE[countryCode] ?? "USD";
+  return currencyForCountryCode(countryCode);
+}
+
+/**
+ * The handle_new_user() DB trigger only knows six countries' currencies and
+ * defaults everything else to USD (it can't be updated while the Supabase SQL
+ * editor refuses this account). Correct it from the app side on load.
+ */
+async function repairBuyerCurrency(
+  supabase: SupabaseClient,
+  profile: EdenUser
+): Promise<EdenUser> {
+  if (profile.role !== "buyer" || !profile.country_code) return profile;
+  const expected = currencyForBuyerCountry(profile.country_code);
+  if (profile.detected_currency === expected) return profile;
+  const { error } = await supabase
+    .from("users")
+    .update({ detected_currency: expected })
+    .eq("id", profile.id);
+  return error ? profile : { ...profile, detected_currency: expected };
 }
 
 export async function fetchUserProfile(
@@ -69,7 +79,7 @@ export async function ensureUserProfile(
   authUser: User
 ): Promise<{ profile: EdenUser | null; error: string | null }> {
   const existing = await fetchUserProfile(supabase, authUser.id);
-  if (existing) return { profile: existing, error: null };
+  if (existing) return { profile: await repairBuyerCurrency(supabase, existing), error: null };
 
   const metadata = (authUser.user_metadata ?? {}) as Record<string, unknown>;
   const role = roleFromMetadata(metadata);

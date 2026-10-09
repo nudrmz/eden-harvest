@@ -27,7 +27,21 @@ interface ErApiResponse {
 }
 
 export function getCurrencySymbol(code: string): string {
-  return BUYER_CURRENCY_SYMBOLS[code] ?? code;
+  if (BUYER_CURRENCY_SYMBOLS[code]) return BUYER_CURRENCY_SYMBOLS[code];
+  try {
+    const symbol = new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: code,
+      currencyDisplay: "narrowSymbol"
+    })
+      .formatToParts(0)
+      .find((p) => p.type === "currency")?.value;
+    // Bare codes ("AED") read better with a space before the amount.
+    if (symbol) return /^[A-Z]{3}$/.test(symbol) ? `${symbol} ` : symbol;
+  } catch {
+    /* unknown code */
+  }
+  return `${code} `;
 }
 
 export function convertCurrency(
@@ -142,7 +156,10 @@ async function getBuyerCurrencyUncached(): Promise<string> {
       .eq("id", user.id)
       .maybeSingle();
 
-    return profile?.detected_currency ?? "GBP";
+    const currency = profile?.detected_currency ?? "GBP";
+    // No rate for this currency (rare): show USD rather than unconverted naira.
+    const rates = await getExchangeRates();
+    return currency === BASE_CURRENCY || rates[currency] ? currency : "USD";
   } catch {
     return "GBP";
   }

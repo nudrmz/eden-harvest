@@ -6,12 +6,4 @@ export const BUYER_MEMBERSHIP_TIERS = {
 /** Browser session — populated after onboarding submit (mock until Supabase) */
 export const SELLER_PROFILE_STORAGE_KEY = "eden_harvest_seller_profile";
 
-export const BUYER_COUNTRY_OPTIONS = [
-  { value: "GB", label: "United Kingdom" },
-  { value: "US", label: "United States" },
-  { value: "AU", label: "Australia" },
-  { value: "CA", label: "Canada" },
-  { value: "DE", label: "Germany" },
-  { value: "IE", label: "Ireland" },
-  { value: "OT", label: "Other" }
-] as const;
+// Buyer countries: see lib/data/buyer-countries.ts (every country, searchable).

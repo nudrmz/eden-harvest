@@ -8,12 +8,11 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthSpinner } from "@/components/auth/AuthSpinner";
 import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordField } from "@/components/auth/PasswordField";
-import { DarkSelect } from "@/components/ui/DarkSelect";
 import { createClient } from "@/lib/supabase/client";
 import { mapAuthError } from "@/lib/auth/errors";
 import { createUserProfile, fetchUserProfile } from "@/lib/auth/profile";
 import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
-import { BUYER_COUNTRY_OPTIONS } from "@/lib/utils/constants";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 import { getPasswordStrength } from "@/lib/utils/helpers";
 import type { UserRole } from "@/lib/types/user";
 import { firstTouchMetadata, readFirstTouchFromDocument } from "@/lib/campaigns";
@@ -28,6 +27,20 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [buyerCountry, setBuyerCountry] = useState("");
+
+  // Pre-fill the buyer's country from their location; they can still change it.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((geo: { country?: string | null } | null) => {
+        if (!cancelled && geo?.country) setBuyerCountry((current) => current || geo.country!);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -279,15 +292,7 @@ function RegisterForm() {
             <label className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
               Country
             </label>
-            <DarkSelect
-              value={buyerCountry}
-              options={BUYER_COUNTRY_OPTIONS.map((c) => ({
-                value: c.value,
-                label: c.label
-              }))}
-              onChange={setBuyerCountry}
-              placeholder="Select your country"
-            />
+            <CountrySelect value={buyerCountry} onChange={setBuyerCountry} />
           </div>
         ) : null}
 

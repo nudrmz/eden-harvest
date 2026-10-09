@@ -6,11 +6,10 @@ import { ArrowLeft, Bell, HelpCircle, Shield, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { DarkSelect } from "@/components/ui/DarkSelect";
 import { useAuth } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
 import { currencyForBuyerCountry } from "@/lib/auth/profile";
-import { BUYER_COUNTRY_OPTIONS } from "@/lib/utils/constants";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 
 const NOTIFICATION_PREFS_KEY = "eden_harvest_notification_prefs";
 
@@ -157,11 +156,6 @@ export default function SettingsPage() {
     });
   }
 
-  const countryOptions = BUYER_COUNTRY_OPTIONS.map((option) => ({
-    value: option.value,
-    label: option.label
-  }));
-
   const detectedCurrency =
     user?.role === "buyer" && countryCode
       ? currencyForBuyerCountry(countryCode)
@@ -239,11 +233,11 @@ export default function SettingsPage() {
                     <label className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
                       Your country
                     </label>
-                    <DarkSelect
+                    <CountrySelect
                       value={countryCode}
-                      options={countryOptions}
                       onChange={setCountryCode}
                       placeholder="Select country"
+                      showCurrency={false}
                     />
                   </div>
                   <div>

@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { FIRST_TOUCH_COOKIE, firstTouchMetadata, parseFirstTouch } from "@/lib/campaigns";
+import { currencyForCountryCode, isKnownCountry } from "@/lib/data/buyer-countries";
 
 /** Accounts created within this window count as new sign-ups for attribution. */
 const NEW_ACCOUNT_WINDOW_MS = 15 * 60 * 1000;
@@ -114,21 +115,42 @@ export async function GET(request: NextRequest) {
     return bounceToLogin(INVALID_LINK);
   }
 
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  const isNew = Boolean(
+    user?.created_at && Date.now() - new Date(user.created_at).getTime() < NEW_ACCOUNT_WINDOW_MS
+  );
+
   // Email sign-ups carry the campaign in their signUp metadata already; Google
   // sign-ups arrive here, so credit them now. Only brand-new accounts, so an
   // existing user clicking a campaign link later isn't re-attributed.
   const touch = parseFirstTouch(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
-  if (touch) {
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    const isNew =
-      user?.created_at && Date.now() - new Date(user.created_at).getTime() < NEW_ACCOUNT_WINDOW_MS;
-    if (user && isNew && !user.user_metadata?.signup_source) {
-      const { error: metaError } = await supabase.auth.updateUser({
-        data: firstTouchMetadata(touch)
-      });
-      if (metaError) console.error("auth callback: attribution", metaError.message);
+  if (touch && user && isNew && !user.user_metadata?.signup_source) {
+    const { error: metaError } = await supabase.auth.updateUser({
+      data: firstTouchMetadata(touch)
+    });
+    if (metaError) console.error("auth callback: attribution", metaError.message);
+  }
+
+  // Google sign-ups never see the country picker: use their location so prices
+  // show in a sensible currency. They can change it in Settings.
+  const geoCountry = request.headers.get("x-vercel-ip-country")?.toUpperCase();
+  if (user && isNew && geoCountry && isKnownCountry(geoCountry)) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role, country_code")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.role === "buyer" && !profile.country_code) {
+      const { error: geoError } = await supabase
+        .from("users")
+        .update({
+          country_code: geoCountry,
+          detected_currency: currencyForCountryCode(geoCountry)
+        })
+        .eq("id", user.id);
+      if (geoError) console.error("auth callback: country", geoError.message);
     }
   }
 
