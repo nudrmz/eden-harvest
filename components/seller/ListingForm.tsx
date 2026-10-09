@@ -68,8 +68,9 @@ export const EMPTY_LISTING: ListingFormValues = {
   stock_status: "in_season"
 };
 
-const field =
-  "w-full rounded-xl bg-[#1a2e1f] px-4 py-3 text-white outline-none placeholder:text-gray-500";
+// Theme-aware (CSS variables), so text stays readable in both light and dark mode.
+const field = "eden-field-input !px-4 !py-3 !text-base";
+const label = "mb-1 block text-sm font-medium text-[var(--text-secondary)]";
 
 interface Props {
   initial: ListingFormValues;
@@ -180,14 +181,14 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
   return (
     <>
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="mb-4 rounded-xl border border-[#E5484D55] bg-[#E5484D18] px-4 py-3 text-sm text-[#E5484D]">
           <p>{error}</p>
         </div>
       ) : null}
 
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm text-gray-300">Photo</label>
+          <label className={label}>Photo</label>
           <input
             ref={fileInputRef}
             type="file"
@@ -199,7 +200,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex min-h-[160px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-white/20 bg-[#1a2e1f] px-4 py-6 transition hover:border-[#1D9E75]/60"
+              className="flex min-h-[160px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-6 transition hover:border-[#1D9E75]/60"
             >
               {photoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -210,9 +211,9 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
                 />
               ) : (
                 <>
-                  <Camera className="text-white/50" size={28} />
-                  <span className="text-sm font-medium text-white/85">Add a produce photo</span>
-                  <span className="text-xs text-gray-500">
+                  <Camera className="text-[var(--text-tertiary)]" size={28} />
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Add a produce photo</span>
+                  <span className="text-xs text-[var(--text-tertiary)]">
                     Optional · JPG, PNG or WebP · listings with photos get more enquiries
                   </span>
                 </>
@@ -223,19 +224,19 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
                 type="button"
                 onClick={removePhoto}
                 aria-label="Remove photo"
-                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-[#ffffff] hover:bg-black/80"
               >
                 <X size={14} strokeWidth={2.5} />
               </button>
             ) : null}
           </div>
           {photoPreview ? (
-            <p className="mt-1.5 text-xs text-gray-500">Tap the photo to change it.</p>
+            <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">Tap the photo to change it.</p>
           ) : null}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-gray-300">Produce name</label>
+          <label className={label}>Produce name</label>
           <input
             name="product_name"
             value={form.product_name}
@@ -246,7 +247,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-gray-300">Category</label>
+          <label className={label}>Category</label>
           <select name="category" value={form.category} onChange={handleChange} className={field}>
             <option value="">Select category</option>
             {LISTING_CATEGORIES.map((c) => (
@@ -259,7 +260,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
 
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="mb-1 block text-sm text-gray-300">Price</label>
+            <label className={label}>Price</label>
             <input
               name="price_local"
               value={form.price_local}
@@ -272,12 +273,12 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-gray-300">Currency</label>
+            <label className={label}>Currency</label>
             <select
               name="price_currency_code"
               value={form.price_currency_code}
               onChange={handleChange}
-              className="rounded-xl bg-[#1a2e1f] px-4 py-3 text-white outline-none"
+              className="eden-field-input !w-auto !px-4 !py-3 !text-base"
             >
               {/* Keep an unusual saved currency selectable when editing. */}
               {[...new Set([...LISTING_CURRENCIES, form.price_currency_code])].map((c) => (
@@ -291,7 +292,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
 
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="mb-1 block text-sm text-gray-300">Unit</label>
+            <label className={label}>Unit</label>
             <select name="unit" value={form.unit} onChange={handleChange} className={field}>
               {[...new Set([...LISTING_UNITS, form.unit])].map((u) => (
                 <option key={u} value={u}>
@@ -301,7 +302,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
             </select>
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-sm text-gray-300">Min order</label>
+            <label className={label}>Min order</label>
             <input
               name="min_order_quantity"
               value={form.min_order_quantity}
@@ -315,7 +316,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-gray-300">Description</label>
+          <label className={label}>Description</label>
           <textarea
             name="description"
             value={form.description}
@@ -327,7 +328,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-gray-300">Stock</label>
+          <label className={label}>Stock</label>
           <div className="grid grid-cols-2 gap-2">
             {STOCK_OPTIONS.map((opt) => {
               const active = form.stock_status === opt.value;
@@ -339,12 +340,12 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
                   aria-pressed={active}
                   className={`rounded-xl border px-3 py-2.5 text-left transition ${
                     active
-                      ? "border-[#1D9E75] bg-[#1D9E75]/20"
-                      : "border-white/10 bg-[#1a2e1f] hover:border-white/25"
+                      ? "border-[#1D9E75] bg-[#1D9E75]/15 ring-1 ring-[#1D9E75]"
+                      : "border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[#1D9E75]/50"
                   }`}
                 >
-                  <span className="block text-sm font-medium text-white">{opt.label}</span>
-                  <span className="block text-[11px] text-gray-400">{opt.hint}</span>
+                  <span className="block text-sm font-semibold text-[var(--text-primary)]">{opt.label}</span>
+                  <span className="block text-[11px] text-[var(--text-secondary)]">{opt.hint}</span>
                 </button>
               );
             })}
@@ -356,7 +357,7 @@ export function ListingForm({ initial, initialPhotoUrl = null, submitLabel, onSa
         type="button"
         onClick={() => void handleSubmit()}
         disabled={loading}
-        className="mt-8 w-full rounded-2xl bg-green-600 py-4 font-semibold text-white transition-colors hover:bg-green-500 disabled:opacity-50"
+        className="mt-8 w-full rounded-2xl bg-[#1D9E75] py-4 font-semibold text-[#ffffff] shadow-[0_10px_28px_rgba(29,158,117,0.3)] transition hover:brightness-110 disabled:opacity-50"
       >
         {loading ? loadingLabel : submitLabel}
       </button>

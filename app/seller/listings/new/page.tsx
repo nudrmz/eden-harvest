@@ -41,18 +41,18 @@ export default function NewListingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1a0f] p-6 text-white">
+    <div className="min-h-screen bg-[var(--app-bg)] p-6 text-[var(--text-primary)]">
       <div className="mx-auto max-w-lg">
-        <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-400">
+        <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
           <ArrowLeft size={16} /> Dashboard
         </Link>
         <h1 className="mb-1 text-2xl font-bold">Add a listing</h1>
-        <p className="mb-6 text-sm text-gray-400">Buyers will see this on the marketplace</p>
+        <p className="mb-6 text-sm text-[var(--text-secondary)]">Buyers will see this on the marketplace</p>
 
         {needsOnboarding ? (
           <Link
             href="/onboarding"
-            className="mb-4 inline-block text-sm font-semibold text-[#5DCAA5]"
+            className="mb-4 inline-block text-sm font-semibold text-[#1D9E75]"
           >
             Go to seller onboarding →
           </Link>

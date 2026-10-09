@@ -131,31 +131,31 @@ export default function EditListingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1a0f] p-6 text-white">
+    <div className="min-h-screen bg-[var(--app-bg)] p-6 text-[var(--text-primary)]">
       <div className="mx-auto max-w-lg">
-        <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-400">
+        <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
           <ArrowLeft size={16} /> Dashboard
         </Link>
         <h1 className="mb-1 text-2xl font-bold">Edit listing</h1>
 
         {state.kind === "loading" ? (
-          <p className="mt-6 text-sm text-gray-400">Loading listing…</p>
+          <p className="mt-6 text-sm text-[var(--text-secondary)]">Loading listing…</p>
         ) : state.kind === "error" ? (
-          <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="mt-6 rounded-xl border border-[#E5484D55] bg-[#E5484D18] px-4 py-3 text-sm text-[#E5484D]">
             {state.message}
           </div>
         ) : (
           <>
-            <p className="mb-6 text-sm text-gray-400">
+            <p className="mb-6 text-sm text-[var(--text-secondary)]">
               {state.listing.is_active ? (
                 <>
                   Live on the marketplace ·{" "}
-                  <Link href={`/listing/${state.listing.id}`} className="text-[#5DCAA5]">
+                  <Link href={`/listing/${state.listing.id}`} className="font-semibold text-[#1D9E75]">
                     view as a buyer
                   </Link>
                 </>
               ) : (
-                <span className="text-[#F5C442]">Hidden — buyers can&apos;t see this listing</span>
+                <span className="font-semibold text-[var(--accent-gold)]">Hidden — buyers can&apos;t see this listing</span>
               )}
             </p>
 
@@ -165,24 +165,24 @@ export default function EditListingPage() {
               submitLabel="Save changes"
               onSave={save}
               footer={
-                <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="mt-6 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
                   <p className="text-sm font-semibold">
                     {state.listing.is_active ? "Hide this listing" : "Show this listing again"}
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
                     {state.listing.is_active
                       ? "Takes it off the marketplace without deleting it. Your enquiries and reviews are kept, and you can show it again any time."
                       : "Puts it back on the marketplace for buyers to see."}
                   </p>
-                  {toggleError ? <p className="mt-2 text-xs text-red-300">{toggleError}</p> : null}
+                  {toggleError ? <p className="mt-2 text-xs text-[#E5484D]">{toggleError}</p> : null}
                   <button
                     type="button"
                     onClick={() => void toggleVisibility()}
                     disabled={toggling}
                     className={`mt-3 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50 ${
                       state.listing.is_active
-                        ? "border border-white/20 text-white hover:bg-white/10"
-                        : "bg-[#1D9E75] text-white"
+                        ? "border border-[var(--card-border)] text-[var(--text-primary)] hover:border-[#1D9E75]"
+                        : "bg-[#1D9E75] text-[#ffffff]"
                     }`}
                   >
                     {state.listing.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
