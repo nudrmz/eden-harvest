@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/supabase/hooks";
 import { stripeConfig, type VerifiedAccessPlan } from "@/lib/stripe/config";
 
 const BENEFITS = [
-  "Message any seller directly, in-app or on WhatsApp",
+  "Message any seller directly in the Eden Harvest app",
   "See every seller's reviews and ratings",
   "Unlimited enquiries across all listings"
 ];
@@ -220,7 +220,7 @@ function UpgradePageContent() {
               {submitting ? "Redirecting to payment…" : "Continue to payment"}
             </button>
             <p className="mt-2 text-center text-[11px] text-[var(--text-tertiary)]">
-              Cancel anytime from Stripe&apos;s billing portal link in your receipt email.
+              Cancel anytime from Manage subscription on your Profile page.
             </p>
           </>
         )}
