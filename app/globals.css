@@ -372,3 +372,22 @@ main.eden-seller-shell {
 [data-theme="light"] main.eden-seller-shell input::placeholder {
   color: #9c9c95 !important;
 }
+
+/*
+ * Native dropdown lists (<select> options) are drawn by the browser/OS, which
+ * on Windows Chrome uses a white list even in dark mode — leaving our white
+ * option text invisible. Give options an explicit solid background and text
+ * colour from the theme so they're readable in both themes.
+ */
+select {
+  color-scheme: inherit;
+}
+select option,
+select optgroup {
+  background-color: var(--app-bg);
+  color: var(--text-primary);
+}
+select option:checked {
+  background-color: #1d9e75;
+  color: #ffffff;
+}
