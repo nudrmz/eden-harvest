@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageSquare } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageSquare, Pencil } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/hooks";
+import { useIsAdmin } from "@/lib/auth/use-is-admin";
 
 interface ListingDetail {
   id: string;
@@ -27,6 +28,7 @@ interface ListingDetail {
 
 interface SellerSummary {
   id: string;
+  user_id: string;
   farm_name: string;
   state_region: string;
   local_area: string | null;
@@ -47,7 +49,8 @@ export default function ListingDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const listingId = params.id;
-  const { isVerifiedAccess } = useAuth();
+  const { isVerifiedAccess, user } = useAuth();
+  const isAdmin = useIsAdmin();
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [seller, setSeller] = useState<SellerSummary | null>(null);
@@ -100,7 +103,7 @@ export default function ListingDetailPage() {
       const { data: sellerRow } = await supabase
         .from("seller_profiles")
         .select(
-          "id, farm_name, state_region, local_area, is_verified, average_rating, african_country_id"
+          "id, user_id, farm_name, state_region, local_area, is_verified, average_rating, african_country_id"
         )
         .eq("id", listingRow.seller_id)
         .maybeSingle();
@@ -308,6 +311,18 @@ export default function ListingDetailPage() {
           <p className="mt-2 text-[10px] text-white/45">Gold segments = typically available months</p>
         </div>
       </section>
+
+      {seller && (user?.id === seller.user_id || isAdmin) ? (
+        <section className="px-4 pt-4">
+          <Link
+            href={`/seller/listings/${listing.id}/edit`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] py-3 text-sm font-semibold text-[var(--text-primary)]"
+          >
+            <Pencil size={15} />
+            {user?.id === seller.user_id ? "Edit listing" : "Edit listing (admin)"}
+          </Link>
+        </section>
+      ) : null}
 
       <section className="px-4 pt-4">
         {isVerifiedAccess ? (

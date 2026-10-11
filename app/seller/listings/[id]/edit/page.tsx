@@ -32,7 +32,14 @@ interface ListingRow {
 type LoadState =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; listing: ListingRow; sellerCurrency: string | null };
+  | {
+      kind: "ready";
+      listing: ListingRow;
+      sellerCurrency: string | null;
+      /** Editing someone else's listing via admin moderation. */
+      asAdmin: boolean;
+      farmName: string | null;
+    };
 
 function toFormValues(l: ListingRow): ListingFormValues {
   return {
@@ -83,11 +90,52 @@ export default function EditListingPage() {
 
       if (!listing) {
         setState({ kind: "error", message: "We couldn't find that listing." });
-      } else if (!profile || listing.seller_id !== profile.id) {
-        setState({ kind: "error", message: "You can only edit your own listings." });
-      } else {
-        setState({ kind: "ready", listing: listing as ListingRow, sellerCurrency });
+        return;
       }
+
+      if (profile && listing.seller_id === profile.id) {
+        setState({
+          kind: "ready",
+          listing: listing as ListingRow,
+          sellerCurrency,
+          asAdmin: false,
+          farmName: null
+        });
+        return;
+      }
+
+      // Not the owner: admins may still moderate it (saved via the admin API).
+      const isAdmin = await fetch("/api/admin/me")
+        .then((r) => (r.ok ? r.json() : { isAdmin: false }))
+        .then((d: { isAdmin?: boolean }) => Boolean(d.isAdmin))
+        .catch(() => false);
+      if (cancelled) return;
+      if (!isAdmin) {
+        setState({ kind: "error", message: "You can only edit your own listings." });
+        return;
+      }
+
+      const { data: owner } = await supabase
+        .from("seller_profiles")
+        .select("farm_name, african_countries(currency_code)")
+        .eq("id", listing.seller_id)
+        .maybeSingle();
+      if (cancelled) return;
+      const ownerCountry = owner?.african_countries as
+        | { currency_code: string }
+        | { currency_code: string }[]
+        | null
+        | undefined;
+      const ownerCurrency =
+        (Array.isArray(ownerCountry) ? ownerCountry[0] : ownerCountry)?.currency_code ?? null;
+
+      setState({
+        kind: "ready",
+        listing: listing as ListingRow,
+        sellerCurrency: ownerCurrency,
+        asAdmin: true,
+        farmName: (owner?.farm_name as string | undefined) ?? null
+      });
     })();
 
     return () => {
@@ -95,8 +143,29 @@ export default function EditListingPage() {
     };
   }, [id, router]);
 
+  /** Owners update directly (RLS); admins go through the admin API. */
+  const adminUpdate = async (update: Record<string, unknown>): Promise<string | null> => {
+    if (state.kind !== "ready") return "Listing not loaded.";
+    const res = await fetch(`/api/admin/listings/${state.listing.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(update)
+    }).catch(() => null);
+    if (!res) return "Network error. Please try again.";
+    if (res.ok) return null;
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    return body?.error ?? "Couldn't update the listing.";
+  };
+
   const save = async (payload: ListingSavePayload): Promise<string | null> => {
     if (state.kind !== "ready") return "Listing not loaded.";
+    if (state.asAdmin) {
+      const error = await adminUpdate({ ...payload });
+      if (error) return error;
+      router.push(`/listing/${state.listing.id}`);
+      router.refresh();
+      return null;
+    }
     const supabase = createClient();
     // .select() makes a silent RLS refusal (0 rows updated) visible as an error.
     const { data, error } = await supabase
@@ -117,6 +186,16 @@ export default function EditListingPage() {
     setToggling(true);
     setToggleError(null);
     const next = !state.listing.is_active;
+    if (state.asAdmin) {
+      const error = await adminUpdate({ is_active: next });
+      setToggling(false);
+      if (error) {
+        setToggleError(error);
+        return;
+      }
+      setState({ ...state, listing: { ...state.listing, is_active: next } });
+      return;
+    }
     const supabase = createClient();
     const { data, error } = await supabase
       .from("listings")
@@ -138,6 +217,12 @@ export default function EditListingPage() {
           <ArrowLeft size={16} /> Dashboard
         </Link>
         <h1 className="mb-1 text-2xl font-bold">Edit listing</h1>
+        {state.kind === "ready" && state.asAdmin ? (
+          <p className="mb-3 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-gold)]/10 px-3 py-2 text-xs text-[var(--text-primary)]">
+            <span className="font-semibold text-[var(--accent-gold)]">Admin moderation</span> — you&apos;re
+            editing {state.farmName ? <strong>{state.farmName}</strong> : "another seller"}&apos;s listing.
+          </p>
+        ) : null}
 
         {state.kind === "loading" ? (
           <p className="mt-6 text-sm text-[var(--text-secondary)]">Loading listing…</p>
