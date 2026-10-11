@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Check, Copy, Download, QrCode } from "lucide-react";
 import { useAuth } from "@/lib/supabase/hooks";
+import { copyText } from "@/lib/utils/clipboard";
 
 interface Tally {
   total: number;
@@ -28,10 +29,29 @@ interface Payload {
   error?: string;
 }
 
+type ActionState = "busy" | "done" | "failed";
+
+const BUTTON_BASE =
+  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition duration-150 active:scale-95 select-none";
+
+function buttonClass(state?: ActionState | "on"): string {
+  switch (state) {
+    case "done":
+    case "on":
+      return `${BUTTON_BASE} border-[#1D9E75] bg-[#1D9E75]/15 text-[#1D9E75]`;
+    case "failed":
+      return `${BUTTON_BASE} border-[#E5484D] bg-[#E5484D]/10 text-[#E5484D]`;
+    case "busy":
+      return `${BUTTON_BASE} border-[var(--card-border)] text-[var(--text-secondary)] opacity-70`;
+    default:
+      return `${BUTTON_BASE} border-[var(--card-border)] text-[var(--text-primary)] hover:border-[#1D9E75]/60 hover:bg-[#1D9E75]/5`;
+  }
+}
+
 /** Render the QR SVG onto a canvas so it can be saved as a PNG for Canva/WhatsApp. */
-async function downloadPng(slug: string) {
+async function downloadPng(slug: string): Promise<boolean> {
   const res = await fetch(`/api/admin/campaigns/qr?slug=${encodeURIComponent(slug)}`);
-  if (!res.ok) return;
+  if (!res.ok) return false;
   const svg = await res.text();
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
   try {
@@ -46,7 +66,7 @@ async function downloadPng(slug: string) {
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return false;
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, 0, 0, size, size);
@@ -54,6 +74,9 @@ async function downloadPng(slug: string) {
     a.href = canvas.toDataURL("image/png");
     a.download = `eden-harvest-qr-${slug}.png`;
     a.click();
+    return true;
+  } catch {
+    return false;
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -63,7 +86,29 @@ export default function AdminCampaignsPage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState<string | null>(null);
+  // Per-button feedback, keyed "<slug>:<action>".
+  const [actions, setActions] = useState<Record<string, ActionState>>({});
+  // Shown when copying is blocked, so the link can be copied by hand.
+  const [manualCopy, setManualCopy] = useState<string | null>(null);
+
+  const setAction = (key: string, state: ActionState | null, clearAfterMs?: number) => {
+    setActions((prev) => {
+      const next = { ...prev };
+      if (state) next[key] = state;
+      else delete next[key];
+      return next;
+    });
+    if (state && clearAfterMs) {
+      setTimeout(() => {
+        setActions((prev) => {
+          if (prev[key] !== state) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+      }, clearAfterMs);
+    }
+  };
   const [preview, setPreview] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -87,14 +132,16 @@ export default function AdminCampaignsPage() {
     void load();
   }, [authLoading, isAuthenticated, load]);
 
-  const copy = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(url);
-      setTimeout(() => setCopied(null), 1500);
-    } catch {
-      /* ignore */
-    }
+  const copy = async (slug: string, url: string) => {
+    const ok = await copyText(url);
+    setAction(`${slug}:copy`, ok ? "done" : "failed", 2500);
+    setManualCopy(ok ? null : slug);
+  };
+
+  const savePng = async (slug: string) => {
+    setAction(`${slug}:png`, "busy");
+    const ok = await downloadPng(slug).catch(() => false);
+    setAction(`${slug}:png`, ok ? "done" : "failed", 2500);
   };
 
   if (authLoading || loading) {
@@ -169,33 +216,70 @@ export default function AdminCampaignsPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => void copy(link.url)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+                onClick={() => void copy(link.slug, link.url)}
+                className={buttonClass(actions[`${link.slug}:copy`])}
+                aria-live="polite"
               >
-                {copied === link.url ? <Check size={13} /> : <Copy size={13} />}
-                {copied === link.url ? "Copied" : "Copy link"}
+                {actions[`${link.slug}:copy`] === "done" ? (
+                  <>
+                    <Check size={13} /> Copied!
+                  </>
+                ) : actions[`${link.slug}:copy`] === "failed" ? (
+                  <>
+                    <Copy size={13} /> Copy blocked
+                  </>
+                ) : (
+                  <>
+                    <Copy size={13} /> Copy link
+                  </>
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setPreview(preview === link.slug ? null : link.slug)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+                className={buttonClass(preview === link.slug ? "on" : undefined)}
+                aria-pressed={preview === link.slug}
               >
                 <QrCode size={13} /> {preview === link.slug ? "Hide QR" : "Show QR"}
               </button>
               <button
                 type="button"
-                onClick={() => void downloadPng(link.slug)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+                onClick={() => void savePng(link.slug)}
+                disabled={actions[`${link.slug}:png`] === "busy"}
+                className={buttonClass(actions[`${link.slug}:png`])}
               >
-                <Download size={13} /> PNG
+                {actions[`${link.slug}:png`] === "done" ? <Check size={13} /> : <Download size={13} />}
+                {actions[`${link.slug}:png`] === "busy"
+                  ? "Saving…"
+                  : actions[`${link.slug}:png`] === "done"
+                    ? "PNG saved"
+                    : actions[`${link.slug}:png`] === "failed"
+                      ? "Try again"
+                      : "PNG"}
               </button>
               <a
                 href={`/api/admin/campaigns/qr?slug=${link.slug}&download=1`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+                onClick={() => setAction(`${link.slug}:svg`, "done", 2500)}
+                className={buttonClass(actions[`${link.slug}:svg`])}
               >
-                <Download size={13} /> SVG (print)
+                {actions[`${link.slug}:svg`] === "done" ? <Check size={13} /> : <Download size={13} />}
+                {actions[`${link.slug}:svg`] === "done" ? "SVG saved" : "SVG (print)"}
               </a>
             </div>
+            {manualCopy === link.slug ? (
+              <div className="mt-3">
+                <p className="mb-1 text-[11px] text-[var(--text-secondary)]">
+                  Your browser blocked copying. Press and hold (or select) the link below to copy it:
+                </p>
+                <input
+                  readOnly
+                  value={link.url}
+                  onFocus={(e) => e.currentTarget.select()}
+                  autoFocus
+                  className="eden-field-input font-mono text-xs"
+                />
+              </div>
+            ) : null}
             {preview === link.slug ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
