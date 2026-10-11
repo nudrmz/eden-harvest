@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import withPWA from "next-pwa";
 
 /**
  * Campaign short links (lib/campaigns/links.json): edenharvest.app/uk etc.
@@ -59,6 +58,10 @@ function canonicalHostRedirects() {
 
 const nextConfig = {
   reactStrictMode: true,
+  // Every <Image> already uses `unoptimized`; turning the optimizer off
+  // entirely removes the /_next/image endpoint, which several Next.js
+  // advisories target.
+  images: { unoptimized: true },
   async redirects() {
     return [
       ...canonicalHostRedirects(),
@@ -77,13 +80,7 @@ const nextConfig = {
   }
 };
 
-/** PWA is dev-disabled only. On Vercel, next-pwa SW has caused stale/cached JS chunks and dead clicks. */
-const pwaDisabled =
-  process.env.NODE_ENV === "development" || process.env.VERCEL === "1";
-
-export default pwaDisabled
-  ? nextConfig
-  : withPWA({
-      dest: "public",
-      disable: false
-    })(nextConfig);
+// next-pwa was removed: it was already disabled on Vercel (its service worker
+// served stale JS chunks), and installability now comes from app/manifest.ts.
+// Providers.tsx still unregisters any old service worker left on devices.
+export default nextConfig;
