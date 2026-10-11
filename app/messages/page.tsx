@@ -9,7 +9,6 @@ import {
   Channel,
   ChannelList,
   Window,
-  ChannelHeader,
   MessageList,
   MessageInput,
   Thread,
@@ -20,6 +19,7 @@ import { useAuth } from "@/lib/supabase/hooks";
 import { useStreamChatContext } from "@/lib/stream/hooks";
 import { getOtherMemberName } from "@/lib/stream/channel";
 import "stream-chat-react/dist/css/v2/index.css";
+import "./messages.css";
 
 function ChannelMessageEmptyState() {
   const { channel } = useChannelStateContext("ChannelMessageEmptyState");
@@ -33,6 +33,82 @@ function ChannelMessageEmptyState() {
         Send a message to start the conversation about their produce.
       </p>
     </div>
+  );
+}
+
+/** Replaces Stream's header (whose hamburger menu does nothing in our layout). */
+function ConversationHeader() {
+  const { channel } = useChannelStateContext("ConversationHeader");
+  const { client, setActiveChannel } = useChatContext("ConversationHeader");
+  const name = getOtherMemberName(channel, client.userID ?? "");
+
+  return (
+    <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-3">
+      <button
+        type="button"
+        onClick={() => setActiveChannel(undefined)}
+        aria-label="Back to conversations"
+        className="text-white/70"
+      >
+        <ArrowLeft size={20} />
+      </button>
+      <p className="truncate text-base font-semibold text-white">{name}</p>
+    </div>
+  );
+}
+
+/**
+ * Phone-style layout: the conversation list OR one open conversation fills the
+ * screen, never both stacked. Stacking them (each 100% tall) made the page
+ * itself scroll behind the inner lists, which is what made scrolling stick.
+ * The list stays mounted while a chat is open so it keeps its scroll position.
+ */
+function MessagesPanes({ userId, preselectedChannelId }: { userId: string; preselectedChannelId?: string }) {
+  const { channel: activeChannel } = useChatContext("MessagesPanes");
+  const filters = { members: { $in: [userId] }, type: "messaging" };
+  const sort = { last_message_at: -1 as const };
+
+  return (
+    <>
+      <div className={`eh-chat-pane ${activeChannel ? "hidden" : "flex"}`}>
+        <ChannelList
+          filters={filters}
+          sort={sort}
+          customActiveChannel={preselectedChannelId}
+          // Don't auto-open the newest chat on phones; show the list first.
+          setActiveChannelOnMount={Boolean(preselectedChannelId)}
+          getLatestMessagePreview={(channel) => {
+            const latest =
+              channel.state.latestMessages?.[channel.state.latestMessages.length - 1] ??
+              channel.state.messages?.[channel.state.messages.length - 1];
+
+            if (!latest || latest.deleted_at) {
+              return `Say hello to ${getOtherMemberName(channel, userId)}`;
+            }
+
+            const text = latest.text?.trim();
+            return text || "Attachment";
+          }}
+          EmptyStateIndicator={() => (
+            <p className="px-4 py-8 text-center text-sm text-white/50">
+              No conversations yet. Message a seller from a listing to start one.
+            </p>
+          )}
+        />
+      </div>
+      {activeChannel ? (
+        <div className="eh-chat-pane flex">
+          <Channel EmptyStateIndicator={ChannelMessageEmptyState}>
+            <Window>
+              <ConversationHeader />
+              <MessageList />
+              <MessageInput />
+            </Window>
+            <Thread />
+          </Channel>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -105,50 +181,18 @@ function MessagesPageContent() {
     );
   }
 
-  const filters = { members: { $in: [user.id] }, type: "messaging" };
-  const sort = { last_message_at: -1 as const };
-
   return (
-    <main className="app-shell mx-auto flex h-screen w-full max-w-md flex-col">
-      <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4">
+    <main className="app-shell eh-chat-page">
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-4">
         <Link href="/" aria-label="Back" className="text-white/70">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-lg font-semibold text-white">Messages</h1>
       </div>
 
-      <div className="str-chat min-h-0 flex-1" data-theme="dark">
+      <div className="str-chat relative min-h-0 flex-1" data-theme="dark">
         <Chat client={client} theme="str-chat__theme-dark">
-          <ChannelList
-            filters={filters}
-            sort={sort}
-            customActiveChannel={preselectedChannelId}
-            getLatestMessagePreview={(channel) => {
-              const latest =
-                channel.state.latestMessages?.[channel.state.latestMessages.length - 1] ??
-                channel.state.messages?.[channel.state.messages.length - 1];
-
-              if (!latest || latest.deleted_at) {
-                return `Say hello to ${getOtherMemberName(channel, user.id)}`;
-              }
-
-              const text = latest.text?.trim();
-              return text || "Attachment";
-            }}
-            EmptyStateIndicator={() => (
-              <p className="px-4 py-8 text-center text-sm text-white/50">
-                No conversations yet. Message a seller from a listing to start one.
-              </p>
-            )}
-          />
-          <Channel EmptyStateIndicator={ChannelMessageEmptyState}>
-            <Window>
-              <ChannelHeader />
-              <MessageList />
-              <MessageInput />
-            </Window>
-            <Thread />
-          </Channel>
+          <MessagesPanes userId={user.id} preselectedChannelId={preselectedChannelId} />
         </Chat>
       </div>
     </main>

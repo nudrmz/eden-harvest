@@ -1,0 +1,49 @@
+/*
+ * Messages page: lock the page to the visible screen so only the list or the
+ * conversation scrolls — never the page behind it.
+ * 100dvh follows the phone's visible area as the address bar shows/hides;
+ * 100vh (used before) is taller than that on mobile, which made the page
+ * itself scrollable underneath the chat.
+ */
+.eh-chat-page {
+  position: fixed;
+  inset: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 28rem;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* One full-height pane at a time (list or conversation). */
+.eh-chat-pane {
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.eh-chat-pane .str-chat__channel-list,
+.eh-chat-pane .str-chat__channel,
+.eh-chat-pane .str-chat__container,
+.eh-chat-pane .str-chat__main-panel {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Smooth momentum scrolling, and stop scroll "chaining" to the page. */
+.eh-chat-pane .str-chat__channel-list,
+.eh-chat-pane .str-chat__list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* The message list takes the remaining space; header and input stay put. */
+.eh-chat-pane .str-chat__main-panel .str-chat__list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
