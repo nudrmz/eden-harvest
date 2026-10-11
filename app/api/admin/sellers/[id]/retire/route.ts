@@ -11,8 +11,9 @@ import { isAdminUser } from "@/lib/auth/admin";
  * subscription (Verified Access is a buyer subscription), reviews (keyed
  * to users, not profiles) and Stream chat history.
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const params = await paramsPromise;
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

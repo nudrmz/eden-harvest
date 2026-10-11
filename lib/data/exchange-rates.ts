@@ -68,7 +68,7 @@ export function formatMoney(amount: number, currencyCode: string, symbol?: strin
 }
 
 async function readStoredRates(): Promise<{ rates: ExchangeRateMap; fetchedAt: Date | null }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("exchange_rates")
     .select("to_currency, rate, fetched_at")
@@ -144,7 +144,7 @@ export const getExchangeRates = cache(getExchangeRatesUncached);
 
 async function getBuyerCurrencyUncached(): Promise<string> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user }
     } = await supabase.auth.getUser();

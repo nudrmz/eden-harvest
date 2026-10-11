@@ -10,11 +10,16 @@ import {
 export const revalidate = 300;
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params: paramsPromise
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await paramsPromise;
   const path = `/listing/${params.id}`;
   const fallback = sharePreview({
     title: "Produce listing",

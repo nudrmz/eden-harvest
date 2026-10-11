@@ -15,7 +15,7 @@ import { siteUrl } from "@/lib/site";
  * provided" in test mode.
  */
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: authUser }
   } = await supabase.auth.getUser();

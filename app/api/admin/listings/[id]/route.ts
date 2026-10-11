@@ -18,8 +18,9 @@ const EDITABLE = [
   "is_active"
 ] as const;
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function PATCH(request: NextRequest, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const params = await paramsPromise;
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

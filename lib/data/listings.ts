@@ -179,7 +179,7 @@ async function fetchRawListings(options: {
   verifiedOnly?: boolean;
   sortBy?: BrowseListingsParams["sortBy"];
 }): Promise<RawListingRow[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const fetchLimit = Math.max((options.limit ?? 20) * 4, 40);
 
   let query = supabase
@@ -429,7 +429,7 @@ export async function fetchFeaturedListing(): Promise<FeaturedListingDisplay | n
 }
 
 export async function fetchHomeStats(): Promise<HomeStatsDisplay> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // A plain count would include listings whose seller no longer exists, which
   // the grid drops, so the headline number would exceed what is on screen.
@@ -463,7 +463,7 @@ export async function fetchHomeStats(): Promise<HomeStatsDisplay> {
 }
 
 export async function fetchTopVerifiedSellers(limit = 5): Promise<VerifiedSellerCard[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("seller_profiles")
     .select(
@@ -511,7 +511,7 @@ export async function fetchTopVerifiedSellers(limit = 5): Promise<VerifiedSeller
 }
 
 export async function fetchCountrySellerClusters(): Promise<CountrySellerCluster[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("seller_profiles")
     .select("id, african_country_id")
@@ -569,7 +569,7 @@ export async function fetchCountrySellerClusters(): Promise<CountrySellerCluster
 
 export async function resolveCountryIdByName(countryName: string): Promise<string | null> {
   if (!countryName) return null;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("african_countries")
     .select("id")
@@ -603,7 +603,7 @@ export async function fetchHomePageData() {
 }
 
 export async function fetchAfricanCountriesForBrowse() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("african_countries")
     .select("id, name, code, flag_emoji")

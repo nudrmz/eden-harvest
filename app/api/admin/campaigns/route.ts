@@ -30,7 +30,7 @@ async function allUsers(admin: NonNullable<ReturnType<typeof createAdminClient>>
 
 /** Short links plus how many sign-ups each one brought in (first touch). */
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

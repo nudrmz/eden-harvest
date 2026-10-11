@@ -4,7 +4,7 @@ import { fetchUserProfile } from "@/lib/auth/profile";
 import { getStreamServerClient, upsertStreamUser } from "@/lib/stream/server";
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: authUser }
   } = await supabase.auth.getUser();

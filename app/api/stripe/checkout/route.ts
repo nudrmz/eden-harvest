@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
   const plan: VerifiedAccessPlan = body.plan === "yearly" ? "yearly" : "monthly";
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: authUser }
   } = await supabase.auth.getUser();

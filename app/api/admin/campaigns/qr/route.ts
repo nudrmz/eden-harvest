@@ -6,7 +6,7 @@ import { campaignQrSvg } from "@/lib/campaigns/qr";
 import { siteUrl } from "@/lib/site";
 
 export async function GET(request: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

@@ -4,11 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/auth/admin";
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: Request, { params }: RouteParams) {
-  const supabase = createClient();
+export async function POST(_request: Request, { params: paramsPromise }: RouteParams) {
+  const params = await paramsPromise;
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

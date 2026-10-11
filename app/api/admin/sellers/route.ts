@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Every seller profile with its owner and what retiring it would remove. */
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();

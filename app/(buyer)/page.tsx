@@ -5,10 +5,11 @@ import HomePageClient from "./HomePageClient";
 export const revalidate = 60;
 
 interface BuyerHomePageProps {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function BuyerHomePage({ searchParams = {} }: BuyerHomePageProps) {
+export default async function BuyerHomePage({ searchParams: searchParamsPromise }: BuyerHomePageProps) {
+  const searchParams = (await searchParamsPromise) ?? {};
   const code = typeof searchParams.code === "string" ? searchParams.code : null;
   if (code) {
     const type = typeof searchParams.type === "string" ? searchParams.type : "";

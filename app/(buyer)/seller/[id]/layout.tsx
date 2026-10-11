@@ -4,14 +4,19 @@ import { clip, publicSupabase, sharePreview } from "@/lib/seo/share";
 export const revalidate = 300;
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 }
 
 const COLUMNS =
   "id, farm_name, state_region, local_area, farm_photo_url, is_verified, african_countries(name, flag_emoji)";
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params: paramsPromise
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await paramsPromise;
   const path = `/seller/${params.id}`;
   const fallback = sharePreview({
     title: "Farm profile",
