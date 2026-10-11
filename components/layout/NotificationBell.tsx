@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { OwnUserResponse } from "stream-chat";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { useStreamChatContext } from "@/lib/stream/hooks";
 import { getOtherMemberName, latestMessagePreview } from "@/lib/stream/channel";
@@ -24,11 +23,17 @@ const EMPTY_MESSAGE =
 
 const SIGNED_OUT_MESSAGE = "Sign in to see your message notifications.";
 
-/** Events that change either the unread total or which threads are unread. */
+/** Events that can change which conversations are unread. */
 const UNREAD_EVENTS = [
+  "message.new",
+  "message.read",
   "notification.message_new",
   "notification.mark_read",
-  "message.read"
+  "notification.mark_unread",
+  "channel.deleted",
+  "channel.hidden",
+  "channel.visible",
+  "connection.recovered"
 ];
 
 export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
@@ -47,7 +52,7 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
       const channels = await client.queryChannels(
         { type: "messaging", members: { $in: [userId] } },
         { last_message_at: -1 },
-        { limit: 20, state: true }
+        { limit: 30, state: true }
       );
 
       const unread: UnreadConversation[] = [];
@@ -63,13 +68,10 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
       }
 
       setConversations(unread);
-      // total_unread_count only exists on the connected (own) user; the summed
-      // fallback is capped by the query limit above, so prefer Stream's total.
-      const ownUser = client.user as OwnUserResponse | undefined;
-      setUnreadCount(
-        ownUser?.total_unread_count ??
-          unread.reduce((total, item) => total + item.unread, 0)
-      );
+      // The badge is the sum of what the panel lists, so the two always agree.
+      // (Using Stream's total_unread_count snapshot from sign-in left a stale
+      // "1" on the bell after the message had been read.)
+      setUnreadCount(unread.reduce((total, item) => total + item.unread, 0));
     } catch (error) {
       // A failed count should never break the header.
       console.error("unread refresh failed:", error);
@@ -85,16 +87,26 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
 
     void refreshUnread();
 
-    const subscriptions = UNREAD_EVENTS.map((eventType) =>
-      client.on(eventType, (event) => {
-        if (typeof event.total_unread_count === "number") {
-          setUnreadCount(event.total_unread_count);
-        }
-        void refreshUnread();
-      })
-    );
+    // Several events can arrive together (e.g. reading a chat); refresh once.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void refreshUnread(), 300);
+    };
 
-    return () => subscriptions.forEach((subscription) => subscription.unsubscribe());
+    const subscriptions = UNREAD_EVENTS.map((eventType) => client.on(eventType, scheduleRefresh));
+
+    // Coming back to the tab/app (e.g. after reading on another device).
+    const onVisible = () => {
+      if (document.visibilityState === "visible") scheduleRefresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [client, connected, refreshUnread]);
 
   useEffect(() => {
@@ -129,7 +141,11 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setOpen((value) => !value);
+          // Always show an up-to-date list when the panel opens.
+          if (!open) void refreshUnread();
+        }}
         className={`relative flex h-11 w-11 items-center justify-center rounded-full border ${buttonClass}`}
         aria-label={
           unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"
