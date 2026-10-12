@@ -71,6 +71,10 @@ export default function ProfilePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -98,6 +102,37 @@ export default function ProfilePage() {
     await signOut();
     router.push("/");
     router.refresh();
+  }
+
+  function openDeleteDialog() {
+    setDeleteConfirm("");
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function handleDeleteAccount() {
+    if (deleting || deleteConfirm.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const response = await fetch("/api/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: deleteConfirm })
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setDeleteError(payload?.error ?? "Could not delete your account. Please try again.");
+        setDeleting(false);
+        return;
+      }
+      await signOut().catch(() => undefined);
+      router.replace("/?accountDeleted=1");
+      router.refresh();
+    } catch {
+      setDeleteError("Could not reach the server. Check your connection and try again.");
+      setDeleting(false);
+    }
   }
 
   async function handleManageSubscription() {
@@ -221,6 +256,7 @@ export default function ProfilePage() {
             </button>
             <button
               type="button"
+              onClick={openDeleteDialog}
               className="mt-3 w-full text-center text-[11px] text-[var(--text-tertiary)] underline-offset-2 hover:underline"
             >
               Delete account
@@ -247,6 +283,74 @@ export default function ProfilePage() {
           </Link>
         </div>
       )}
+
+      {deleteOpen && user ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+        >
+          <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[var(--card-border)] bg-[var(--app-bg)] p-5">
+            <h2 id="delete-account-title" className="text-base font-semibold text-[var(--text-primary)]">
+              Delete your account?
+            </h2>
+            <p className="mt-2 text-xs text-[var(--text-secondary)]">
+              This is permanent and can&apos;t be undone. We will delete:
+            </p>
+            <ul className="mt-2 space-y-1.5 text-xs text-[var(--text-secondary)]">
+              <li>• Your sign-in, name, email and settings</li>
+              <li>• Your farm profile, listings and photos, if you&apos;re a seller</li>
+              <li>• All your chats and messages, for you and the people you talked to</li>
+              <li>• Your enquiries, plus reviews you wrote or received</li>
+              {isVerifiedAccess ? (
+                <li>
+                  •{" "}
+                  <strong className="text-[var(--text-primary)]">
+                    Your Verified Access subscription is cancelled straight away
+                  </strong>
+                  , with no refund for the rest of the current period
+                </li>
+              ) : null}
+            </ul>
+            <p className="mt-3 text-xs text-[var(--text-secondary)]">
+              You can sign up again later with the same email, but you&apos;ll start from scratch.
+            </p>
+            <label htmlFor="delete-confirm" className="mt-4 block text-xs text-[var(--text-secondary)]">
+              Type <strong className="text-[var(--text-primary)]">DELETE</strong> to confirm
+            </label>
+            <input
+              id="delete-confirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              autoFocus
+              autoCapitalize="characters"
+              autoComplete="off"
+              className="eden-field-input mt-1.5"
+              placeholder="DELETE"
+            />
+            {deleteError ? <p className="mt-2 text-xs text-[#E5484D]">{deleteError}</p> : null}
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleting}
+                className="flex-1 rounded-xl border border-[var(--card-border)] py-2.5 text-sm font-semibold text-[var(--text-primary)] disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleting || deleteConfirm.trim().toUpperCase() !== "DELETE"}
+                className="flex-1 rounded-xl bg-[#E5484D] py-2.5 text-sm font-semibold text-[#ffffff] disabled:opacity-40"
+              >
+                {deleting ? "Deleting…" : "Delete forever"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <MobileBottomNav active="profile" />
     </main>

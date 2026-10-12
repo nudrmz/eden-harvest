@@ -20,5 +20,5 @@ export default async function BuyerHomePage({ searchParams: searchParamsPromise 
   }
 
   const data = await fetchHomePageData();
-  return <HomePageClient {...data} />;
+  return <HomePageClient {...data} accountDeleted={searchParams.accountDeleted === "1"} />;
 }

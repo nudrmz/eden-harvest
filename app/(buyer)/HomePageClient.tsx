@@ -27,6 +27,8 @@ interface HomePageClientProps {
   stats: HomeStatsDisplay;
   topVerifiedSellers: VerifiedSellerCard[];
   location: BuyerLocation;
+  /** Just came from deleting an account: show a one-off confirmation. */
+  accountDeleted?: boolean;
 }
 
 export default function HomePageClient({
@@ -34,7 +36,8 @@ export default function HomePageClient({
   featured,
   stats,
   topVerifiedSellers,
-  location
+  location,
+  accountDeleted = false
 }: HomePageClientProps) {
   const router = useRouter();
   const { theme } = useTheme();
@@ -44,6 +47,7 @@ export default function HomePageClient({
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const hasListings = listings.length > 0;
+  const [showDeletedNotice, setShowDeletedNotice] = useState(accountDeleted);
 
   function goToBrowseSearch(term?: string) {
     const q = (term ?? searchQuery).trim();
@@ -68,6 +72,24 @@ export default function HomePageClient({
 
   return (
     <main className="app-shell mx-auto min-h-screen w-full max-w-md overflow-x-hidden pb-24 no-scrollbar">
+      {showDeletedNotice ? (
+        <div
+          role="status"
+          className="fixed inset-x-4 top-4 z-[80] mx-auto flex max-w-md items-start justify-between gap-3 rounded-xl border border-[#1D9E75]/50 bg-[var(--app-bg)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-lg"
+        >
+          <span>Your account and all its data have been deleted. Sorry to see you go.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setShowDeletedNotice(false);
+              router.replace("/");
+            }}
+            className="shrink-0 text-xs font-semibold text-[#1D9E75]"
+          >
+            OK
+          </button>
+        </div>
+      ) : null}
       <section className="hero-photo relative h-[340px] overflow-hidden rounded-b-[24px] border-b border-[var(--card-border)]">
         <div
           className="absolute inset-0 bg-cover bg-center"
