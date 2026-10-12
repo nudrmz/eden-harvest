@@ -100,7 +100,7 @@ function RegisterForm() {
 
       setPendingConfirmEmail(targetEmail.trim());
       setInfo(
-        "Confirmation email sent. Check inbox and spam. If nothing arrives within a few minutes, wait about an hour — Supabase limits how many auth emails can be sent."
+        "Confirmation email sent. Check your inbox and your spam or junk folder. If nothing arrives within a few minutes, wait about an hour before trying again."
       );
     } catch {
       setError("Could not resend confirmation email. Please try again.");
@@ -167,7 +167,7 @@ function RegisterForm() {
     if (!data.session) {
       setPendingConfirmEmail(trimmedEmail);
       setInfo(
-        "Check your email to confirm your account, then sign in. Also check spam. If nothing arrives, use Resend below."
+        "Check your email to confirm your account, then sign in. Also check your spam or junk folder. If nothing arrives, use Resend below."
       );
       setSubmitting(false);
       return;

@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
         <div className="mt-8 space-y-4">
           <p className="rounded-xl border border-[#1D9E7540] bg-[#1D9E7518] px-3 py-2.5 text-sm text-[#5DCAA5]">
             If an account exists for <strong>{email.trim()}</strong>, you&apos;ll
-            receive a password reset link shortly. Check your inbox and spam folder.
+            receive a password reset link shortly. Check your inbox and your spam or junk folder.
           </p>
           <Link
             href="/login"
