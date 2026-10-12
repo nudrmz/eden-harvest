@@ -332,10 +332,10 @@ export default function SettingsPage() {
               <div className="border-t border-white/10 pt-3">
                 <p className="font-medium text-[var(--text-primary)]">Contact us</p>
                 <a
-                  href="mailto:hello@edenharvest.app"
+                  href="mailto:support@edenharvest.app"
                   className="mt-1 inline-block text-[12px] font-semibold text-[#1D9E75] hover:underline"
                 >
-                  hello@edenharvest.app
+                  support@edenharvest.app
                 </a>
               </div>
             </div>

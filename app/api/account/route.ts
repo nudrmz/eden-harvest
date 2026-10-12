@@ -85,7 +85,7 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "We couldn't cancel your subscription, so your account hasn't been deleted. Please try again or contact admin@edenharvest.app."
+              "We couldn't cancel your subscription, so your account hasn't been deleted. Please try again or contact support@edenharvest.app."
           },
           { status: 502 }
         );
