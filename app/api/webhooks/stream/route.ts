@@ -186,8 +186,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing signature." }, { status: 401 });
   }
 
-  // Must be the raw body — any re-serialisation changes the bytes Stream signed.
-  const rawBody = await request.text();
+  // Must be the raw bytes: Stream may gzip the payload, and decoding it as
+  // text first would corrupt it (and fail the signature check). The SDK
+  // detects and decompresses gzip itself.
+  const rawBody = Buffer.from(await request.arrayBuffer());
 
   let event: StreamWebhookEvent;
   try {
@@ -196,7 +198,11 @@ export async function POST(request: NextRequest) {
       signature
     ) as StreamWebhookEvent;
   } catch (error) {
-    console.error("Stream webhook rejected:", error);
+    console.error(
+      "Stream webhook rejected:",
+      error instanceof Error ? error.message : error,
+      { bytes: rawBody.length, encoding: request.headers.get("content-encoding") }
+    );
     return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
   }
 
