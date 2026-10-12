@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStreamServerClient } from "@/lib/stream/server";
 import { sendNewMessageEmail } from "@/lib/notifications/email";
+import { readNotificationPrefs } from "@/lib/notifications/prefs";
 
 /**
  * Stream event hook. Emails anyone who was offline when a message arrived, so
@@ -30,6 +31,7 @@ interface ReminderChannel {
 interface StreamWebhookEvent {
   type?: string;
   channel_id?: string;
+  channel_type?: string;
   message?: { text?: string; user?: { id?: string; name?: string } };
   user?: { id?: string; name?: string };
   members?: WebhookMember[];
@@ -42,7 +44,11 @@ interface Recipient {
   fullName: string | null;
 }
 
-/** Stream only knows ids and display names, so emails come from our own users table. */
+/**
+ * Stream only knows ids and display names, so emails come from our own users
+ * table. Anyone who has turned off message emails (Settings, or the link in an
+ * email) is left out.
+ */
 async function lookupRecipients(userIds: string[]): Promise<Recipient[]> {
   if (userIds.length === 0) return [];
 
@@ -62,11 +68,45 @@ async function lookupRecipients(userIds: string[]): Promise<Recipient[]> {
     return [];
   }
 
-  return (data ?? [])
-    .filter((row): row is { id: string; email: string; full_name: string | null } =>
-      Boolean(row.email)
-    )
+  const rows = (data ?? []).filter(
+    (row): row is { id: string; email: string; full_name: string | null } => Boolean(row.email)
+  );
+
+  const wanted = await Promise.all(
+    rows.map(async (row) => {
+      const { data: authUser, error: authError } = await admin.auth.admin.getUserById(row.id);
+      if (authError || !authUser.user) return false;
+      return readNotificationPrefs(authUser.user.user_metadata).enquiries;
+    })
+  );
+
+  return rows
+    .filter((_, i) => wanted[i])
     .map((row) => ({ id: row.id, email: row.email, fullName: row.full_name }));
+}
+
+/**
+ * One email per conversation until it's read: only email when this message is
+ * the recipient's first unread one in the channel. Later messages in the same
+ * unread run would just repeat the first email. If Stream can't tell us, send.
+ */
+async function firstUnreadRecipients(
+  channelType: string,
+  channelId: string,
+  userIds: string[]
+): Promise<string[]> {
+  if (userIds.length === 0) return [];
+  try {
+    const channel = getStreamServerClient().channel(channelType, channelId);
+    const state = await channel.query({ state: true, messages: { limit: 1 } });
+    const unread = new Map(
+      (state.read ?? []).map((r) => [r.user?.id, r.unread_messages ?? 0] as const)
+    );
+    return userIds.filter((id) => (unread.get(id) ?? 1) <= 1);
+  } catch (error) {
+    console.error("unread check failed, emailing anyway:", error);
+    return userIds;
+  }
 }
 
 function offlineMemberIds(members: WebhookMember[], senderId: string | undefined): string[] {
@@ -87,13 +127,15 @@ async function handleNewMessage(event: StreamWebhookEvent): Promise<number> {
 
   const senderId = event.message?.user?.id ?? event.user?.id;
   const senderName = event.message?.user?.name ?? event.user?.name ?? "Someone";
-  const targets = offlineMemberIds(event.members ?? [], senderId);
+  const offline = offlineMemberIds(event.members ?? [], senderId);
+  const targets = await firstUnreadRecipients(event.channel_type ?? "messaging", channelId, offline);
   const recipients = await lookupRecipients(targets);
 
   let sent = 0;
   for (const recipient of recipients) {
     const ok = await sendNewMessageEmail({
       to: recipient.email,
+      recipientId: recipient.id,
       recipientName: recipient.fullName,
       senderName,
       preview: event.message?.text ?? null,
@@ -126,6 +168,7 @@ async function handleUnreadReminder(event: StreamWebhookEvent): Promise<number> 
 
     const ok = await sendNewMessageEmail({
       to: recipient.email,
+      recipientId: recipient.id,
       recipientName: recipient.fullName,
       senderName,
       preview: latest?.text ?? null,

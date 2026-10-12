@@ -10,31 +10,12 @@ import { useAuth } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
 import { currencyForBuyerCountry } from "@/lib/auth/profile";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-
-const NOTIFICATION_PREFS_KEY = "eden_harvest_notification_prefs";
-
-interface NotificationPrefs {
-  enquiries: boolean;
-  listingUpdates: boolean;
-  marketing: boolean;
-}
-
-const DEFAULT_PREFS: NotificationPrefs = {
-  enquiries: true,
-  listingUpdates: true,
-  marketing: false
-};
-
-function readNotificationPrefs(): NotificationPrefs {
-  if (typeof window === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = localStorage.getItem(NOTIFICATION_PREFS_KEY);
-    if (!raw) return DEFAULT_PREFS;
-    return { ...DEFAULT_PREFS, ...(JSON.parse(raw) as NotificationPrefs) };
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
+import {
+  DEFAULT_NOTIFICATION_PREFS as DEFAULT_PREFS,
+  NOTIFICATION_PREFS_METADATA_KEY,
+  readNotificationPrefs,
+  type NotificationPrefs
+} from "@/lib/notifications/prefs";
 
 function ToggleRow({
   label,
@@ -83,6 +64,7 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
   const [prefsSaved, setPrefsSaved] = useState(false);
+  const [prefsError, setPrefsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -90,9 +72,19 @@ export default function SettingsPage() {
     setCountryCode(user.country_code ?? "");
   }, [user]);
 
+  // Saved on the account (auth metadata), so the server honours them when emailing.
   useEffect(() => {
-    setPrefs(readNotificationPrefs());
-  }, []);
+    if (!user) return;
+    let cancelled = false;
+    void createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (!cancelled && data.user) setPrefs(readNotificationPrefs(data.user.user_metadata));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,18 +134,22 @@ export default function SettingsPage() {
     setSaveSuccess("Profile updated.");
   }
 
-  function updatePref(key: keyof NotificationPrefs, value: boolean) {
-    setPrefs((prev) => {
-      const next = { ...prev, [key]: value };
-      try {
-        localStorage.setItem(NOTIFICATION_PREFS_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      setPrefsSaved(true);
-      window.setTimeout(() => setPrefsSaved(false), 1500);
-      return next;
+  async function updatePref(key: keyof NotificationPrefs, value: boolean) {
+    const previous = prefs;
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    setPrefsSaved(false);
+    setPrefsError(null);
+    const { error } = await createClient().auth.updateUser({
+      data: { [NOTIFICATION_PREFS_METADATA_KEY]: next }
     });
+    if (error) {
+      setPrefs(previous);
+      setPrefsError("Couldn't save that change. Please try again.");
+      return;
+    }
+    setPrefsSaved(true);
+    window.setTimeout(() => setPrefsSaved(false), 1500);
   }
 
   const detectedCurrency =
@@ -294,27 +290,28 @@ export default function SettingsPage() {
             </div>
             <div className="glass-card px-4">
               <ToggleRow
-                label="Enquiry alerts"
-                description="When a buyer contacts you or you get a reply"
+                label="Message emails"
+                description="Email me when someone messages me while I'm away from Eden Harvest"
                 checked={prefs.enquiries}
-                onChange={(value) => updatePref("enquiries", value)}
+                onChange={(value) => void updatePref("enquiries", value)}
               />
               <ToggleRow
                 label="Listing updates"
                 description="Stock, price, and listing status reminders"
                 checked={prefs.listingUpdates}
-                onChange={(value) => updatePref("listingUpdates", value)}
+                onChange={(value) => void updatePref("listingUpdates", value)}
               />
               <ToggleRow
                 label="Tips & offers"
                 description="Occasional product tips from Eden Harvest"
                 checked={prefs.marketing}
-                onChange={(value) => updatePref("marketing", value)}
+                onChange={(value) => void updatePref("marketing", value)}
               />
             </div>
             {prefsSaved ? (
-              <p className="mt-2 px-1 text-[11px] text-[#5DCAA5]">Preferences saved on this device.</p>
+              <p className="mt-2 px-1 text-[11px] text-[#5DCAA5]">Preferences saved.</p>
             ) : null}
+            {prefsError ? <p className="mt-2 px-1 text-[11px] text-[#E5484D]">{prefsError}</p> : null}
           </section>
 
           <section id="support" className="scroll-mt-24">
