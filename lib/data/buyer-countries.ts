@@ -37,3 +37,33 @@ export function currencyForCountryCode(code: string | null | undefined): string 
 }
 
 export { ALL_COUNTRIES };
+
+/** Compact names for small UI spaces (e.g. the home page location box). */
+const SHORT_NAMES: Record<string, string> = {
+  GB: "UK",
+  US: "USA",
+  AE: "UAE",
+  CD: "DR Congo",
+  CF: "CAR",
+  BA: "Bosnia",
+  DO: "Dominican Rep.",
+  KR: "South Korea",
+  KP: "North Korea",
+  VC: "St Vincent",
+  KN: "St Kitts & Nevis",
+  ST: "São Tomé",
+  TT: "Trinidad",
+  SA: "Saudi Arabia",
+  NZ: "New Zealand",
+  ZA: "South Africa",
+  PG: "Papua NG",
+  AG: "Antigua",
+  VA: "Vatican City",
+  MK: "N. Macedonia"
+};
+
+export function countryShortName(code: string | null | undefined): string {
+  const country = countryByCode(code);
+  if (!country) return "";
+  return SHORT_NAMES[country.code] ?? country.name;
+}

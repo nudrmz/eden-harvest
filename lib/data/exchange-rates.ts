@@ -1,6 +1,8 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { headers } from "next/headers";
+import { countryByCode, countryShortName, currencyForCountryCode } from "@/lib/data/buyer-countries";
 
 const BASE_CURRENCY = "NGN";
 const ER_API_URL = "https://open.er-api.com/v6/latest/NGN";
@@ -142,27 +144,94 @@ async function getExchangeRatesUncached(): Promise<ExchangeRateMap> {
 
 export const getExchangeRates = cache(getExchangeRatesUncached);
 
-async function getBuyerCurrencyUncached(): Promise<string> {
+export interface BuyerLocation {
+  countryCode: string | null;
+  countryName: string;
+  /** Compact name for small spaces (UK, USA, UAE…). */
+  shortName: string;
+  /** Display currency for prices (always one we have an exchange rate for). */
+  currency: string;
+  symbol: string;
+  /** account = from the buyer's settings; detected = from their connection. */
+  source: "account" | "detected" | "default";
+  signedIn: boolean;
+}
+
+/**
+ * Where the viewer is and which currency to show prices in:
+ * 1. a signed-in buyer's chosen country (Settings → Your country);
+ * 2. otherwise the country Vercel detects from their connection, so visitors
+ *    who aren't signed in see their own currency too;
+ * 3. otherwise the United Kingdom / GBP.
+ */
+async function getBuyerLocationUncached(): Promise<BuyerLocation> {
+  let signedIn = false;
+  let countryCode: string | null = null;
+  let currency: string | null = null;
+  let source: BuyerLocation["source"] = "default";
+
   try {
     const supabase = await createClient();
     const {
       data: { user }
     } = await supabase.auth.getUser();
-    if (!user) return "GBP";
-
-    const { data: profile } = await supabase
-      .from("users")
-      .select("detected_currency")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const currency = profile?.detected_currency ?? "GBP";
-    // No rate for this currency (rare): show USD rather than unconverted naira.
-    const rates = await getExchangeRates();
-    return currency === BASE_CURRENCY || rates[currency] ? currency : "USD";
+    if (user) {
+      signedIn = true;
+      const { data: profile } = await supabase
+        .from("users")
+        .select("country_code, detected_currency")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.country_code && countryByCode(profile.country_code)) {
+        countryCode = profile.country_code;
+        currency = profile.detected_currency ?? currencyForCountryCode(countryCode);
+        source = "account";
+      }
+    }
   } catch {
-    return "GBP";
+    /* fall back to detection */
   }
+
+  if (!countryCode) {
+    try {
+      const detected = (await headers()).get("x-vercel-ip-country")?.toUpperCase() ?? null;
+      if (detected && countryByCode(detected)) {
+        countryCode = detected;
+        currency = currencyForCountryCode(detected);
+        source = "detected";
+      }
+    } catch {
+      /* no request context (e.g. build time) */
+    }
+  }
+
+  if (!countryCode) {
+    countryCode = "GB";
+    currency = "GBP";
+  }
+
+  // No exchange rate for this currency (rare): show USD rather than unconverted naira.
+  try {
+    const rates = await getExchangeRates();
+    if (currency && currency !== BASE_CURRENCY && !rates[currency]) currency = "USD";
+  } catch {
+    /* keep currency */
+  }
+
+  const finalCurrency = currency ?? "GBP";
+  return {
+    countryCode,
+    countryName: countryByCode(countryCode)?.name ?? "United Kingdom",
+    shortName: countryShortName(countryCode) || "UK",
+    currency: finalCurrency,
+    symbol: getCurrencySymbol(finalCurrency).trim(),
+    source,
+    signedIn
+  };
 }
 
-export const getBuyerCurrency = cache(getBuyerCurrencyUncached);
+export const getBuyerLocation = cache(getBuyerLocationUncached);
+
+export const getBuyerCurrency = cache(async (): Promise<string> => {
+  return (await getBuyerLocation()).currency;
+});

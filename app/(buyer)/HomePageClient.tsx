@@ -12,7 +12,8 @@ import { useAuth } from "@/lib/supabase/hooks";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { ListingCard } from "@/components/ui/ListingCard";
-import { buyerLocation, categoryChips } from "@/lib/mockData";
+import { categoryChips } from "@/lib/mockData";
+import type { BuyerLocation } from "@/lib/data/exchange-rates";
 import type {
   FeaturedListingDisplay,
   HomeStatsDisplay,
@@ -25,13 +26,15 @@ interface HomePageClientProps {
   featured: FeaturedListingDisplay | null;
   stats: HomeStatsDisplay;
   topVerifiedSellers: VerifiedSellerCard[];
+  location: BuyerLocation;
 }
 
 export default function HomePageClient({
   listings,
   featured,
   stats,
-  topVerifiedSellers
+  topVerifiedSellers,
+  location
 }: HomePageClientProps) {
   const router = useRouter();
   const { theme } = useTheme();
@@ -177,8 +180,14 @@ export default function HomePageClient({
                   {stats.products}
                 </p>
               </div>
-              <div
-                className={`rounded-xl backdrop-blur-sm ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}
+              <Link
+                href={location.signedIn ? "/settings" : "/register"}
+                title={
+                  location.signedIn
+                    ? `${location.countryName} — change your country in Settings`
+                    : `${location.countryName} — prices are shown in your local currency`
+                }
+                className={`block min-w-0 rounded-xl backdrop-blur-sm transition active:scale-95 ${theme === "dark" ? "glass-card" : "border border-white/50 bg-white/80"}`}
                 style={{ padding: "6px 10px" }}
               >
                 <p
@@ -188,18 +197,19 @@ export default function HomePageClient({
                   Your location
                 </p>
                 <p
-                  className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
-                  style={{ fontSize: "16px", fontWeight: 600 }}
+                  className={`truncate leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+                  style={{ fontSize: "14px", fontWeight: 600 }}
                 >
-                  {buyerLocation.city}
-                  <span
-                    className={`ml-1 ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
-                    style={{ fontSize: "12px", fontWeight: 500 }}
-                  >
-                    ({buyerLocation.currency})
-                  </span>
+                  {location.shortName}
                 </p>
-              </div>
+                <p
+                  className={`leading-tight ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
+                  style={{ fontSize: "11px", fontWeight: 500 }}
+                >
+                  {location.currency} {location.symbol !== location.currency ? location.symbol : ""}
+                  {location.signedIn ? " · change" : ""}
+                </p>
+              </Link>
             </div>
           </div>
         </div>

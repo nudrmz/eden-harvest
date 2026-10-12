@@ -4,6 +4,7 @@ import {
   convertCurrency,
   formatMoney,
   getBuyerCurrency,
+  getBuyerLocation,
   getCurrencySymbol,
   getExchangeRates
 } from "@/lib/data/exchange-rates";
@@ -579,13 +580,14 @@ export async function resolveCountryIdByName(countryName: string): Promise<strin
 }
 
 export async function fetchHomePageData() {
-  const [buyerCurrency, rates, stats, topVerifiedSellers] = await Promise.all([
-    getBuyerCurrency(),
+  const [location, rates, stats, topVerifiedSellers] = await Promise.all([
+    getBuyerLocation(),
     getExchangeRates(),
     fetchHomeStats(),
     fetchTopVerifiedSellers(5)
   ]);
 
+  const buyerCurrency = location.currency;
   const homeRows = await fetchRawListings({ limit: 8 });
   const listings = mapRows(homeRows, buyerCurrency, rates);
 
@@ -599,7 +601,7 @@ export async function fetchHomePageData() {
     : null;
   const featured = featuredListing ? toFeatured(featuredListing) : null;
 
-  return { listings, featured, stats, topVerifiedSellers };
+  return { listings, featured, stats, topVerifiedSellers, location };
 }
 
 export async function fetchAfricanCountriesForBrowse() {
