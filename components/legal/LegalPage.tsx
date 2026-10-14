@@ -15,12 +15,15 @@ export function LegalPage({
   title,
   intro,
   sections,
-  otherLink
+  otherLink,
+  showUpdated = true
 }: {
   title: string;
+  /** Hide the "Last updated" line (e.g. on the support page). */
+  showUpdated?: boolean;
   intro: React.ReactNode;
   sections: Section[];
-  otherLink: { href: string; label: string };
+  otherLink: { href: string; label: string } | { href: string; label: string }[];
 }) {
   return (
     <main className="app-shell mx-auto min-h-screen w-full max-w-2xl px-4 pb-16 pt-6 text-[var(--text-primary)]">
@@ -32,7 +35,9 @@ export function LegalPage({
       </Link>
 
       <h1 className="mt-4 font-heading text-2xl font-bold">{title}</h1>
-      <p className="mt-1 text-xs text-[var(--text-tertiary)]">Last updated {LEGAL_LAST_UPDATED}</p>
+      {showUpdated ? (
+        <p className="mt-1 text-xs text-[var(--text-tertiary)]">Last updated {LEGAL_LAST_UPDATED}</p>
+      ) : null}
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">{intro}</div>
 
       <nav aria-label="Contents" className="glass-card mt-6 p-4">
@@ -71,9 +76,14 @@ export function LegalPage({
         </p>
         <p className="mt-2">
           See also our{" "}
-          <Link href={otherLink.href} className="text-[#1D9E75] hover:underline">
-            {otherLink.label}
-          </Link>
+          {(Array.isArray(otherLink) ? otherLink : [otherLink]).map((l, i, all) => (
+            <span key={l.href}>
+              {i > 0 ? (i === all.length - 1 ? " and " : ", ") : null}
+              <Link href={l.href} className="text-[#1D9E75] hover:underline">
+                {l.label}
+              </Link>
+            </span>
+          ))}
           .
         </p>
       </footer>

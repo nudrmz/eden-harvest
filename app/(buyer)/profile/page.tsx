@@ -235,10 +235,10 @@ export default function ProfilePage() {
               Support
             </p>
             <div className="glass-card px-4">
-              <ProfileRow label="Help & FAQ" href="/settings#support" />
-              <ProfileRow label="Contact us" href="/settings#support" />
-              <ProfileRow label="Privacy Policy" href="/settings#legal" />
-              <ProfileRow label="Terms of Service" href="/settings#legal" />
+              <ProfileRow label="Help & FAQ" href="/support" />
+              <ProfileRow label="Contact us" href="/support" />
+              <ProfileRow label="Privacy Policy" href="/privacy" />
+              <ProfileRow label="Terms of Service" href="/terms" />
             </div>
           </section>
 

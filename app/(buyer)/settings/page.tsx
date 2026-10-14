@@ -328,6 +328,9 @@ export default function SettingsPage() {
                   Buyers browse produce, message sellers in Eden Harvest, and complete deals directly.
                   Sellers publish listings from the Seller hub after onboarding.
                 </p>
+                <Link href="/support" className="mt-1 inline-block text-[12px] font-medium text-[#1D9E75] hover:underline">
+                  Visit Help &amp; Support →
+                </Link>
               </div>
               <div className="border-t border-white/10 pt-3">
                 <p className="font-medium text-[var(--text-primary)]">Contact us</p>
