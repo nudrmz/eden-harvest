@@ -204,12 +204,12 @@ export default function AdminCampaignsPage() {
                 <p className="text-lg font-bold leading-none text-[var(--text-primary)]">
                   {link.signups.total}
                 </p>
-                <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--text-tertiary)]">
+                <p className="mt-1 text-[length:calc(10px*var(--fs-small))] uppercase tracking-wide text-[var(--text-tertiary)]">
                   sign-ups
                 </p>
               </div>
             </div>
-            <p className="mt-2 text-[11px] text-[var(--text-tertiary)]">
+            <p className="mt-2 text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)]">
               {link.signups.buyers} buyers · {link.signups.sellers} sellers ·{" "}
               {link.signups.last30} in last 30 days
             </p>
@@ -268,7 +268,7 @@ export default function AdminCampaignsPage() {
             </div>
             {manualCopy === link.slug ? (
               <div className="mt-3">
-                <p className="mb-1 text-[11px] text-[var(--text-secondary)]">
+                <p className="mb-1 text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                   Your browser blocked copying. Press and hold (or select) the link below to copy it:
                 </p>
                 <input
@@ -305,7 +305,7 @@ export default function AdminCampaignsPage() {
         </section>
       ) : null}
 
-      <p className="mt-6 text-[11px] leading-relaxed text-[var(--text-tertiary)]">
+      <p className="mt-6 text-[length:calc(11px*var(--fs-small))] leading-relaxed text-[var(--text-tertiary)]">
         A sign-up counts towards the first campaign link that person opened (remembered for 90
         days). {data?.untracked?.total ?? 0} of {data?.totalUsers ?? 0} accounts came without a
         campaign link — including everyone who signed up before tracking started. To add a link,

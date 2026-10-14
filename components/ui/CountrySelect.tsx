@@ -162,7 +162,7 @@ export function CountrySelect({
               results.map((c, i) => (
                 <li key={`${c.group ?? ""}${c.code}-${i}`}>
                   {c.group ? (
-                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                    <p className="px-3 pb-1 pt-2 text-[length:calc(10px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                       {c.group}
                     </p>
                   ) : null}

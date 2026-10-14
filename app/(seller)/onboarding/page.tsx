@@ -236,7 +236,7 @@ export default function SellerOnboardingPage() {
             );
           })}
         </div>
-        <div className="mt-3 flex justify-between text-[10px]" style={{ color: "rgba(255,255,255,0.72)" }}>
+        <div className="mt-3 flex justify-between text-[length:calc(10px*var(--fs-small))]" style={{ color: "rgba(255,255,255,0.72)" }}>
           <span style={{ color: "rgba(255,255,255,0.9)" }}>
             Step {step} of {TOTAL_STEPS}
           </span>
@@ -280,7 +280,7 @@ export default function SellerOnboardingPage() {
                       {country.flag}
                     </span>
                     <span
-                      className={`text-[11px] font-medium leading-tight ${
+                      className={`text-[length:calc(11px*var(--fs-small))] font-medium leading-tight ${
                         selected
                           ? "text-white"
                           : isDark
@@ -307,7 +307,7 @@ export default function SellerOnboardingPage() {
             </p>
             <div className="mt-6 space-y-4">
               <div>
-                <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+                <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   Farm/Business name
                 </label>
                 <input
@@ -319,7 +319,7 @@ export default function SellerOnboardingPage() {
                 />
               </div>
               <div>
-                <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+                <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   State / region
                 </label>
                 <DarkSelect
@@ -331,7 +331,7 @@ export default function SellerOnboardingPage() {
                 />
               </div>
               <div>
-                <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+                <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   Local area / district
                 </label>
                 <input
@@ -387,7 +387,7 @@ export default function SellerOnboardingPage() {
             </p>
             <div className="mt-6 space-y-4">
               <div>
-                <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+                <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   WhatsApp number
                 </label>
                 <div className="flex gap-2">
@@ -406,13 +406,13 @@ export default function SellerOnboardingPage() {
                     autoComplete="tel-national"
                   />
                 </div>
-                <p className="mt-2 text-[11px] leading-snug text-[rgba(159,225,203,0.95)]">
+                <p className="mt-2 text-[length:calc(11px*var(--fs-small))] leading-snug text-[rgba(159,225,203,0.95)]">
                   Saved on your seller profile. Buyers message you in Eden Harvest.
                 </p>
               </div>
 
               <div>
-                <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+                <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   Farm photo
                 </label>
                 <input
@@ -441,7 +441,7 @@ export default function SellerOnboardingPage() {
                       <span className={`text-sm font-medium ${isDark ? "text-[rgba(255,255,255,0.85)]" : "text-[#1A1A18]"}`}>
                         Upload farm photo
                       </span>
-                      <span className={`text-[11px] ${textTertiary}`}>
+                      <span className={`text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
                         Optional · JPG, PNG or WebP · shown on your profile
                       </span>
                     </>
@@ -459,7 +459,7 @@ export default function SellerOnboardingPage() {
                 ) : null}
                 </div>
                 {photoPreview ? (
-                  <p className={`mt-2 text-[11px] ${textTertiary}`}>
+                  <p className={`mt-2 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
                     Tap the photo to change it. It uploads when you submit.
                   </p>
                 ) : null}
@@ -488,7 +488,7 @@ export default function SellerOnboardingPage() {
                   >
                     <p className={`text-sm font-semibold ${textPrimary}`}>{choice.title}</p>
                     {choice.subtitle ? (
-                      <p className={`mt-1 text-[11px] ${textTertiary}`}>
+                      <p className={`mt-1 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
                         {choice.subtitle}
                       </p>
                     ) : null}
@@ -497,7 +497,7 @@ export default function SellerOnboardingPage() {
               })}
             </div>
             <div className="mt-5">
-              <label className={`mb-1.5 block text-[11px] ${labelTone}`}>
+              <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                 Document number / ID
               </label>
               <input
@@ -507,7 +507,7 @@ export default function SellerOnboardingPage() {
                 placeholder="Enter the number shown on your document"
               />
             </div>
-            <p className={`mt-4 text-[11px] ${textTertiary}`}>
+            <p className={`mt-4 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
               Your verification will be reviewed within 48 hours
             </p>
             {submitError ? (

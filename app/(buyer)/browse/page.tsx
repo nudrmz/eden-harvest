@@ -217,7 +217,7 @@ function BrowsePageContent() {
           >
             <SlidersHorizontal size={13} />
             Filters
-            <span className="rounded-full bg-black/25 px-1.5 py-0.5 text-[10px] text-white">
+            <span className="rounded-full bg-black/25 px-1.5 py-0.5 text-[length:calc(10px*var(--fs-small))] text-white">
               {activeFilterCount}
             </span>
           </button>
@@ -230,7 +230,7 @@ function BrowsePageContent() {
         >
           <div className="glass-card mt-3 space-y-3 p-3">
             <div>
-              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>African country</p>
+              <p className={`mb-1.5 text-[length:calc(11px*var(--fs-small))] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>African country</p>
               <input
                 value={countrySearch}
                 onChange={(event) => setCountrySearch(event.target.value)}
@@ -246,7 +246,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>State/region</p>
+              <p className={`mb-1.5 text-[length:calc(11px*var(--fs-small))] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>State/region</p>
               <DarkSelect
                 value={selectedState}
                 options={stateSelectOptions}
@@ -257,7 +257,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Category</p>
+              <p className={`mb-1.5 text-[length:calc(11px*var(--fs-small))] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Category</p>
               <DarkSelect
                 value={selectedCategory}
                 options={categorySelectOptions}
@@ -286,7 +286,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className={`mb-1 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>
+              <p className={`mb-1 text-[length:calc(11px*var(--fs-small))] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>
                 Price range (GBP): £0 – £{maxPrice}
               </p>
               <input
@@ -301,7 +301,7 @@ function BrowsePageContent() {
             </div>
 
             <div>
-              <p className={`mb-1.5 text-[11px] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Min order (kg/units)</p>
+              <p className={`mb-1.5 text-[length:calc(11px*var(--fs-small))] ${theme === "dark" ? "text-white/70" : "text-[#444441]"}`}>Min order (kg/units)</p>
               <DarkSelect
                 value={String(minOrder)}
                 options={minOrderOptions}

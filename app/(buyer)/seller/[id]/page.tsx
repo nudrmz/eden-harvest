@@ -203,7 +203,7 @@ export default function SellerProfilePage() {
       <section className="relative -mt-8 px-4">
         <div className="glass-card p-4">
           <h1
-            className={`font-heading text-[20px] font-bold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+            className={`font-heading text-[length:calc(20px*var(--fs))] font-bold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
           >
             {seller.farm_name}
           </h1>
@@ -213,13 +213,13 @@ export default function SellerProfilePage() {
           </p>
           <div className="mt-3 flex items-center gap-2">
             {seller.is_verified ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-eden-gold/35 bg-eden-gold/15 px-2.5 py-1 text-[10px] font-semibold text-eden-gold">
+              <span className="inline-flex items-center gap-1 rounded-full border border-eden-gold/35 bg-eden-gold/15 px-2.5 py-1 text-[length:calc(10px*var(--fs-small))] font-semibold text-eden-gold">
                 <CheckCircle2 size={12} />
                 Verified seller
               </span>
             ) : (
               <span
-                className={`rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
+                className={`rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
               >
                 Pending verification
               </span>
@@ -254,8 +254,8 @@ export default function SellerProfilePage() {
             Upgrade to message sellers in-app
           </Link>
         )}
-        {messageError ? <p className="mt-2 text-[11px] text-[#F09595]">{messageError}</p> : null}
-        <p className="mt-2 text-[11px] text-white/45">
+        {messageError ? <p className="mt-2 text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{messageError}</p> : null}
+        <p className="mt-2 text-[length:calc(11px*var(--fs-small))] text-white/45">
           Message this seller in Eden Harvest.
         </p>
       </section>
@@ -265,7 +265,7 @@ export default function SellerProfilePage() {
           <h2 className={`eden-section-title ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>
             About this farm
           </h2>
-          <p className={`mt-3 text-[11px] font-medium ${theme === "dark" ? "text-white/75" : "text-[#444441]"}`}>
+          <p className={`mt-3 text-[length:calc(11px*var(--fs-small))] font-medium ${theme === "dark" ? "text-white/75" : "text-[#444441]"}`}>
             Location: {seller.state_region}
           </p>
         </div>

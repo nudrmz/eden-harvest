@@ -41,7 +41,7 @@ export function LegalPage({
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">{intro}</div>
 
       <nav aria-label="Contents" className="glass-card mt-6 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Contents</p>
+        <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Contents</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
           {sections.map((s) => (
             <li key={s.id}>

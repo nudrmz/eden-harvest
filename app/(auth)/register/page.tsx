@@ -246,7 +246,7 @@ function RegisterForm() {
         ) : null}
 
         <div>
-          <label htmlFor="fullName" className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+          <label htmlFor="fullName" className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
             Full name
           </label>
           <input
@@ -262,7 +262,7 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label htmlFor="reg-email" className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+          <label htmlFor="reg-email" className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
             Email
           </label>
           <input
@@ -289,7 +289,7 @@ function RegisterForm() {
 
         {role === "buyer" ? (
           <div>
-            <label className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+            <label className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
               Country
             </label>
             <CountrySelect value={buyerCountry} onChange={setBuyerCountry} />
@@ -323,7 +323,7 @@ function RegisterForm() {
         nextPath={role === "seller" ? "/onboarding" : "/"}
       />
 
-      <p className="mt-4 text-center text-[11px] leading-relaxed text-[var(--text-tertiary)]">
+      <p className="mt-4 text-center text-[length:calc(11px*var(--fs-small))] leading-relaxed text-[var(--text-tertiary)]">
         By creating an account, you agree to our{" "}
         <Link href="/terms" className="text-[#1D9E75] hover:underline">
           Terms of Service
@@ -342,7 +342,7 @@ function RegisterForm() {
         </Link>
       </p>
 
-      <p className="mt-8 text-center text-[10px] leading-relaxed text-[var(--text-tertiary)]">
+      <p className="mt-8 text-center text-[length:calc(10px*var(--fs-small))] leading-relaxed text-[var(--text-tertiary)]">
         By continuing, you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-2">
           Terms

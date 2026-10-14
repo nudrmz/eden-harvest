@@ -35,7 +35,7 @@ export function PasswordField({
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+      <label htmlFor={id} className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
         {label}
       </label>
       <div className="relative">
@@ -69,7 +69,7 @@ export function PasswordField({
               }}
             />
           </div>
-          <p className="mt-1 text-[10px] capitalize text-[var(--text-tertiary)]">
+          <p className="mt-1 text-[length:calc(10px*var(--fs-small))] capitalize text-[var(--text-tertiary)]">
             {strength} password
           </p>
         </div>

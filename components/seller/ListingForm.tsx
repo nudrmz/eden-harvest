@@ -361,7 +361,7 @@ export function ListingForm({
                   }`}
                 >
                   <span className="block text-sm font-semibold text-[var(--text-primary)]">{opt.label}</span>
-                  <span className="block text-[11px] text-[var(--text-secondary)]">{opt.hint}</span>
+                  <span className="block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">{opt.hint}</span>
                 </button>
               );
             })}

@@ -26,6 +26,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Scaled by --fs / --fs-small (see globals.css) so text can be enlarged
+      // on phones without changing spacing. Unitless line heights scale with it.
+      fontSize: {
+        xs: ["calc(0.75rem * var(--fs-small))", { lineHeight: "1.3333" }],
+        sm: ["calc(0.875rem * var(--fs))", { lineHeight: "1.4286" }],
+        base: ["calc(1rem * var(--fs))", { lineHeight: "1.5" }],
+        lg: ["calc(1.125rem * var(--fs))", { lineHeight: "1.5556" }],
+        xl: ["calc(1.25rem * var(--fs))", { lineHeight: "1.4" }],
+        "2xl": ["calc(1.5rem * var(--fs))", { lineHeight: "1.3333" }],
+        "3xl": ["calc(1.875rem * var(--fs))", { lineHeight: "1.2" }],
+        "4xl": ["calc(2.25rem * var(--fs))", { lineHeight: "1.1111" }]
+      },
       colors: {
         eden: {
           bg: "#0f1f0f",

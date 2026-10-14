@@ -181,7 +181,7 @@ export default function ProfilePage() {
             </p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{user.email}</p>
             <span
-              className={`mt-3 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+              className={`mt-3 rounded-full px-3 py-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide ${
                 isVerifiedAccess
                   ? "border border-eden-gold/40 bg-eden-gold/15 text-eden-gold"
                   : "border border-white/15 bg-white/10 text-white/70"
@@ -195,7 +195,7 @@ export default function ProfilePage() {
           </div>
 
           <section className="mt-8">
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+            <p className="mb-2 px-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
               Account
             </p>
             <div className="glass-card px-4">
@@ -213,13 +213,13 @@ export default function ProfilePage() {
               )}
             </div>
             {portalError ? (
-              <p className="mt-2 px-1 text-[11px] text-[#F09595]">{portalError}</p>
+              <p className="mt-2 px-1 text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{portalError}</p>
             ) : null}
           </section>
 
           {isAdmin ? (
             <section className="mt-6">
-              <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <p className="mb-2 px-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Admin
               </p>
               <div className="glass-card px-4">
@@ -231,7 +231,7 @@ export default function ProfilePage() {
           ) : null}
 
           <section className="mt-6">
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+            <p className="mb-2 px-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
               Support
             </p>
             <div className="glass-card px-4">
@@ -257,7 +257,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={openDeleteDialog}
-              className="mt-3 w-full text-center text-[11px] text-[var(--text-tertiary)] underline-offset-2 hover:underline"
+              className="mt-3 w-full text-center text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)] underline-offset-2 hover:underline"
             >
               Delete account
             </button>

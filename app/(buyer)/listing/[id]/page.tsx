@@ -224,7 +224,7 @@ export default function ListingDetailPage() {
           >
             <ArrowLeft size={16} />
           </button>
-          <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+          <span className="rounded-full bg-black/35 px-2.5 py-1 text-[length:calc(10px*var(--fs-small))] font-semibold uppercase tracking-wide text-white">
             {STATUS_LABELS[listing.stock_status] ?? listing.stock_status}
           </span>
         </div>
@@ -232,9 +232,9 @@ export default function ListingDetailPage() {
 
       <section className="relative -mt-8 px-4">
         <div className="glass-card p-4">
-          <p className="text-[11px] uppercase tracking-wide text-white/55">{listing.category}</p>
+          <p className="text-[length:calc(11px*var(--fs-small))] uppercase tracking-wide text-white/55">{listing.category}</p>
           <h1
-            className={`font-heading mt-1 text-[22px] font-bold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
+            className={`font-heading mt-1 text-[length:calc(22px*var(--fs))] font-bold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
           >
             {listing.product_name}
           </h1>
@@ -252,7 +252,7 @@ export default function ListingDetailPage() {
                 <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>
                   {seller.farm_name}
                 </p>
-                <p className="mt-0.5 text-[11px] text-white/55">
+                <p className="mt-0.5 text-[length:calc(11px*var(--fs-small))] text-white/55">
                   {countryLabel}
                   {countryLabel ? " · " : ""}
                   {seller.local_area ? `${seller.local_area}, ` : ""}
@@ -260,12 +260,12 @@ export default function ListingDetailPage() {
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
                   {seller.is_verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-eden-gold/35 bg-eden-gold/15 px-2 py-0.5 text-[10px] font-semibold text-eden-gold">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-eden-gold/35 bg-eden-gold/15 px-2 py-0.5 text-[length:calc(10px*var(--fs-small))] font-semibold text-eden-gold">
                       <CheckCircle2 size={11} />
                       Verified
                     </span>
                   ) : (
-                    <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] text-white/60">
+                    <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[length:calc(10px*var(--fs-small))] text-white/60">
                       Pending verification
                     </span>
                   )}
@@ -273,7 +273,7 @@ export default function ListingDetailPage() {
               </div>
               <Link
                 href={`/seller/${seller.id}`}
-                className="shrink-0 rounded-xl border border-white/15 px-3 py-2 text-[11px] font-medium text-[#5DCAA5]"
+                className="shrink-0 rounded-xl border border-white/15 px-3 py-2 text-[length:calc(11px*var(--fs-small))] font-medium text-[#5DCAA5]"
               >
                 View profile
               </Link>
@@ -308,7 +308,7 @@ export default function ListingDetailPage() {
               />
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-white/45">Gold segments = typically available months</p>
+          <p className="mt-2 text-[length:calc(10px*var(--fs-small))] text-white/45">Gold segments = typically available months</p>
         </div>
       </section>
 
@@ -343,8 +343,8 @@ export default function ListingDetailPage() {
             Upgrade to message sellers in-app
           </Link>
         )}
-        {messageError ? <p className="mt-2 text-center text-[11px] text-[#F09595]">{messageError}</p> : null}
-        <p className="mt-2 text-center text-[11px] text-white/45">
+        {messageError ? <p className="mt-2 text-center text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{messageError}</p> : null}
+        <p className="mt-2 text-center text-[length:calc(11px*var(--fs-small))] text-white/45">
           Message the seller in Eden Harvest about this produce.
         </p>
       </section>

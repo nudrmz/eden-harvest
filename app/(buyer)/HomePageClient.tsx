@@ -136,12 +136,12 @@ export default function HomePageClient({
                           border: "none",
                           padding: "6px 16px",
                           borderRadius: "20px",
-                          fontSize: "13px"
+                          fontSize: "calc(13px * var(--fs))"
                         }
                       : {
                           background: "rgba(255,255,255,0.15)",
                           border: "0.5px solid rgba(255,255,255,0.3)",
-                          fontSize: "12px",
+                          fontSize: "calc(12px * var(--fs-small))",
                           padding: "5px 12px"
                         }
                   }
@@ -174,13 +174,13 @@ export default function HomePageClient({
               >
                 <p
                   className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
-                  style={{ fontSize: "10px" }}
+                  style={{ fontSize: "calc(10px * var(--fs-small))" }}
                 >
                   Active sellers
                 </p>
                 <p
                   className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
-                  style={{ fontSize: "16px", fontWeight: 600 }}
+                  style={{ fontSize: "calc(16px * var(--fs))", fontWeight: 600 }}
                 >
                   {stats.activeSellers}
                 </p>
@@ -191,13 +191,13 @@ export default function HomePageClient({
               >
                 <p
                   className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
-                  style={{ fontSize: "10px" }}
+                  style={{ fontSize: "calc(10px * var(--fs-small))" }}
                 >
                   Products
                 </p>
                 <p
                   className={`leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
-                  style={{ fontSize: "16px", fontWeight: 600 }}
+                  style={{ fontSize: "calc(16px * var(--fs))", fontWeight: 600 }}
                 >
                   {stats.products}
                 </p>
@@ -214,19 +214,19 @@ export default function HomePageClient({
               >
                 <p
                   className={`leading-none ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
-                  style={{ fontSize: "10px" }}
+                  style={{ fontSize: "calc(10px * var(--fs-small))" }}
                 >
                   Your location
                 </p>
                 <p
                   className={`truncate leading-tight ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}
-                  style={{ fontSize: "14px", fontWeight: 600 }}
+                  style={{ fontSize: "calc(14px * var(--fs))", fontWeight: 600 }}
                 >
                   {location.shortName}
                 </p>
                 <p
                   className={`leading-tight ${theme === "dark" ? "text-white/65" : "text-[#444441]"}`}
-                  style={{ fontSize: "11px", fontWeight: 500 }}
+                  style={{ fontSize: "calc(11px * var(--fs-small))", fontWeight: 500 }}
                 >
                   {location.currency} {location.symbol !== location.currency ? location.symbol : ""}
                   {location.signedIn ? " · change" : ""}
@@ -311,7 +311,7 @@ export default function HomePageClient({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(245,196,66,0.25),transparent_40%)]" />
             <div className="relative flex h-full flex-col p-4">
               <span
-                className="w-fit rounded-full bg-[#F5C4422A] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-eden-gold"
+                className="w-fit rounded-full bg-[#F5C4422A] px-2 py-1 text-[length:calc(10px*var(--fs-small))] font-semibold uppercase tracking-wide text-eden-gold"
                 style={{ textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}
               >
                 {featured.tag}
@@ -435,22 +435,22 @@ export default function HomePageClient({
               className={`rounded-xl border p-2 text-center ${theme === "dark" ? "border-white/10 bg-[#0b160b]" : "border-[#1D9E75] bg-[#1D9E75]"}`}
             >
               <p className={`text-lg font-semibold ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>4.8</p>
-              <p className={`text-[10px] ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>★★★★★</p>
-              <p className={`text-[9px] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Avg seller score</p>
+              <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>★★★★★</p>
+              <p className={`text-[length:calc(9px*var(--fs-small))] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Avg seller score</p>
             </div>
             <div
               className={`rounded-xl border p-2 text-center ${theme === "dark" ? "border-white/10 bg-[#0b160b]" : "border-[#1D9E75] bg-[#1D9E75]"}`}
             >
               <p className={`text-lg font-semibold ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>4.6</p>
-              <p className={`text-[10px] ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>★★★★☆</p>
-              <p className={`text-[9px] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Avg buyer score</p>
+              <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-eden-gold" : "text-white"}`}>★★★★☆</p>
+              <p className={`text-[length:calc(9px*var(--fs-small))] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Avg buyer score</p>
             </div>
             <div
               className={`rounded-xl border p-2 text-center ${theme === "dark" ? "border-white/10 bg-[#0b160b]" : "border-[#1D9E75] bg-[#1D9E75]"}`}
             >
               <p className={`text-lg font-semibold ${theme === "dark" ? "text-[#5DCAA5]" : "text-white"}`}>96%</p>
-              <p className={`text-[10px] ${theme === "dark" ? "text-white/60" : "text-white"}`}>Completed</p>
-              <p className={`text-[9px] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Deals completed</p>
+              <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-white/60" : "text-white"}`}>Completed</p>
+              <p className={`text-[length:calc(9px*var(--fs-small))] ${theme === "dark" ? "text-white/55" : "text-white/90"}`}>Deals completed</p>
             </div>
           </div>
         </div>
@@ -485,7 +485,7 @@ export default function HomePageClient({
                     <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-[#1A1A18]"}`}>
                       {seller.farmName}
                     </p>
-                    <p className={`text-[10px] ${theme === "dark" ? "text-white/60" : "text-[#6B6B66]"}`}>
+                    <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-white/60" : "text-[#6B6B66]"}`}>
                       {seller.countryState}
                     </p>
                   </div>

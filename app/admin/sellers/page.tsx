@@ -145,18 +145,18 @@ export default function AdminSellersPage() {
                     </Link>
                     {s.is_verified ? <BadgeCheck size={14} className="shrink-0 text-[#1D9E75]" /> : null}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+                  <p className="mt-0.5 text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                     {s.state_region}
                     {country ? `, ${country.name}` : ""}
                   </p>
-                  <p className="mt-0.5 truncate text-[11px] text-[var(--text-tertiary)]">
+                  <p className="mt-0.5 truncate text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)]">
                     {owner?.email ?? "No account"}
                     {owner ? ` · account: ${owner.role}` : ""}
                     {owner?.membership_tier === "verified_access" ? " · Verified Access" : ""}
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-[var(--text-tertiary)]">
+              <p className="mt-2 text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)]">
                 {s.activeListingCount} live / {s.listingCount} listings · {s.enquiryCount} enquiries
               </p>
               <button

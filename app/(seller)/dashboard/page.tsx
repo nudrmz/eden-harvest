@@ -149,7 +149,7 @@ export default function SellerDashboardPage() {
         <section className={`${glass} p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className={`text-[11px] uppercase tracking-wide ${textSecondary}`}>
+              <p className={`text-[length:calc(11px*var(--fs-small))] uppercase tracking-wide ${textSecondary}`}>
                 Verification status
               </p>
               <p className={`mt-1 font-heading text-base font-semibold ${textPrimary}`}>
@@ -157,7 +157,7 @@ export default function SellerDashboardPage() {
               </p>
             </div>
             <span
-              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+              className={`rounded-full px-2.5 py-1 text-[length:calc(10px*var(--fs-small))] font-semibold uppercase tracking-wide ${
                 isVerified
                   ? "bg-[rgba(29,158,117,0.18)] text-[#5DCAA5]"
                   : "bg-[rgba(250,199,117,0.18)] text-[#FAC775]"
@@ -175,19 +175,19 @@ export default function SellerDashboardPage() {
 
         <section className="grid grid-cols-3 gap-2">
           <div className={`${glass} p-2.5 text-center`}>
-            <p className={`text-[10px] ${textSecondary}`}>Listings</p>
+            <p className={`text-[length:calc(10px*var(--fs-small))] ${textSecondary}`}>Listings</p>
             <p className={`mt-1 text-sm font-semibold ${textPrimary}`}>
               {loadingData ? "…" : activeListings.length}
             </p>
           </div>
           <div className={`${glass} p-2.5 text-center`}>
-            <p className={`text-[10px] ${textSecondary}`}>Enquiries</p>
+            <p className={`text-[length:calc(10px*var(--fs-small))] ${textSecondary}`}>Enquiries</p>
             <p className={`mt-1 text-sm font-semibold ${textPrimary}`}>
               {loadingData ? "…" : enquiries.length}
             </p>
           </div>
           <div className={`${glass} p-2.5 text-center`}>
-            <p className={`text-[10px] ${textSecondary}`}>Status</p>
+            <p className={`text-[length:calc(10px*var(--fs-small))] ${textSecondary}`}>Status</p>
             <p className="mt-1 text-sm font-semibold text-[#9FE1CB]">
               {activeListings.length ? "Live" : "New"}
             </p>
@@ -248,7 +248,7 @@ export default function SellerDashboardPage() {
                     <p className={`truncate text-sm font-semibold ${textPrimary}`}>
                       {listing.product_name}
                     </p>
-                    <p className={`text-[11px] ${textTertiary}`}>
+                    <p className={`text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
                       {listing.is_active ? (
                         STOCK_LABELS[listing.stock_status] ?? listing.category
                       ) : (
@@ -261,7 +261,7 @@ export default function SellerDashboardPage() {
                       /{listing.unit}
                     </p>
                   </div>
-                  <span className={`flex shrink-0 items-center text-[11px] ${textSecondary}`}>
+                  <span className={`flex shrink-0 items-center text-[length:calc(11px*var(--fs-small))] ${textSecondary}`}>
                     Edit <ChevronRight size={14} />
                   </span>
                 </Link>
@@ -288,7 +288,7 @@ export default function SellerDashboardPage() {
                   <p className={`text-sm font-medium ${textPrimary}`}>
                     {enquiry.listings?.product_name ?? "Listing enquiry"}
                   </p>
-                  <p className={`mt-0.5 text-[11px] ${textTertiary}`}>
+                  <p className={`mt-0.5 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
                     {new Date(enquiry.created_at).toLocaleString()}
                   </p>
                 </div>

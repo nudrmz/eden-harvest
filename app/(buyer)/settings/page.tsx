@@ -32,7 +32,7 @@ function ToggleRow({
     <div className="flex items-center justify-between gap-3 border-b border-white/10 py-3.5 last:border-b-0">
       <div className="min-w-0">
         <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
-        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">{description}</p>
+        <p className="mt-0.5 text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)]">{description}</p>
       </div>
       <button
         type="button"
@@ -182,13 +182,13 @@ export default function SettingsPage() {
           <section id="profile" className="scroll-mt-24">
             <div className="mb-2 flex items-center gap-2 px-1">
               <UserRound size={14} className="text-[#1D9E75]" />
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Edit profile
               </p>
             </div>
             <form onSubmit={(e) => void handleSaveProfile(e)} className="glass-card space-y-4 p-4">
               <div>
-                <label htmlFor="fullName" className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+                <label htmlFor="fullName" className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                   Full name
                 </label>
                 <input
@@ -201,7 +201,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+                <label htmlFor="email" className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                   Email
                 </label>
                 <input
@@ -210,13 +210,13 @@ export default function SettingsPage() {
                   readOnly
                   className="eden-field-input w-full rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-3 py-2.5 text-sm text-[var(--text-tertiary)] opacity-80"
                 />
-                <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">
+                <p className="mt-1 text-[length:calc(10px*var(--fs-small))] text-[var(--text-tertiary)]">
                   Email is managed by your sign-in account.
                 </p>
               </div>
 
               <div>
-                <p className="mb-1.5 text-[11px] text-[var(--text-secondary)]">Account type</p>
+                <p className="mb-1.5 text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">Account type</p>
                 <p className="rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-3 py-2.5 text-sm capitalize text-[var(--text-primary)]">
                   {user.role}
                   {isSeller ? " · Seller hub on dashboard" : ""}
@@ -226,7 +226,7 @@ export default function SettingsPage() {
               {user.role === "buyer" ? (
                 <>
                   <div>
-                    <label className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+                    <label className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                       Your country
                     </label>
                     <CountrySelect
@@ -237,17 +237,17 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] text-[var(--text-secondary)]">Display currency</p>
+                    <p className="mb-1.5 text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">Display currency</p>
                     <p className="rounded-xl border border-[var(--card-border)] bg-[color:var(--search-bg)] px-3 py-2.5 text-sm text-[var(--text-primary)]">
                       {detectedCurrency}
                     </p>
-                    <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">
+                    <p className="mt-1 text-[length:calc(10px*var(--fs-small))] text-[var(--text-tertiary)]">
                       Updates automatically when you change country.
                     </p>
                   </div>
                 </>
               ) : (
-                <p className="text-[11px] leading-relaxed text-[var(--text-tertiary)]">
+                <p className="text-[length:calc(11px*var(--fs-small))] leading-relaxed text-[var(--text-tertiary)]">
                   Farm details are managed in{" "}
                   <Link href="/dashboard" className="font-semibold text-[#1D9E75] hover:underline">
                     Seller hub
@@ -284,7 +284,7 @@ export default function SettingsPage() {
           <section id="notifications" className="scroll-mt-24">
             <div className="mb-2 flex items-center gap-2 px-1">
               <Bell size={14} className="text-[#1D9E75]" />
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Notifications
               </p>
             </div>
@@ -309,26 +309,26 @@ export default function SettingsPage() {
               />
             </div>
             {prefsSaved ? (
-              <p className="mt-2 px-1 text-[11px] text-[#5DCAA5]">Preferences saved.</p>
+              <p className="mt-2 px-1 text-[length:calc(11px*var(--fs-small))] text-[#5DCAA5]">Preferences saved.</p>
             ) : null}
-            {prefsError ? <p className="mt-2 px-1 text-[11px] text-[#E5484D]">{prefsError}</p> : null}
+            {prefsError ? <p className="mt-2 px-1 text-[length:calc(11px*var(--fs-small))] text-[#E5484D]">{prefsError}</p> : null}
           </section>
 
           <section id="support" className="scroll-mt-24">
             <div className="mb-2 flex items-center gap-2 px-1">
               <HelpCircle size={14} className="text-[#1D9E75]" />
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Support
               </p>
             </div>
             <div className="glass-card space-y-3 p-4 text-sm text-[var(--text-secondary)]">
               <div>
                 <p className="font-medium text-[var(--text-primary)]">Help & FAQ</p>
-                <p className="mt-1 text-[12px] leading-relaxed">
+                <p className="mt-1 text-[length:calc(12px*var(--fs-small))] leading-relaxed">
                   Buyers browse produce, message sellers in Eden Harvest, and complete deals directly.
                   Sellers publish listings from the Seller hub after onboarding.
                 </p>
-                <Link href="/support" className="mt-1 inline-block text-[12px] font-medium text-[#1D9E75] hover:underline">
+                <Link href="/support" className="mt-1 inline-block text-[length:calc(12px*var(--fs-small))] font-medium text-[#1D9E75] hover:underline">
                   Visit Help &amp; Support →
                 </Link>
               </div>
@@ -336,7 +336,7 @@ export default function SettingsPage() {
                 <p className="font-medium text-[var(--text-primary)]">Contact us</p>
                 <a
                   href="mailto:support@edenharvest.app"
-                  className="mt-1 inline-block text-[12px] font-semibold text-[#1D9E75] hover:underline"
+                  className="mt-1 inline-block text-[length:calc(12px*var(--fs-small))] font-semibold text-[#1D9E75] hover:underline"
                 >
                   support@edenharvest.app
                 </a>
@@ -347,11 +347,11 @@ export default function SettingsPage() {
           <section id="legal" className="scroll-mt-24">
             <div className="mb-2 flex items-center gap-2 px-1">
               <Shield size={14} className="text-[#1D9E75]" />
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Legal
               </p>
             </div>
-            <div className="glass-card space-y-3 p-4 text-[12px] leading-relaxed text-[var(--text-secondary)]">
+            <div className="glass-card space-y-3 p-4 text-[length:calc(12px*var(--fs-small))] leading-relaxed text-[var(--text-secondary)]">
               <div>
                 <p className="font-medium text-[var(--text-primary)]">Privacy Policy</p>
                 <p className="mt-1">

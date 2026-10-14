@@ -107,7 +107,7 @@ function LoginForm() {
         ) : null}
 
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-[11px] text-[var(--text-secondary)]">
+          <label htmlFor="email" className="mb-1.5 block text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
             Email
           </label>
           <input
@@ -168,7 +168,7 @@ function LoginForm() {
         </Link>
       </p>
 
-      <p className="mt-8 text-center text-[10px] leading-relaxed text-[var(--text-tertiary)]">
+      <p className="mt-8 text-center text-[length:calc(10px*var(--fs-small))] leading-relaxed text-[var(--text-tertiary)]">
         By continuing, you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-2">
           Terms

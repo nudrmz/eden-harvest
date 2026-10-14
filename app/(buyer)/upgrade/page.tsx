@@ -126,7 +126,7 @@ function UpgradePageContent() {
               Message sellers and see reviews across Eden Harvest.
             </p>
             {manageError ? (
-              <p className="mt-3 text-[11px] text-[#F09595]">{manageError}</p>
+              <p className="mt-3 text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{manageError}</p>
             ) : null}
             <button
               type="button"
@@ -196,7 +196,7 @@ function UpgradePageContent() {
                     : "border-[var(--card-border)]"
                 }`}
               >
-                <span className="absolute -top-2 right-3 rounded-full bg-eden-gold px-2 py-0.5 text-[10px] font-semibold text-[#2a1f00]">
+                <span className="absolute -top-2 right-3 rounded-full bg-eden-gold px-2 py-0.5 text-[length:calc(10px*var(--fs-small))] font-semibold text-[#2a1f00]">
                   Save {savings}%
                 </span>
                 <p className="text-xs text-[var(--text-tertiary)]">Yearly</p>
@@ -208,7 +208,7 @@ function UpgradePageContent() {
             </section>
 
             {error ? (
-              <p className="mt-3 text-center text-[11px] text-[#F09595]">{error}</p>
+              <p className="mt-3 text-center text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{error}</p>
             ) : null}
 
             <button
@@ -219,7 +219,7 @@ function UpgradePageContent() {
             >
               {submitting ? "Redirecting to payment…" : "Continue to payment"}
             </button>
-            <p className="mt-2 text-center text-[11px] text-[var(--text-tertiary)]">
+            <p className="mt-2 text-center text-[length:calc(11px*var(--fs-small))] text-[var(--text-tertiary)]">
               Cancel anytime from Manage subscription on your Profile page.
             </p>
           </>

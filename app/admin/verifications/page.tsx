@@ -159,7 +159,7 @@ export default function AdminVerificationsPage() {
       {migrationRequired ? (
         <p className="mt-4 rounded-xl border border-[#FAC77540] bg-[#FAC77518] px-3 py-2.5 text-sm text-[#FAC775]">
           Run migration{" "}
-          <code className="text-[11px]">20260917100000_seller_verification_status.sql</code> in
+          <code className="text-[length:calc(11px*var(--fs-small))]">20260917100000_seller_verification_status.sql</code> in
           Supabase for full approve/reject status tracking.
         </p>
       ) : null}

@@ -80,7 +80,7 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
             />
           ) : null}
           <span
-            className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wide ${statusStyles[listing.stockStatus]}`}
+            className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[length:calc(9px*var(--fs-small))] font-semibold uppercase tracking-wide ${statusStyles[listing.stockStatus]}`}
           >
             {statusLabels[listing.stockStatus]}
           </span>
@@ -111,14 +111,14 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <Link
             href={listingHref}
-            className={`text-[10px] underline-offset-2 hover:underline ${theme === "dark" ? "text-eden-gold/90" : "text-[#1D9E75]"}`}
+            className={`text-[length:calc(10px*var(--fs-small))] underline-offset-2 hover:underline ${theme === "dark" ? "text-eden-gold/90" : "text-[#1D9E75]"}`}
           >
             View listing
           </Link>
-          <span className="text-[10px] text-white/25">·</span>
+          <span className="text-[length:calc(10px*var(--fs-small))] text-white/25">·</span>
           <Link
             href={profileHref}
-            className={`text-[10px] underline-offset-2 hover:underline ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}
+            className={`text-[length:calc(10px*var(--fs-small))] underline-offset-2 hover:underline ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}
           >
             View profile
           </Link>
@@ -126,10 +126,10 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         <p className={`eden-price ${theme === "dark" ? "text-[#5DCAA5]" : "text-[#1D9E75]"}`}>
           {listing.buyerPrice}
         </p>
-        <p className={`text-[10px] ${theme === "dark" ? "text-white/40" : "text-[#9C9C95]"}`}>
+        <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-white/40" : "text-[#9C9C95]"}`}>
           {listing.sellerPrice}
         </p>
-        <p className={`text-[10px] ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}>
+        <p className={`text-[length:calc(10px*var(--fs-small))] ${theme === "dark" ? "text-white/55" : "text-[#9C9C95]"}`}>
           {listing.minOrder}
         </p>
         {showSeasonBar ? (
@@ -144,7 +144,7 @@ export function ListingCard({ listing, showSeasonBar = false }: ListingCardProps
         ) : null}
         <Link
           href={listingHref}
-          className={`mt-1 block w-full rounded-lg py-1.5 text-center text-[10px] font-medium ${
+          className={`mt-1 block w-full rounded-lg py-1.5 text-center text-[length:calc(10px*var(--fs-small))] font-medium ${
             theme === "dark"
               ? "border border-[#2faf7e99] bg-[#25D3661f] text-[#6BE79E]"
               : "border border-[#1D9E75] bg-[#1D9E75] text-white"

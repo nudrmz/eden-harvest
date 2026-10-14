@@ -154,7 +154,7 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
       >
         <Bell size={18} style={{ color: iconColor }} />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-eden-gold px-1 text-[9px] font-bold text-[#0f1f0f]">
+          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-eden-gold px-1 text-[length:calc(9px*var(--fs-small))] font-bold text-[#0f1f0f]">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
@@ -169,7 +169,7 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
             {conversations.length > 0 ? (
               <button
                 type="button"
-                className="text-[11px] font-medium text-eden-gold hover:underline"
+                className="text-[length:calc(11px*var(--fs-small))] font-medium text-eden-gold hover:underline"
                 onClick={() => void markAllRead()}
               >
                 Mark all read
@@ -195,11 +195,11 @@ export function NotificationBell({ variant = "hero" }: NotificationBellProps) {
                       <span className="block truncate text-xs font-semibold text-[var(--text-primary)]">
                         {conversation.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] text-[var(--text-secondary)]">
+                      <span className="mt-0.5 block truncate text-[length:calc(11px*var(--fs-small))] text-[var(--text-secondary)]">
                         {conversation.preview}
                       </span>
                     </span>
-                    <span className="shrink-0 rounded-full bg-eden-gold px-1.5 text-[9px] font-bold leading-4 text-[#0f1f0f]">
+                    <span className="shrink-0 rounded-full bg-eden-gold px-1.5 text-[length:calc(9px*var(--fs-small))] font-bold leading-4 text-[#0f1f0f]">
                       {conversation.unread}
                     </span>
                   </Link>
