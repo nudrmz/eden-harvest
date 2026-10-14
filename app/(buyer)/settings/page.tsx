@@ -355,6 +355,9 @@ export default function SettingsPage() {
                   We store your account details, listings, and messages to run the marketplace. Seller
                   contact numbers stay on the seller profile.
                 </p>
+                <Link href="/privacy" className="mt-1 inline-block font-medium text-[#1D9E75] hover:underline">
+                  Read the full Privacy Policy →
+                </Link>
               </div>
               <div className="border-t border-white/10 pt-3">
                 <p className="font-medium text-[var(--text-primary)]">Terms of Service</p>
@@ -362,6 +365,9 @@ export default function SettingsPage() {
                   Eden Harvest connects buyers and sellers. Trades happen between you and the other party
                   through in-app messages. Always verify quality and payment terms before completing a deal.
                 </p>
+                <Link href="/terms" className="mt-1 inline-block font-medium text-[#1D9E75] hover:underline">
+                  Read the full Terms of Service →
+                </Link>
               </div>
             </div>
           </section>
