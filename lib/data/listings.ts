@@ -58,6 +58,8 @@ interface RawListingRow {
 export interface BrowseListingsParams {
   search?: string;
   countryId?: string;
+  /** Seller's state / region (case-insensitive exact match). */
+  state?: string;
   category?: string;
   verifiedOnly?: boolean;
   sortBy?: "newest" | "highest_rated" | "most_enquired" | "price_low_high" | "price_high_low";
@@ -213,7 +215,35 @@ async function fetchRawListings(options: {
   }
 
   if (options.search?.trim()) {
-    query = query.ilike("product_name", `%${options.search.trim()}%`);
+    // Strip characters that have meaning inside a PostgREST or() filter.
+    const term = options.search.trim().replace(/[,()*%\\:"']/g, " ").replace(/\s+/g, " ").trim();
+    if (term) {
+      const like = `%${term}%`;
+      // Quoted so dots or spaces in the term can't be read as filter syntax.
+      const quoted = `"${like}"`;
+      // Match the farm name, region or country too, as the search box promises.
+      const { data: countries } = await supabase
+        .from("african_countries")
+        .select("id")
+        .ilike("name", like);
+      const countryIds = (countries ?? []).map((c) => c.id as string);
+      const sellerFilters = [`farm_name.ilike.${quoted}`, `state_region.ilike.${quoted}`];
+      if (countryIds.length) sellerFilters.push(`african_country_id.in.(${countryIds.join(",")})`);
+      const { data: sellers } = await supabase
+        .from("seller_profiles")
+        .select("id, user_id")
+        .or(sellerFilters.join(","));
+      // Listings may store either the profile id or (older rows) the auth user id.
+      const sellerIds = (sellers ?? []).flatMap((s) => [s.id as string, s.user_id as string]).filter(Boolean);
+
+      const listingFilters = [
+        `product_name.ilike.${quoted}`,
+        `category.ilike.${quoted}`,
+        `description.ilike.${quoted}`
+      ];
+      if (sellerIds.length) listingFilters.push(`seller_id.in.(${sellerIds.join(",")})`);
+      query = query.or(listingFilters.join(","));
+    }
   }
 
   if (options.category && options.category !== "All") {
@@ -387,6 +417,11 @@ export async function fetchListingsForBrowse(
   });
 
   let listings = mapRows(rows, currency, rates);
+
+  if (params.state?.trim()) {
+    const state = params.state.trim().toLowerCase();
+    listings = listings.filter((listing) => listing.stateRegion?.trim().toLowerCase() === state);
+  }
 
   if (params.maxPriceGbp !== undefined && params.maxPriceGbp < 50) {
     listings = listings.filter(

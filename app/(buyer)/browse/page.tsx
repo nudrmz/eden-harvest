@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, List, Map, Search, SlidersHorizontal } from "lucide-react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -35,35 +35,54 @@ function BrowsePageContent() {
   const searchParams = useSearchParams();
   const { theme } = useTheme();
   const [isMapView, setIsMapView] = useState(false);
-  const [query, setQuery] = useState("");
+  // Read the link's filters on the first render, so the first fetch is
+  // already filtered (fetching "everything" first raced the filtered fetch).
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+  const [debouncedQuery, setDebouncedQuery] = useState(() => searchParams.get("q") ?? "");
   const [listingsList, setListingsList] = useState<ListingDisplay[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
   const [countryClusters, setCountryClusters] = useState<CountrySellerCluster[]>([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(() => searchParams.get("filters") === "open");
   const [sortBy, setSortBy] = useState<SortKey>("newest");
 
   const [selectedCountry, setSelectedCountry] = useState("");
   const [countrySearch, setCountrySearch] = useState("");
   const [selectedState, setSelectedState] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("category") ?? "");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [maxPrice, setMaxPrice] = useState(50);
   const [minOrder, setMinOrder] = useState(1);
 
+  // Later navigations to /browse?category=… (e.g. from the home chips) while mounted.
+  const lastParams = useRef(searchParams.toString());
   useEffect(() => {
-    const category = searchParams.get("category");
-    const q = searchParams.get("q");
-    if (category) setSelectedCategory(category);
-    if (q) setQuery(q);
+    const current = searchParams.toString();
+    if (current === lastParams.current) return;
+    lastParams.current = current;
+    setSelectedCategory(searchParams.get("category") ?? "");
+    const q = searchParams.get("q") ?? "";
+    setQuery(q);
+    setDebouncedQuery(q);
     if (searchParams.get("filters") === "open") setFiltersOpen(true);
   }, [searchParams]);
 
+  // Search once typing pauses, not on every letter.
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebouncedQuery(query.trim()), 350);
+    return () => window.clearTimeout(handle);
+  }, [query]);
+
+  // Only the newest request may update the list; slower, older responses are ignored.
+  const requestSeq = useRef(0);
+
   const loadListings = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setListingsLoading(true);
     try {
       const params = new URLSearchParams();
-      if (query.trim()) params.set("q", query.trim());
+      if (debouncedQuery) params.set("q", debouncedQuery);
       if (selectedCountry) params.set("country", selectedCountry);
+      if (selectedState) params.set("state", selectedState);
       if (selectedCategory) params.set("category", selectedCategory);
       if (verifiedOnly) params.set("verified", "true");
       if (sortBy) params.set("sort", sortBy);
@@ -73,13 +92,15 @@ function BrowsePageContent() {
 
       const response = await fetch(`/api/listings?${params.toString()}`);
       const payload = (await response.json()) as { listings?: ListingDisplay[] };
+      if (seq !== requestSeq.current) return;
       setListingsList(payload.listings ?? []);
     } catch {
+      if (seq !== requestSeq.current) return;
       setListingsList([]);
     } finally {
-      setListingsLoading(false);
+      if (seq === requestSeq.current) setListingsLoading(false);
     }
-  }, [query, selectedCountry, selectedCategory, verifiedOnly, sortBy, maxPrice, minOrder]);
+  }, [debouncedQuery, selectedCountry, selectedState, selectedCategory, verifiedOnly, sortBy, maxPrice, minOrder]);
 
   useEffect(() => {
     void loadListings();
@@ -331,6 +352,29 @@ function BrowsePageContent() {
       </section>
 
       <section className="px-4 pt-3">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+          {["", ...browseCategories].map((category) => {
+            const active = selectedCategory === category;
+            return (
+              <button
+                type="button"
+                key={category || "all"}
+                onClick={() => setSelectedCategory(category)}
+                aria-pressed={active}
+                className={`eden-category-chip whitespace-nowrap rounded-full border px-3 py-1.5 transition ${
+                  active
+                    ? "border-eden-primary bg-eden-primary text-white"
+                    : "border-[#F0EDE6] bg-[#F0EDE6] text-[#444441]"
+                }`}
+              >
+                {category || "All"}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="px-4 pt-2">
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
           {sortPills.map((pill) => (
             <button

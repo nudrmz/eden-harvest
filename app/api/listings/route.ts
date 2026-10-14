@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const params: BrowseListingsParams = {
       search: searchParams.get("q") ?? undefined,
       countryId: countryId ?? undefined,
+      state: searchParams.get("state") ?? undefined,
       category: searchParams.get("category") ?? undefined,
       verifiedOnly: searchParams.get("verified") === "true",
       sortBy: (searchParams.get("sort") as BrowseListingsParams["sortBy"]) ?? "newest",

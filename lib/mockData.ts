@@ -201,18 +201,6 @@ export const buyerLocation = {
   userName: "Emmanuel"
 };
 
-export const categoryChips = [
-  "All",
-  "Dried goods",
-  "Grains",
-  "Spices",
-  "Seafood",
-  "Oils",
-  "Fresh",
-  "Livestock",
-  "Beverages",
-  "Nuts & Seeds"
-];
 
 export const homeStats = {
   activeSellers: 842,
@@ -578,6 +566,9 @@ export const browseCategories = [
   "Nuts & Seeds",
   "Roots & Tubers"
 ];
+
+/** Home page chips: same names sellers pick from, so every chip can match. */
+export const categoryChips = ["All", ...browseCategories];
 
 export const sellerCountryClusters: SellerLocationCluster[] = [
   { countryCode: "NG", countryName: "Nigeria", flag: "🇳🇬", lat: 9.08, lng: 7.49, sellers: 84 },
