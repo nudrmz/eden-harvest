@@ -474,39 +474,73 @@ export default function SellerOnboardingPage() {
             <p className={`mt-1 text-sm ${textSecondary}`}>
               Verified sellers get more enquiries and buyer trust
             </p>
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              {verificationChoices.map((choice) => {
+            {verificationChoices.length > 1 ? (
+              <p className={`mt-5 text-sm font-semibold ${textPrimary}`}>
+                Choose <span className="text-[#1D9E75]">ONE</span> of these. You only need one.
+              </p>
+            ) : null}
+            <div role="radiogroup" aria-label="Verification document" className="mt-3 flex flex-col">
+              {verificationChoices.map((choice, index) => {
                 const picked = verificationChoiceId === choice.id;
                 return (
-                  <button
-                    key={choice.id}
-                    type="button"
-                    onClick={() => setVerificationChoiceId(choice.id)}
-                    className={`${glassCard} rounded-2xl p-3 text-left transition hover:bg-[rgba(14,26,14,0.92)] ${
-                      picked ? "border-2 border-[#1D9E75]" : ""
-                    }`}
-                  >
-                    <p className={`text-sm font-semibold ${textPrimary}`}>{choice.title}</p>
-                    {choice.subtitle ? (
-                      <p className={`mt-1 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
-                        {choice.subtitle}
-                      </p>
+                  <div key={choice.id}>
+                    {index > 0 ? (
+                      <div className="my-2 flex items-center gap-3" aria-hidden="true">
+                        <span className="h-px flex-1 bg-[var(--card-border)]" />
+                        <span className={`text-xs font-bold tracking-widest ${textSecondary}`}>OR</span>
+                        <span className="h-px flex-1 bg-[var(--card-border)]" />
+                      </div>
                     ) : null}
-                  </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={picked}
+                      onClick={() => setVerificationChoiceId(choice.id)}
+                      className={`${glassCard} flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-[rgba(14,26,14,0.92)] ${
+                        picked ? "border-2 border-[#1D9E75]" : ""
+                      }`}
+                    >
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                          picked ? "border-[#1D9E75]" : "border-[var(--text-tertiary)]"
+                        }`}
+                      >
+                        {picked ? <span className="h-2.5 w-2.5 rounded-full bg-[#1D9E75]" /> : null}
+                      </span>
+                      <span className="min-w-0">
+                        <span className={`block text-sm font-semibold ${textPrimary}`}>{choice.title}</span>
+                        {choice.subtitle ? (
+                          <span className={`mt-1 block text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
+                            {choice.subtitle}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  </div>
                 );
               })}
             </div>
-            <div className="mt-5">
-              <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
-                Document number / ID
-              </label>
-              <input
-                className={inputClass}
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
-                placeholder="Enter the number shown on your document"
-              />
-            </div>
+            {(() => {
+              const picked = verificationChoices.find((c) => c.id === verificationChoiceId);
+              return (
+                <div className="mt-5">
+                  <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
+                    {picked ? `Your ${picked.title} number` : "Document number"}
+                  </label>
+                  <input
+                    className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                    value={documentNumber}
+                    onChange={(e) => setDocumentNumber(e.target.value)}
+                    disabled={!picked}
+                    placeholder={
+                      picked
+                        ? `Enter your ${picked.title} number`
+                        : "Choose one option above first"
+                    }
+                  />
+                </div>
+              );
+            })()}
             <p className={`mt-4 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
               Your verification will be reviewed within 48 hours
             </p>
