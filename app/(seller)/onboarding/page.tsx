@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { DarkSelect } from "@/components/ui/DarkSelect";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import { isPlausiblePhone, toE164 } from "@/lib/utils/phone";
 import {
   browseCategories,
   getSellerVerificationChoices,
@@ -44,6 +46,10 @@ export default function SellerOnboardingPage() {
   const [localArea, setLocalArea] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [phoneDigits, setPhoneDigits] = useState("");
+  // The phone's country defaults to the farm's country but can be any country
+  // (e.g. a farmer abroad, or a UK number for a family member who handles sales).
+  const [phoneCountry, setPhoneCountry] = useState("");
+  const [phoneCountryChosen, setPhoneCountryChosen] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [verificationChoiceId, setVerificationChoiceId] = useState("");
@@ -87,7 +93,10 @@ export default function SellerOnboardingPage() {
   useEffect(() => {
     setVerificationChoiceId("");
     setDocumentNumber("");
-  }, [countryCode]);
+    if (!phoneCountryChosen) setPhoneCountry(countryCode);
+  }, [countryCode, phoneCountryChosen]);
+
+  const effectivePhoneCountry = phoneCountry || countryCode;
 
   const toggleCategory = (name: string) => {
     setSelectedCategories((prev) =>
@@ -99,7 +108,7 @@ export default function SellerOnboardingPage() {
   const canAdvanceStep2 =
     farmName.trim().length > 0 && stateRegion.length > 0 && localArea.trim().length > 0;
   const canAdvanceStep3 = selectedCategories.length > 0;
-  const canAdvanceStep4 = phoneDigits.replace(/\D/g, "").length >= 7;
+  const canAdvanceStep4 = isPlausiblePhone(effectivePhoneCountry, phoneDigits);
 
   const canSubmitStep5 =
     verificationChoiceId.length > 0 && documentNumber.trim().length > 0;
@@ -118,7 +127,7 @@ export default function SellerOnboardingPage() {
       stateRegion,
       localArea: localArea.trim(),
       categories: selectedCategories,
-      phoneE164: `${selectedCountry.phoneCode}${phoneDigits.replace(/\D/g, "")}`,
+      phoneE164: toE164(effectivePhoneCountry, phoneDigits),
       verificationType: verificationChoiceId,
       documentNumber: documentNumber.trim(),
       submittedAt: Date.now()
@@ -390,22 +399,21 @@ export default function SellerOnboardingPage() {
                 <label className={`mb-1.5 block text-[length:calc(11px*var(--fs-small))] ${labelTone}`}>
                   WhatsApp number
                 </label>
-                <div className="flex gap-2">
-                  <div
-                    className={`${glassCard} flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-[rgba(255,255,255,0.95)]`}
-                  >
-                    <span className="text-lg">{selectedCountry.flag}</span>
-                    <span className={isDark ? "text-[rgba(255,255,255,0.85)]" : "text-[#1A1A18]"}>{selectedCountry.phoneCode}</span>
-                  </div>
-                  <input
-                    className={`${inputClass} min-w-0 flex-1`}
-                    inputMode="numeric"
-                    value={phoneDigits}
-                    onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d\s]/g, ""))}
-                    placeholder="8012345678"
-                    autoComplete="tel-national"
-                  />
-                </div>
+                <PhoneNumberInput
+                  countryCode={effectivePhoneCountry}
+                  onCountryChange={(code) => {
+                    setPhoneCountry(code);
+                    setPhoneCountryChosen(true);
+                  }}
+                  value={phoneDigits}
+                  onChange={setPhoneDigits}
+                  inputClassName={inputClass}
+                  placeholder="8012345678"
+                  priorityCodes={[countryCode, "GB", "US", "NG", "GH"].filter(Boolean)}
+                />
+                <p className={`mt-1.5 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
+                  Tap the code to use a number from any country.
+                </p>
                 <p className="mt-2 text-[length:calc(11px*var(--fs-small))] leading-snug text-[rgba(159,225,203,0.95)]">
                   Saved on your seller profile. Buyers message you in Eden Harvest.
                 </p>

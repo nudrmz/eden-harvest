@@ -73,6 +73,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Any country is fine; it just has to be a full international number.
+  if (!/^\+[1-9]\d{6,14}$/.test(whatsappNumber)) {
+    return NextResponse.json(
+      { error: "Please enter a valid phone number, including the country code." },
+      { status: 400 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user: authUser }
