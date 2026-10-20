@@ -230,6 +230,12 @@ function RegisterForm() {
         </button>
       </div>
 
+      {role === "seller" ? (
+        <p className="mt-3 text-center text-xs font-medium text-[#1D9E75]">
+          Free to join and list your produce. No fees for sellers.
+        </p>
+      ) : null}
+
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
         {error ? (
           <p

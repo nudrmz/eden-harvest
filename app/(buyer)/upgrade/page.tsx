@@ -22,7 +22,7 @@ function yearlySavingsPercent(): number {
 function UpgradePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, isVerifiedAccess, refreshProfile } = useAuth();
+  const { user, loading, isVerifiedAccess, isSeller, refreshProfile } = useAuth();
 
   const [plan, setPlan] = useState<VerifiedAccessPlan>("yearly");
   const [submitting, setSubmitting] = useState(false);
@@ -146,6 +146,15 @@ function UpgradePageContent() {
           </div>
         ) : (
           <>
+            {isSeller ? (
+              <div className="mb-4 rounded-xl border border-[#1D9E75]/40 bg-[#1D9E75]/10 px-4 py-3 text-sm text-[var(--text-primary)]">
+                <p className="font-semibold">Selling on Eden Harvest is free.</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  You can list produce and reply to every buyer at no cost. Verified Access is only
+                  needed if you also want to start conversations with other sellers as a buyer.
+                </p>
+              </div>
+            ) : null}
             {checkoutStatus === "canceled" ? (
               <p className="mb-4 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-xs text-[var(--text-secondary)]">
                 Checkout was canceled — no charge was made.

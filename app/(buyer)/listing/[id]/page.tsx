@@ -324,6 +324,8 @@ export default function ListingDetailPage() {
         </section>
       ) : null}
 
+      {/* No "message the seller" box on your own listing. */}
+      {seller && user?.id === seller.user_id ? null : (
       <section className="px-4 pt-4">
         {isVerifiedAccess ? (
           <button
@@ -348,6 +350,7 @@ export default function ListingDetailPage() {
           Message the seller in Eden Harvest about this produce.
         </p>
       </section>
+      )}
 
       <MobileBottomNav active="browse" />
     </main>

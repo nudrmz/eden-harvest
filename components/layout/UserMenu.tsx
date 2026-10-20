@@ -14,7 +14,7 @@ interface UserMenuProps {
 
 export function UserMenu({ variant = "hero" }: UserMenuProps) {
   const router = useRouter();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, isSeller, isVerifiedAccess } = useAuth();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -167,17 +167,19 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
               </Link>
             </li>
           ) : null}
-          <li>
-            <Link
-              href="/upgrade"
-              role="menuitem"
-              className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
-              onClick={() => setOpen(false)}
-            >
-              <Shield size={16} className="text-eden-gold" />
-              Upgrade to Verified Access
-            </Link>
-          </li>
+          {!isSeller && !isVerifiedAccess ? (
+            <li>
+              <Link
+                href="/upgrade"
+                role="menuitem"
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[rgba(29,158,117,0.12)]"
+                onClick={() => setOpen(false)}
+              >
+                <Shield size={16} className="text-eden-gold" />
+                Upgrade to Verified Access
+              </Link>
+            </li>
+          ) : null}
           <li>
             <Link
               href="/settings"

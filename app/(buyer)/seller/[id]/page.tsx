@@ -46,7 +46,7 @@ export default function SellerProfilePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const sellerId = params.id;
-  const { isVerifiedAccess } = useAuth();
+  const { isVerifiedAccess, user } = useAuth();
 
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [listings, setListings] = useState<SellerListing[]>([]);
@@ -235,6 +235,8 @@ export default function SellerProfilePage() {
         </div>
       </section>
 
+      {/* No "message this seller" box on your own farm page. */}
+      {seller && user?.id === seller.user_id ? null : (
       <section className="px-4 pt-4">
         {isVerifiedAccess ? (
           <button
@@ -259,6 +261,7 @@ export default function SellerProfilePage() {
           Message this seller in Eden Harvest.
         </p>
       </section>
+      )}
 
       <section className="px-4 pt-4">
         <div className="glass-card p-4">

@@ -67,7 +67,7 @@ function ProfileActionRow({ label, onClick, busy = false, goldArrow = false }: P
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading, isVerifiedAccess, signOut } = useAuth();
+  const { user, loading, isVerifiedAccess, isSeller, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
@@ -184,10 +184,12 @@ export default function ProfilePage() {
               className={`mt-3 rounded-full px-3 py-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide ${
                 isVerifiedAccess
                   ? "border border-eden-gold/40 bg-eden-gold/15 text-eden-gold"
-                  : "border border-white/15 bg-white/10 text-white/70"
+                  : isSeller
+                    ? "border border-[#1D9E75]/50 bg-[#1D9E75]/15 text-[#1D9E75]"
+                    : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-secondary)]"
               }`}
             >
-              {isVerifiedAccess ? "Verified Access" : "Free"}
+              {isVerifiedAccess ? "Verified Access" : isSeller ? "Seller" : "Free"}
             </span>
             <p className="mt-2 text-xs text-[var(--text-tertiary)]">
               Member since {formatMemberSince(user.created_at)}
@@ -201,16 +203,18 @@ export default function ProfilePage() {
             <div className="glass-card px-4">
               <ProfileRow label="Edit profile" href="/settings#profile" />
               <ProfileRow label="Notification preferences" href="/settings#notifications" />
-              {!isVerifiedAccess ? (
-                <ProfileRow label="Upgrade to Verified Access" href="/upgrade" goldArrow />
-              ) : (
+              {/* Selling is free: sellers never see upgrade prompts. Anyone who
+                  does have a subscription can still manage it. */}
+              {isVerifiedAccess ? (
                 <ProfileActionRow
                   label={managingSubscription ? "Opening billing portal…" : "Manage subscription"}
                   onClick={() => void handleManageSubscription()}
                   busy={managingSubscription}
                   goldArrow
                 />
-              )}
+              ) : !isSeller ? (
+                <ProfileRow label="Upgrade to Verified Access" href="/upgrade" goldArrow />
+              ) : null}
             </div>
             {portalError ? (
               <p className="mt-2 px-1 text-[length:calc(11px*var(--fs-small))] text-[#F09595]">{portalError}</p>
