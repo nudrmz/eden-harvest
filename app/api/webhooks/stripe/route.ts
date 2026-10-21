@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripeServerClient } from "@/lib/stripe/server";
+import { setAppMetadata } from "@/lib/access/server";
 
 /**
  * Stripe event hook — this is what actually flips membership_tier. The
@@ -62,6 +63,9 @@ async function setMembership(params: {
   if (error) {
     console.error("stripe webhook: membership_tier update failed:", error.message);
   }
+
+  // What access checks actually trust (users can't edit app_metadata).
+  await setAppMetadata(params.userId, { va_paid: params.tier === "verified_access" });
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {

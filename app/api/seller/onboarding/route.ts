@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { saveSellerPrivateDetails } from "@/lib/seller/privateDetails";
 import { isOwnPhotoUrl } from "@/lib/storage/photos";
 
 interface OnboardingBody {
@@ -129,6 +130,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const savedPrivate = await saveSellerPrivateDetails(admin, authUser.id, {
+      whatsapp: whatsappNumber,
+      documentValue
+    });
+    if (!savedPrivate) {
+      return NextResponse.json(
+        { error: "Could not save your details. Please try again." },
+        { status: 500 }
+      );
+    }
+
     const { data: inserted, error: insertError } = await admin
       .from("seller_profiles")
       .insert({
@@ -137,9 +149,11 @@ export async function POST(request: NextRequest) {
         african_country_id: country.id,
         state_region: stateRegion,
         local_area: body.localArea?.trim() || null,
-        whatsapp_number: whatsappNumber,
+        // Private: kept in the seller's account (see lib/seller/privateDetails),
+        // not in this table, which other users can read.
+        whatsapp_number: "",
         verification_document_type: documentType,
-        verification_document_value: documentValue,
+        verification_document_value: "",
         farm_photo_url: farmPhotoUrl
       })
       .select(PROFILE_COLUMNS)

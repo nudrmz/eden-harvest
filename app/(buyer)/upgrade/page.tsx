@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/lib/supabase/hooks";
+import { formatTrialEnd, trialDaysLeft } from "@/lib/access/trial";
 import { stripeConfig, type VerifiedAccessPlan } from "@/lib/stripe/config";
 
 const BENEFITS = [
@@ -22,7 +23,11 @@ function yearlySavingsPercent(): number {
 function UpgradePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, isVerifiedAccess, isSeller, refreshProfile } = useAuth();
+  const { user, loading, isSeller, refreshProfile, access } = useAuth();
+  // Trial buyers still see the plans, so they can subscribe before it ends.
+  const hasPlan = Boolean(access?.paid || access?.reason === "admin");
+  const onTrial = !isSeller && access?.reason === "trial";
+  const trialEnded = !isSeller && !access?.paid && Boolean(access?.trialEndsAt) && !access?.trialActive;
 
   const [plan, setPlan] = useState<VerifiedAccessPlan>("yearly");
   const [submitting, setSubmitting] = useState(false);
@@ -36,7 +41,7 @@ function UpgradePageContent() {
   // Right after a successful checkout the webhook may still be a second or
   // two behind — poll a few times rather than making the buyer refresh by hand.
   useEffect(() => {
-    if (checkoutStatus !== "success" || isVerifiedAccess) return;
+    if (checkoutStatus !== "success" || access?.paid) return;
 
     const interval = window.setInterval(() => {
       pollAttempts.current += 1;
@@ -47,7 +52,7 @@ function UpgradePageContent() {
     }, 1500);
 
     return () => window.clearInterval(interval);
-  }, [checkoutStatus, isVerifiedAccess, refreshProfile]);
+  }, [checkoutStatus, access?.paid, refreshProfile]);
 
   async function handleManageSubscription() {
     setManaging(true);
@@ -116,7 +121,7 @@ function UpgradePageContent() {
               Sign in to upgrade to Verified Access.
             </p>
           </div>
-        ) : isVerifiedAccess ? (
+        ) : hasPlan ? (
           <div className="glass-card p-5 text-center">
             <ShieldCheck size={32} className="mx-auto text-eden-gold" />
             <h2 className="mt-3 font-heading text-lg font-semibold text-[var(--text-primary)]">
@@ -154,6 +159,24 @@ function UpgradePageContent() {
                   needed if you also want to start conversations with other sellers as a buyer.
                 </p>
               </div>
+            ) : null}
+            {onTrial && access?.trialEndsAt && checkoutStatus !== "success" ? (
+              <div className="mb-4 rounded-xl border border-eden-gold/40 bg-eden-gold/10 px-4 py-3 text-sm text-[var(--text-primary)]">
+                <p className="font-semibold text-eden-gold">
+                  You&apos;re on a free trial: {trialDaysLeft(access.trialEndsAt)}{" "}
+                  {trialDaysLeft(access.trialEndsAt) === 1 ? "day" : "days"} left
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  You have full Verified Access until {formatTrialEnd(access.trialEndsAt)}. Subscribe now
+                  to keep messaging sellers after that. Your plan starts straight away.
+                </p>
+              </div>
+            ) : null}
+            {trialEnded && access?.trialEndsAt ? (
+              <p className="mb-4 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-xs text-[var(--text-secondary)]">
+                Your free trial ended on {formatTrialEnd(access.trialEndsAt)}. Subscribe to keep
+                messaging sellers.
+              </p>
             ) : null}
             {checkoutStatus === "canceled" ? (
               <p className="mb-4 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-xs text-[var(--text-secondary)]">

@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchUserProfile } from "@/lib/auth/profile";
+import { getBuyerAccess } from "@/lib/access/server";
 import { enquiryChannelId, getStreamServerClient, upsertStreamUser } from "@/lib/stream/server";
 
 interface StartChatBody {
@@ -63,16 +64,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
-  // Re-check entitlement server-side — the client's membership_tier is not
-  // trusted for gating, only for UI. This is what actually enforces
-  // "subscription lapsed => in-app conversation access stops."
-  const buyerProfile = await fetchUserProfile(supabase, authUser.id);
-  if (buyerProfile?.membership_tier !== "verified_access") {
+  // Re-check entitlement server-side. getBuyerAccess reads server-only
+  // account data, never the users row (which users can edit), and includes
+  // the free trial for new buyers. This is what enforces "no Verified Access
+  // => no new in-app conversations."
+  const access = await getBuyerAccess(authUser);
+  if (!access.verified) {
     return NextResponse.json(
-      { error: "Verified Access is required to message sellers in-app." },
+      {
+        error: access.trialEndsAt
+          ? "Your free trial has ended. Subscribe to Verified Access to message sellers."
+          : "Verified Access is required to message sellers in-app."
+      },
       { status: 403 }
     );
   }
+
+  const buyerProfile = await fetchUserProfile(supabase, authUser.id);
 
   const admin = createAdminClient();
   if (!admin) {
@@ -105,7 +113,7 @@ export async function POST(request: NextRequest) {
     await Promise.all([
       upsertStreamUser({
         id: authUser.id,
-        name: buyerProfile.full_name ?? authUser.email?.split("@")[0] ?? "Buyer"
+        name: buyerProfile?.full_name ?? authUser.email?.split("@")[0] ?? "Buyer"
       }),
       upsertStreamUser({ id: sellerProfile.user_id, name: sellerProfile.farm_name })
     ]);

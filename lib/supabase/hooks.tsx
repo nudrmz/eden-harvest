@@ -13,6 +13,24 @@ import { createClient } from "@/lib/supabase/client";
 import { ensureUserProfile } from "@/lib/auth/profile";
 import type { EdenUser } from "@/lib/types/user";
 
+/** Mirrors BuyerAccess in lib/access/server.ts (worked out on the server). */
+export interface AccessState {
+  verified: boolean;
+  reason: "paid" | "trial" | "admin" | "none";
+  paid: boolean;
+  trialEndsAt: string | null;
+  trialActive: boolean;
+}
+
+async function fetchAccess(): Promise<AccessState | null> {
+  try {
+    const res = await fetch("/api/access", { cache: "no-store" });
+    return res.ok ? ((await res.json()) as AccessState) : null;
+  } catch {
+    return null;
+  }
+}
+
 const AUTH_LOADING_TIMEOUT_MS = 2000;
 
 interface AuthContextValue {
@@ -21,7 +39,10 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isSeller: boolean;
   isBuyer: boolean;
+  /** Paid, admin or free trial: what the server will actually allow. */
   isVerifiedAccess: boolean;
+  /** Details for the trial badge / upgrade prompts. Null until loaded. */
+  access: AccessState | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -32,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<EdenUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [access, setAccess] = useState<AccessState | null>(null);
 
   const finishLoading = useCallback(() => {
     setLoading(false);
@@ -49,7 +71,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { profile } = await ensureUserProfile(supabase, authUser);
     setUser(profile);
+    setAccess(await fetchAccess());
   }, [supabase]);
+
+  // Access comes from the server (never from the editable users row).
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) {
+      setAccess(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchAccess().then((next) => {
+      if (!cancelled) setAccess(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => {
     let mounted = true;
@@ -134,11 +173,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(user),
       isSeller: user?.role === "seller",
       isBuyer: user?.role === "buyer",
-      isVerifiedAccess: user?.membership_tier === "verified_access",
+      isVerifiedAccess: Boolean(user && access?.verified),
+      access: user ? access : null,
       signOut,
       refreshProfile
     }),
-    [user, loading, signOut, refreshProfile]
+    [user, loading, access, signOut, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

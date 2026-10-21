@@ -9,6 +9,7 @@ import { AuthSpinner } from "@/components/auth/AuthSpinner";
 import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
+import { TRIAL_DAYS } from "@/lib/access/trial";
 import { mapAuthError } from "@/lib/auth/errors";
 import { createUserProfile, fetchUserProfile } from "@/lib/auth/profile";
 import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
@@ -234,7 +235,11 @@ function RegisterForm() {
         <p className="mt-3 text-center text-xs font-medium text-[#1D9E75]">
           Free to join and list your produce. No fees for sellers.
         </p>
-      ) : null}
+      ) : (
+        <p className="mt-3 text-center text-xs font-medium text-eden-gold">
+          Try Verified Access free for {TRIAL_DAYS} days: message any seller. No card needed.
+        </p>
+      )}
 
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
         {error ? (

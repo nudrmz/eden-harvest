@@ -8,6 +8,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { FarmLogoAvatar } from "@/components/ui/FarmLogoAvatar";
 import { useAuth } from "@/lib/supabase/hooks";
+import { formatTrialEnd, trialDaysLeft } from "@/lib/access/trial";
 import { getInitials } from "@/lib/utils/helpers";
 
 function formatMemberSince(createdAt: string): string {
@@ -67,7 +68,11 @@ function ProfileActionRow({ label, onClick, busy = false, goldArrow = false }: P
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading, isVerifiedAccess, isSeller, signOut } = useAuth();
+  const { user, loading, isVerifiedAccess, isSeller, signOut, access } = useAuth();
+  // Paid (or admin) shows "Verified Access"; a buyer's free trial gets its own badge.
+  const onTrial = !isSeller && access?.reason === "trial";
+  const fullAccess = isVerifiedAccess && !onTrial;
+  const trialDays = onTrial ? trialDaysLeft(access?.trialEndsAt ?? null) : 0;
   const [isAdmin, setIsAdmin] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
@@ -182,15 +187,27 @@ export default function ProfilePage() {
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{user.email}</p>
             <span
               className={`mt-3 rounded-full px-3 py-1 text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide ${
-                isVerifiedAccess
+                fullAccess || onTrial
                   ? "border border-eden-gold/40 bg-eden-gold/15 text-eden-gold"
                   : isSeller
                     ? "border border-[#1D9E75]/50 bg-[#1D9E75]/15 text-[#1D9E75]"
                     : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-secondary)]"
               }`}
             >
-              {isVerifiedAccess ? "Verified Access" : isSeller ? "Seller" : "Free"}
+              {fullAccess
+                ? "Verified Access"
+                : isSeller
+                  ? "Seller"
+                  : onTrial
+                    ? `Free trial · ${trialDays} ${trialDays === 1 ? "day" : "days"} left`
+                    : "Free"}
             </span>
+            {onTrial && access?.trialEndsAt ? (
+              <p className="mt-2 max-w-xs text-xs text-[var(--text-secondary)]">
+                Full Verified Access until {formatTrialEnd(access.trialEndsAt)}. Subscribe any time to
+                keep messaging sellers after that.
+              </p>
+            ) : null}
             <p className="mt-2 text-xs text-[var(--text-tertiary)]">
               Member since {formatMemberSince(user.created_at)}
             </p>
@@ -205,15 +222,19 @@ export default function ProfilePage() {
               <ProfileRow label="Notification preferences" href="/settings#notifications" />
               {/* Selling is free: sellers never see upgrade prompts. Anyone who
                   does have a subscription can still manage it. */}
-              {isVerifiedAccess ? (
+              {access?.paid ? (
                 <ProfileActionRow
                   label={managingSubscription ? "Opening billing portal…" : "Manage subscription"}
                   onClick={() => void handleManageSubscription()}
                   busy={managingSubscription}
                   goldArrow
                 />
-              ) : !isSeller ? (
-                <ProfileRow label="Upgrade to Verified Access" href="/upgrade" goldArrow />
+              ) : !isSeller && access?.reason !== "admin" ? (
+                <ProfileRow
+                  label={onTrial ? "Subscribe to Verified Access" : "Upgrade to Verified Access"}
+                  href="/upgrade"
+                  goldArrow
+                />
               ) : null}
             </div>
             {portalError ? (
@@ -308,7 +329,7 @@ export default function ProfilePage() {
               <li>• Your farm profile, listings and photos, if you&apos;re a seller</li>
               <li>• All your chats and messages, for you and the people you talked to</li>
               <li>• Your enquiries, plus reviews you wrote or received</li>
-              {isVerifiedAccess ? (
+              {access?.paid ? (
                 <li>
                   •{" "}
                   <strong className="text-[var(--text-primary)]">

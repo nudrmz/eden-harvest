@@ -2,6 +2,32 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/auth/admin";
+import { getSellerPrivateDetails, moveSellerPrivateDetails } from "@/lib/seller/privateDetails";
+
+interface QueueRow {
+  user_id?: string;
+  whatsapp_number?: string | null;
+  verification_document_value?: string | null;
+  [key: string]: unknown;
+}
+
+/** Fill in each seller's private numbers from their account, for admins only. */
+async function withPrivateDetails(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  rows: QueueRow[]
+): Promise<QueueRow[]> {
+  return Promise.all(
+    rows.map(async (row) => {
+      if (!row.user_id) return row;
+      const details = await getSellerPrivateDetails(admin, row.user_id);
+      return {
+        ...row,
+        whatsapp_number: details.whatsapp ?? row.whatsapp_number ?? "",
+        verification_document_value: details.documentValue ?? row.verification_document_value ?? ""
+      };
+    })
+  );
+}
 
 export async function GET() {
   const supabase = await createClient();
@@ -21,11 +47,16 @@ export async function GET() {
     );
   }
 
+  // Older sellers' numbers still sit in seller_profiles: move them out first.
+  const moved = await moveSellerPrivateDetails(admin);
+  if (moved > 0) console.info(`moved private details for ${moved} seller(s)`);
+
   const { data, error } = await admin
     .from("seller_profiles")
     .select(
       `
       id,
+      user_id,
       farm_name,
       state_region,
       local_area,
@@ -50,6 +81,7 @@ export async function GET() {
         .select(
           `
           id,
+          user_id,
           farm_name,
           state_region,
           local_area,
@@ -70,7 +102,7 @@ export async function GET() {
       }
 
       return NextResponse.json({
-        sellers: fallback.data ?? [],
+        sellers: await withPrivateDetails(admin, (fallback.data ?? []) as QueueRow[]),
         migrationRequired: true
       });
     }
@@ -78,5 +110,8 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ sellers: data ?? [], migrationRequired: false });
+  return NextResponse.json({
+    sellers: await withPrivateDetails(admin, (data ?? []) as QueueRow[]),
+    migrationRequired: false
+  });
 }

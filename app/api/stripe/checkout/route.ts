@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchUserProfile } from "@/lib/auth/profile";
+import { getBuyerAccess } from "@/lib/access/server";
+import { ownStripeCustomerId } from "@/lib/stripe/customer";
 import { getStripeServerClient } from "@/lib/stripe/server";
 import { verifiedAccessPriceDataForPlan, type VerifiedAccessPlan } from "@/lib/stripe/config";
 import { siteUrl } from "@/lib/site";
@@ -75,7 +77,8 @@ export async function POST(request: NextRequest) {
   }
 
   const buyerProfile = await fetchUserProfile(supabase, authUser.id);
-  if (buyerProfile?.membership_tier === "verified_access") {
+  // Trial buyers can subscribe early; only an active paid plan blocks this.
+  if ((await getBuyerAccess(authUser)).paid) {
     return NextResponse.json(
       { error: "You already have Verified Access." },
       { status: 400 }
@@ -95,7 +98,7 @@ export async function POST(request: NextRequest) {
     customerId = await resolveStripeCustomerId({
       userId: authUser.id,
       email: authUser.email,
-      existingCustomerId: buyerProfile?.stripe_customer_id ?? null
+      existingCustomerId: await ownStripeCustomerId(buyerProfile?.stripe_customer_id, authUser)
     });
   } catch (error) {
     console.error("stripe checkout: customer resolve failed:", error);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchUserProfile } from "@/lib/auth/profile";
 import { getStripeServerClient } from "@/lib/stripe/server";
+import { ownStripeCustomerId } from "@/lib/stripe/customer";
 import { siteUrl } from "@/lib/site";
 
 
@@ -25,7 +26,9 @@ export async function POST() {
   }
 
   const profile = await fetchUserProfile(supabase, authUser.id);
-  if (!profile?.stripe_customer_id) {
+  // Only open a portal for a Stripe customer that really belongs to this user.
+  const customerId = await ownStripeCustomerId(profile?.stripe_customer_id, authUser);
+  if (!customerId) {
     return NextResponse.json(
       { error: "No billing account yet — subscribe to Verified Access first." },
       { status: 400 }
@@ -42,7 +45,7 @@ export async function POST() {
 
   try {
     const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: customerId,
       return_url: `${siteUrl()}/profile`
     });
 
