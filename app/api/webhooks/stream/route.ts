@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStreamServerClient } from "@/lib/stream/server";
 import { sendNewMessageEmail } from "@/lib/notifications/email";
 import { readNotificationPrefs } from "@/lib/notifications/prefs";
+import { CONTACT_HIDDEN_TEXT, findContactInfo } from "@/lib/moderation/contactInfo";
 
 /**
  * Stream event hook. Emails anyone who was offline when a message arrived, so
@@ -10,7 +11,7 @@ import { readNotificationPrefs } from "@/lib/notifications/prefs";
  *
  * Setup (Stream dashboard → your app → Event hooks, or updateAppSettings):
  *   webhook_url: https://edenharvest.app/api/webhooks/stream
- *   event_types: ["message.new", "user.unread_message_reminder"]
+ *   event_types: ["message.new", "message.updated", "user.unread_message_reminder"]
  *
  * message.new fires immediately; user.unread_message_reminder (enable "unread
  * reminders" in Stream) fires only after a message sits unread for the
@@ -32,7 +33,7 @@ interface StreamWebhookEvent {
   type?: string;
   channel_id?: string;
   channel_type?: string;
-  message?: { text?: string; user?: { id?: string; name?: string } };
+  message?: { id?: string; text?: string; user?: { id?: string; name?: string; role?: string } };
   user?: { id?: string; name?: string };
   members?: WebhookMember[];
   channels?: Record<string, ReminderChannel>;
@@ -138,7 +139,8 @@ async function handleNewMessage(event: StreamWebhookEvent): Promise<number> {
       recipientId: recipient.id,
       recipientName: recipient.fullName,
       senderName,
-      preview: event.message?.text ?? null,
+      // Never put contact details in an email, even if a message slipped through.
+      preview: findContactInfo(event.message?.text) ? null : (event.message?.text ?? null),
       channelId
     });
     if (ok) sent += 1;
@@ -171,13 +173,31 @@ async function handleUnreadReminder(event: StreamWebhookEvent): Promise<number> 
       recipientId: recipient.id,
       recipientName: recipient.fullName,
       senderName,
-      preview: latest?.text ?? null,
+      preview: findContactInfo(latest?.text) ? null : (latest?.text ?? null),
       channelId,
       unreadCount: messages.length
     });
     if (ok) sent += 1;
   }
   return sent;
+}
+
+/**
+ * New messages are checked for contact details before they're sent (see
+ * ./before-send). Edits don't go through that hook, so an edited message that
+ * adds a phone number or email is hidden here instead.
+ */
+async function handleUpdatedMessage(event: StreamWebhookEvent): Promise<void> {
+  const message = event.message;
+  const authorId = message?.user?.id;
+  if (!message?.id || !authorId || message.user?.role === "admin") return;
+  if (!findContactInfo(message.text)) return;
+
+  await getStreamServerClient().partialUpdateMessage(
+    message.id,
+    { set: { text: CONTACT_HIDDEN_TEXT } },
+    authorId
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -210,6 +230,8 @@ export async function POST(request: NextRequest) {
     let sent = 0;
     if (event.type === "message.new") {
       sent = await handleNewMessage(event);
+    } else if (event.type === "message.updated") {
+      await handleUpdatedMessage(event);
     } else if (event.type === "user.unread_message_reminder") {
       sent = await handleUnreadReminder(event);
     }

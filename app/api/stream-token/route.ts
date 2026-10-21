@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchUserProfile } from "@/lib/auth/profile";
 import { getStreamServerClient, upsertStreamUser } from "@/lib/stream/server";
+import { ensureStreamHooks } from "@/lib/stream/setup";
 
 export async function GET() {
   const supabase = await createClient();
@@ -35,6 +36,9 @@ export async function GET() {
   }
 
   const token = streamClient.createToken(authUser.id);
+
+  // Make sure Stream checks messages for contact details (runs after the response).
+  after(() => ensureStreamHooks());
 
   return NextResponse.json({ token, apiKey: process.env.NEXT_PUBLIC_STREAM_API_KEY });
 }

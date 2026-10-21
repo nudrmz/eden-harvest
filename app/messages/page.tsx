@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { ArrowLeft } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
+import { ArrowLeft, ShieldAlert, X } from "lucide-react";
 import {
   Chat,
   Channel,
@@ -18,6 +18,8 @@ import {
 import { useAuth } from "@/lib/supabase/hooks";
 import { useStreamChatContext } from "@/lib/stream/hooks";
 import { getOtherMemberName } from "@/lib/stream/channel";
+import { installContactFilter, onContactBlocked } from "@/lib/stream/contactFilter";
+import { contactBlockedNotice } from "@/lib/moderation/contactInfo";
 import "stream-chat-react/dist/css/v2/index.css";
 import "./messages.css";
 
@@ -32,6 +34,39 @@ function ChannelMessageEmptyState() {
       <p className="mt-2 max-w-xs text-sm text-white/50">
         Send a message to start the conversation about their produce.
       </p>
+    </div>
+  );
+}
+
+/** Shown above the message box when a message with contact details is stopped. */
+function ContactBlockedNotice() {
+  const [text, setText] = useState<string | null>(null);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const off = onContactBlocked((kind) => {
+      setText(contactBlockedNotice(kind));
+      clearTimeout(timer);
+      timer = setTimeout(() => setText(null), 9000);
+    });
+    return () => {
+      off();
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (!text) return null;
+
+  return (
+    <div
+      role="alert"
+      className="mx-3 mb-2 flex items-start gap-2 rounded-xl border border-[#F5C44266] bg-[#F5C4421a] px-3 py-2.5 text-sm text-[#F5D98A]"
+    >
+      <ShieldAlert size={18} className="mt-0.5 shrink-0" />
+      <p className="flex-1">{text}</p>
+      <button type="button" onClick={() => setText(null)} aria-label="Dismiss" className="shrink-0 opacity-70">
+        <X size={16} />
+      </button>
     </div>
   );
 }
@@ -102,6 +137,7 @@ function MessagesPanes({ userId, preselectedChannelId }: { userId: string; prese
             <Window>
               <ConversationHeader />
               <MessageList />
+              <ContactBlockedNotice />
               <MessageInput />
             </Window>
             <Thread />
@@ -140,6 +176,10 @@ function MessagesPageContent() {
   const preselectedChannelId = searchParams.get("channel") ?? undefined;
   const { user, loading: authLoading } = useAuth();
   const { client, connected, status, error } = useStreamChatContext();
+
+  useEffect(() => {
+    if (client) installContactFilter(client);
+  }, [client]);
 
   if (authLoading || status === "idle" || status === "connecting") {
     return (
