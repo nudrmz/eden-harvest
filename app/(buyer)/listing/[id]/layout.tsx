@@ -5,6 +5,7 @@ import {
   publicSupabase,
   sharePreview
 } from "@/lib/seo/share";
+import { priceUnitLabel } from "@/lib/listings/units";
 
 // Listing edits show up in new share previews within 5 minutes.
 export const revalidate = 300;
@@ -55,7 +56,7 @@ export async function generateMetadata({
 
   const price = formatLocalPrice(listing.price_local, listing.price_currency_code);
   const title = price
-    ? `${listing.product_name} — ${price}${listing.unit ? ` per ${listing.unit}` : ""}`
+    ? `${listing.product_name} — ${price}${listing.unit ? ` per ${priceUnitLabel(listing.unit)}` : ""}`
     : listing.product_name;
 
   const where = [seller?.state_region, countryRow?.name].filter(Boolean).join(", ");

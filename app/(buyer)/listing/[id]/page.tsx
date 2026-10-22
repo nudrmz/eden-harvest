@@ -9,6 +9,7 @@ import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/hooks";
 import { useIsAdmin } from "@/lib/auth/use-is-admin";
+import { minOrderLabel, priceUnitLabel } from "@/lib/listings/units";
 
 interface ListingDetail {
   id: string;
@@ -240,10 +241,10 @@ export default function ListingDetailPage() {
           </h1>
           <p className="mt-2 text-xl font-semibold text-eden-gold">
             {listing.price_currency_code} {Number(listing.price_local).toLocaleString()}
-            <span className="text-sm font-normal text-white/55"> / {listing.unit}</span>
+            <span className="text-sm font-normal text-white/55"> / {priceUnitLabel(listing.unit)}</span>
           </p>
           <p className={`mt-1 text-xs ${theme === "dark" ? "text-white/60" : "text-[#444441]"}`}>
-            Min order: {listing.min_order_quantity} {listing.min_order_unit}
+            Min order: {minOrderLabel(listing.min_order_quantity, listing.unit)}
           </p>
 
           {seller ? (

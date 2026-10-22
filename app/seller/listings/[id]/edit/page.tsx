@@ -12,6 +12,7 @@ import {
   type ListingFormValues,
   type ListingSavePayload
 } from "@/components/seller/ListingForm";
+import { parseUnit } from "@/lib/listings/units";
 
 interface ListingRow {
   id: string;
@@ -42,14 +43,17 @@ type LoadState =
     };
 
 function toFormValues(l: ListingRow): ListingFormValues {
+  const unit = parseUnit(l.unit);
   return {
     product_name: l.product_name,
     category: l.category,
     price_local: String(l.price_local ?? ""),
     price_currency_code: l.price_currency_code,
-    unit: l.unit,
+    unit: unit.base,
+    unit_size: unit.size ? String(unit.size.amount) : "",
+    unit_size_measure: unit.size?.measure ?? "kg",
     min_order_quantity: l.min_order_quantity != null ? String(l.min_order_quantity) : "",
-    min_order_unit: l.min_order_unit ?? l.unit,
+    min_order_unit: unit.base,
     description: l.description ?? "",
     stock_status: l.stock_status
   };

@@ -17,6 +17,7 @@ import type {
   VerifiedSellerCard
 } from "@/lib/types/listing";
 import { getInitials } from "@/lib/utils/helpers";
+import { minOrderLabel, priceUnitLabel } from "@/lib/listings/units";
 
 interface RawCountry {
   id: string;
@@ -135,16 +136,16 @@ function mapListingRow(
     stateRegion: seller.state_region,
     country: `${seller.state_region}, ${country.name}`,
     flag: country.flag_emoji,
-    buyerPrice: `${formatMoney(buyerPriceValue, buyerCurrency, buyerSymbol)}/${row.unit}`,
+    buyerPrice: `${formatMoney(buyerPriceValue, buyerCurrency, buyerSymbol)}/${priceUnitLabel(row.unit)}`,
     buyerPriceValue,
     // Shown only when it differs from the buyer's currency (otherwise it repeats the price).
     sellerPrice:
       row.price_currency_code === buyerCurrency
         ? ""
-        : `Seller's price: ${formatMoney(priceLocal, row.price_currency_code, sellerSymbol)}/${row.unit}`,
+        : `Seller's price: ${formatMoney(priceLocal, row.price_currency_code, sellerSymbol)}/${priceUnitLabel(row.unit)}`,
     sellerCurrencyCode: row.price_currency_code,
     sellerPriceValue: priceLocal,
-    minOrder: `Min: ${row.min_order_quantity} ${row.min_order_unit}`,
+    minOrder: `Min order: ${minOrderLabel(row.min_order_quantity, row.unit)}`,
     minOrderValue: Number(row.min_order_quantity),
     stockStatus: row.stock_status,
     rating: Number(seller.average_rating) || 0,

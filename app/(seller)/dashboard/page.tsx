@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { useAuth } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
+import { priceUnitLabel } from "@/lib/listings/units";
 
 interface SellerListingRow {
   id: string;
@@ -258,7 +259,7 @@ export default function SellerDashboardPage() {
                       <span className="text-[#5DCAA5]">
                         {listing.price_currency_code} {Number(listing.price_local).toLocaleString()}
                       </span>
-                      /{listing.unit}
+                      /{priceUnitLabel(listing.unit)}
                     </p>
                   </div>
                   <span className={`flex shrink-0 items-center text-[length:calc(11px*var(--fs-small))] ${textSecondary}`}>

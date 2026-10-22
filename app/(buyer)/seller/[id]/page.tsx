@@ -8,6 +8,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/hooks";
+import { priceUnitLabel } from "@/lib/listings/units";
 
 interface SellerProfile {
   id: string;
@@ -291,7 +292,7 @@ export default function SellerProfilePage() {
                 <p className="mt-1 text-xs text-white/55">{item.category}</p>
                 <p className="mt-2 text-sm font-bold text-eden-gold">
                   {item.price_currency_code} {Number(item.price_local).toLocaleString()}
-                  <span className="text-xs font-normal text-white/50"> / {item.unit}</span>
+                  <span className="text-xs font-normal text-white/50"> / {priceUnitLabel(item.unit)}</span>
                 </p>
               </Link>
             ))}

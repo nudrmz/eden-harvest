@@ -4,6 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
 import type { StockStatus } from "@/lib/types/listing";
 import { uploadPhoto } from "@/lib/storage/photos";
+import {
+  LISTING_UNITS as UNIT_OPTIONS,
+  SIZE_MEASURES,
+  composeUnit,
+  pluralise,
+  unitNeedsSize,
+  type SizeMeasure
+} from "@/lib/listings/units";
 
 export const LISTING_CATEGORIES = [
   "Dried goods",
@@ -18,7 +26,7 @@ export const LISTING_CATEGORIES = [
   "Roots & Tubers"
 ];
 
-export const LISTING_UNITS = ["kg", "bag", "crate", "litre", "piece", "tonne"];
+export const LISTING_UNITS = UNIT_OPTIONS;
 
 /** Offered alongside the seller's own country currency. */
 export const LISTING_CURRENCIES = ["USD", "GBP", "EUR"];
@@ -36,7 +44,11 @@ export interface ListingFormValues {
   category: string;
   price_local: string;
   price_currency_code: string;
+  /** The unit itself ("bag"); its size is kept separately below. */
   unit: string;
+  /** How much is in one unit, e.g. "50" (optional, containers only). */
+  unit_size: string;
+  unit_size_measure: SizeMeasure;
   min_order_quantity: string;
   min_order_unit: string;
   description: string;
@@ -63,6 +75,8 @@ export const EMPTY_LISTING: ListingFormValues = {
   price_local: "",
   price_currency_code: "USD",
   unit: "kg",
+  unit_size: "",
+  unit_size_measure: "kg",
   min_order_quantity: "",
   min_order_unit: "kg",
   description: "",
@@ -169,14 +183,22 @@ export function ListingForm({
     }
 
     const minOrder = parseFloat(form.min_order_quantity);
+    const sizeAmount = parseFloat(form.unit_size);
     const saveError = await onSave({
       product_name: form.product_name.trim(),
       category: form.category,
       price_local: price,
       price_currency_code: form.price_currency_code,
-      unit: form.unit,
+      // Saved as "bag (50 kg)" when the seller gives a size (see lib/listings/units).
+      unit: composeUnit(
+        form.unit,
+        Number.isFinite(sizeAmount) && sizeAmount > 0
+          ? { amount: sizeAmount, measure: form.unit_size_measure }
+          : null
+      ),
       min_order_quantity: Number.isFinite(minOrder) && minOrder > 0 ? minOrder : 1,
-      min_order_unit: form.min_order_unit,
+      // The minimum is always counted in the price unit ("2 bags").
+      min_order_unit: form.unit,
       description: form.description.trim() || null,
       stock_status: form.stock_status,
       photo_url: photoUrl
@@ -318,7 +340,7 @@ export function ListingForm({
             </select>
           </div>
           <div className="flex-1">
-            <label className={label}>Min order</label>
+            <label className={label}>Min order ({pluralise(form.unit, 2)})</label>
             <input
               name="min_order_quantity"
               value={form.min_order_quantity}
@@ -330,6 +352,44 @@ export function ListingForm({
             />
           </div>
         </div>
+
+        {unitNeedsSize(form.unit) ? (
+          <div>
+            <label className={label}>
+              How much is in one {form.unit}? <span className="font-normal">(optional)</span>
+            </label>
+            <div className="flex gap-3">
+              <input
+                name="unit_size"
+                value={form.unit_size}
+                onChange={handleChange}
+                type="number"
+                min="0"
+                step="any"
+                placeholder="e.g. 50"
+                className={`${field} flex-1`}
+                aria-label={`Amount in one ${form.unit}`}
+              />
+              <select
+                name="unit_size_measure"
+                value={form.unit_size_measure}
+                onChange={handleChange}
+                className={`${field} w-28`}
+                aria-label="Measured in"
+              >
+                {SIZE_MEASURES.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+              Helps buyers compare prices. Shown as &ldquo;/{form.unit}
+              {form.unit_size ? ` (${form.unit_size} ${form.unit_size_measure})` : " (50 kg)"}&rdquo;.
+            </p>
+          </div>
+        ) : null}
 
         <div>
           <label className={label}>Description</label>
