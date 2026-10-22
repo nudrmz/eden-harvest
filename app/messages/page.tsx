@@ -16,6 +16,7 @@ import {
   useChatContext
 } from "stream-chat-react";
 import { useAuth } from "@/lib/supabase/hooks";
+import { Lock } from "lucide-react";
 import { useStreamChatContext } from "@/lib/stream/hooks";
 import { getOtherMemberName } from "@/lib/stream/channel";
 import { installContactFilter, onContactBlocked } from "@/lib/stream/contactFilter";
@@ -67,6 +68,42 @@ function ContactBlockedNotice() {
       <button type="button" onClick={() => setText(null)} aria-label="Dismiss" className="shrink-0 opacity-70">
         <X size={16} />
       </button>
+    </div>
+  );
+}
+
+/**
+ * The buyer's side of a conversation once their trial or subscription has
+ * ended: they can read everything but need Verified Access to reply. Sellers
+ * always keep the normal message box. (Stream's before-send hook enforces
+ * the same rule on the server.)
+ */
+function ComposerOrUpgrade() {
+  const { channel } = useChannelStateContext("ComposerOrUpgrade");
+  const { client } = useChatContext("ComposerOrUpgrade");
+  const { access, isSeller, isVerifiedAccess } = useAuth();
+  const startedBy = (channel.data as { created_by?: { id?: string } } | undefined)?.created_by?.id;
+  const iAmBuyer = Boolean(startedBy && startedBy === client.userID);
+  const locked = iAmBuyer && !isSeller && access !== null && !isVerifiedAccess;
+
+  if (!locked) return <MessageInput />;
+
+  const name = getOtherMemberName(channel, client.userID ?? "");
+  return (
+    <div className="border-t border-white/10 px-4 py-4 text-center">
+      <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-white">
+        <Lock size={15} className="text-eden-gold" />
+        {access?.trialEndsAt ? "Your free trial has ended" : "Verified Access needed to reply"}
+      </p>
+      <p className="mt-1 text-xs text-white/60">
+        Subscribe to keep messaging {name} and other sellers. Your conversations are all still here.
+      </p>
+      <Link
+        href="/upgrade"
+        className="mt-3 inline-flex rounded-xl bg-[#1D9E75] px-5 py-2.5 text-sm font-semibold text-white"
+      >
+        Subscribe to Verified Access
+      </Link>
     </div>
   );
 }
@@ -138,7 +175,7 @@ function MessagesPanes({ userId, preselectedChannelId }: { userId: string; prese
               <ConversationHeader />
               <MessageList />
               <ContactBlockedNotice />
-              <MessageInput />
+              <ComposerOrUpgrade />
             </Window>
             <Thread />
           </Channel>

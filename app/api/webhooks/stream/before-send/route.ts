@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStreamServerClient } from "@/lib/stream/server";
 import { contactBlockedNotice, findContactInfo } from "@/lib/moderation/contactInfo";
+import { canSendMessages } from "@/lib/access/server";
 
 /**
  * Stream "before message send" hook: every new message passes through here
@@ -11,8 +12,11 @@ import { contactBlockedNotice, findContactInfo } from "@/lib/moderation/contactI
  * Registered automatically on production by ensureStreamHooks()
  * (lib/stream/setup.ts) as before_message_send_hook_url.
  *
+ * It also stops buyers without Verified Access (trial or subscription
+ * ended) from sending; sellers can always reply.
+ *
  * Stream fails open: if this endpoint errors or is slow, the message goes
- * through. The same check also runs in the app before sending.
+ * through. The same checks also run in the app before sending.
  */
 
 interface BeforeSendPayload {
@@ -47,6 +51,17 @@ export async function POST(request: NextRequest) {
   if (found) {
     return NextResponse.json({
       message: { type: "error", text: contactBlockedNotice(found.kind) }
+    });
+  }
+
+  // Buyers whose trial or subscription has ended can read but not send.
+  const userId = payload.user?.id;
+  if (!isAdmin && userId && !(await canSendMessages(userId))) {
+    return NextResponse.json({
+      message: {
+        type: "error",
+        text: "Your free trial or subscription has ended. Subscribe to Verified Access to keep messaging sellers."
+      }
     });
   }
 

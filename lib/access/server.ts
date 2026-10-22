@@ -113,3 +113,41 @@ export async function getBuyerAccess(user: User): Promise<BuyerAccess> {
     trialActive
   };
 }
+
+const sendCache = new Map<string, { allowed: boolean; expires: number }>();
+const SEND_CACHE_MS = 2 * 60 * 1000;
+
+/**
+ * May this user send chat messages? Sellers always can (selling is free and
+ * they must be able to reply). Buyers need Verified Access: paid, admin or an
+ * active free trial. Used by Stream's before-send hook, so it's cached for a
+ * couple of minutes to keep sending fast. Errs on the side of allowing if
+ * the lookup fails, so an outage never silences paying users.
+ */
+export async function canSendMessages(userId: string): Promise<boolean> {
+  const hit = sendCache.get(userId);
+  if (hit && hit.expires > Date.now()) return hit.allowed;
+
+  const admin = createAdminClient();
+  if (!admin) return true;
+
+  let allowed = true;
+  try {
+    const [{ data: authData, error }, { data: seller }] = await Promise.all([
+      admin.auth.admin.getUserById(userId),
+      admin.from("seller_profiles").select("id").eq("user_id", userId).maybeSingle()
+    ]);
+    if (seller) {
+      allowed = true;
+    } else if (!error && authData.user) {
+      allowed = (await getBuyerAccess(authData.user)).verified;
+    }
+  } catch (error) {
+    console.error("canSendMessages lookup failed, allowing:", error);
+    return true;
+  }
+
+  // Re-check a "no" sooner, so someone who has just subscribed isn't kept waiting.
+  sendCache.set(userId, { allowed, expires: Date.now() + (allowed ? SEND_CACHE_MS : 20_000) });
+  return allowed;
+}
