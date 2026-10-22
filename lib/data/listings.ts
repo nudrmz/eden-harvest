@@ -66,8 +66,25 @@ export interface BrowseListingsParams {
   sortBy?: "newest" | "highest_rated" | "most_enquired" | "price_low_high" | "price_high_low";
   maxPriceGbp?: number;
   minOrder?: number;
+  /** Page size (default 20). */
   limit?: number;
+  /** How many matching listings to skip, for "load more". */
+  offset?: number;
 }
+
+export interface BrowseListingsPage {
+  listings: ListingDisplay[];
+  /** All listings matching the filters, across every page. */
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * Upper bound on listings considered for one browse query. Filters like
+ * state, price and minimum order run after the database query, so we load
+ * every match (up to this) and page through the filtered result.
+ */
+const BROWSE_MAX_LISTINGS = 500;
 
 const ACCENT_PALETTES = [
   ["#1f3f2d", "#142c20"],
@@ -404,7 +421,7 @@ function mapRows(
 export async function fetchListingsForBrowse(
   params: BrowseListingsParams,
   buyerCurrency?: string
-): Promise<ListingDisplay[]> {
+): Promise<BrowseListingsPage> {
   const currency = buyerCurrency ?? (await getBuyerCurrency());
   const rates = await getExchangeRates();
 
@@ -414,7 +431,7 @@ export async function fetchListingsForBrowse(
     category: params.category,
     verifiedOnly: params.verifiedOnly,
     sortBy: params.sortBy === "highest_rated" ? "highest_rated" : "newest",
-    limit: params.limit ?? 20
+    limit: BROWSE_MAX_LISTINGS
   });
 
   let listings = mapRows(rows, currency, rates);
@@ -441,7 +458,13 @@ export async function fetchListingsForBrowse(
     listings.sort((a, b) => b.buyerPriceValue - a.buyerPriceValue);
   }
 
-  return listings.slice(0, params.limit ?? 20);
+  const pageSize = Math.min(Math.max(params.limit ?? 20, 1), 100);
+  const offset = Math.max(params.offset ?? 0, 0);
+  return {
+    listings: listings.slice(offset, offset + pageSize),
+    total: listings.length,
+    hasMore: offset + pageSize < listings.length
+  };
 }
 
 export async function fetchHomeListings(limit = 8): Promise<ListingDisplay[]> {

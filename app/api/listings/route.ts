@@ -24,13 +24,14 @@ export async function GET(request: NextRequest) {
         ? Number(searchParams.get("maxPrice"))
         : undefined,
       minOrder: searchParams.has("minOrder") ? Number(searchParams.get("minOrder")) : undefined,
-      limit: searchParams.has("limit") ? Number(searchParams.get("limit")) : 20
+      limit: searchParams.has("limit") ? Number(searchParams.get("limit")) || 20 : 20,
+      offset: searchParams.has("offset") ? Number(searchParams.get("offset")) || 0 : 0
     };
 
-    const listings = await fetchListingsForBrowse(params);
-    return NextResponse.json({ listings });
+    const page = await fetchListingsForBrowse(params);
+    return NextResponse.json(page);
   } catch (error) {
     console.error("listings API error:", error);
-    return NextResponse.json({ listings: [] });
+    return NextResponse.json({ listings: [], total: 0, hasMore: false });
   }
 }

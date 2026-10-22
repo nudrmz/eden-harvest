@@ -14,6 +14,14 @@ import { africanCountries, browseCategories } from "@/lib/mockData";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import type { CountrySellerCluster, ListingDisplay } from "@/lib/types/listing";
 
+const PAGE_SIZE = 20;
+
+interface ListingsPage {
+  listings?: ListingDisplay[];
+  total?: number;
+  hasMore?: boolean;
+}
+
 const BrowseMap = dynamic(() => import("@/components/ui/BrowseMap"), { ssr: false });
 
 type SortKey =
@@ -41,6 +49,9 @@ function BrowsePageContent() {
   const [debouncedQuery, setDebouncedQuery] = useState(() => searchParams.get("q") ?? "");
   const [listingsList, setListingsList] = useState<ListingDisplay[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  const [listingsTotal, setListingsTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [countryClusters, setCountryClusters] = useState<CountrySellerCluster[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(() => searchParams.get("filters") === "open");
   const [sortBy, setSortBy] = useState<SortKey>("newest");
@@ -75,10 +86,7 @@ function BrowsePageContent() {
   // Only the newest request may update the list; slower, older responses are ignored.
   const requestSeq = useRef(0);
 
-  const loadListings = useCallback(async () => {
-    const seq = ++requestSeq.current;
-    setListingsLoading(true);
-    try {
+  const buildParams = useCallback(() => {
       const params = new URLSearchParams();
       if (debouncedQuery) params.set("q", debouncedQuery);
       if (selectedCountry) params.set("country", selectedCountry);
@@ -88,19 +96,70 @@ function BrowsePageContent() {
       if (sortBy) params.set("sort", sortBy);
       if (maxPrice < 50) params.set("maxPrice", String(maxPrice));
       if (minOrder > 1) params.set("minOrder", String(minOrder));
-      params.set("limit", "20");
+      params.set("limit", String(PAGE_SIZE));
+      return params;
+  }, [debouncedQuery, selectedCountry, selectedState, selectedCategory, verifiedOnly, sortBy, maxPrice, minOrder]);
 
-      const response = await fetch(`/api/listings?${params.toString()}`);
-      const payload = (await response.json()) as { listings?: ListingDisplay[] };
+  // First page whenever the filters change.
+  const loadListings = useCallback(async () => {
+    const seq = ++requestSeq.current;
+    setListingsLoading(true);
+    setLoadingMore(false);
+    try {
+      const response = await fetch(`/api/listings?${buildParams().toString()}`);
+      const payload = (await response.json()) as ListingsPage;
       if (seq !== requestSeq.current) return;
       setListingsList(payload.listings ?? []);
+      setListingsTotal(payload.total ?? payload.listings?.length ?? 0);
+      setHasMore(Boolean(payload.hasMore));
     } catch {
       if (seq !== requestSeq.current) return;
       setListingsList([]);
+      setListingsTotal(0);
+      setHasMore(false);
     } finally {
       if (seq === requestSeq.current) setListingsLoading(false);
     }
-  }, [debouncedQuery, selectedCountry, selectedState, selectedCategory, verifiedOnly, sortBy, maxPrice, minOrder]);
+  }, [buildParams]);
+
+  // Next page, added to the end. Ignored if the filters changed meanwhile.
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || listingsLoading) return;
+    const seq = requestSeq.current;
+    setLoadingMore(true);
+    try {
+      const params = buildParams();
+      params.set("offset", String(listingsList.length));
+      const response = await fetch(`/api/listings?${params.toString()}`);
+      const payload = (await response.json()) as ListingsPage;
+      if (seq !== requestSeq.current) return;
+      setListingsList((current) => {
+        const seen = new Set(current.map((l) => l.id));
+        return [...current, ...(payload.listings ?? []).filter((l) => !seen.has(l.id))];
+      });
+      setListingsTotal(payload.total ?? listingsTotal);
+      setHasMore(Boolean(payload.hasMore));
+    } catch {
+      // Leave the button so they can try again.
+    } finally {
+      if (seq === requestSeq.current) setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, listingsLoading, buildParams, listingsList.length, listingsTotal]);
+
+  // Load the next page automatically when the end of the list scrolls into view.
+  const endOfListRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const target = endOfListRef.current;
+    if (!target || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+      },
+      { rootMargin: "400px 0px" }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   useEffect(() => {
     void loadListings();
@@ -411,6 +470,23 @@ function BrowsePageContent() {
                   No listings match your current filters.
                 </div>
               )}
+              {listingsList.length > 0 ? (
+                <div ref={endOfListRef} className="mt-4 flex flex-col items-center gap-2 pb-2">
+                  <p className="text-xs text-[var(--text-tertiary)]">
+                    Showing {listingsList.length} of {listingsTotal} listings
+                  </p>
+                  {hasMore ? (
+                    <button
+                      type="button"
+                      onClick={() => void loadMore()}
+                      disabled={loadingMore}
+                      className="rounded-xl border border-[#1D9E75]/60 px-5 py-2.5 text-sm font-semibold text-[#1D9E75] disabled:opacity-60"
+                    >
+                      {loadingMore ? "Loading more…" : "Load more"}
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           )}
         </section>
