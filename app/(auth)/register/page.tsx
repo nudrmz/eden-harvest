@@ -165,6 +165,14 @@ function RegisterForm() {
       return;
     }
 
+    // Tell the team about the new sign-up (fire and forget).
+    void fetch("/api/signup-alert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: data.user.id }),
+      keepalive: true
+    }).catch(() => undefined);
+
     if (!data.session) {
       setPendingConfirmEmail(trimmedEmail);
       setInfo(

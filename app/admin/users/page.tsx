@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Search } from "lucide-react";
 
 interface LookupResult {
@@ -71,13 +71,27 @@ export default function AdminUserLookupPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Links from the sign-up alert email arrive with ?email=… and search straight away.
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get("email");
+    if (fromLink) {
+      setEmail(fromLink);
+      void runLookup(fromLink);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function lookUp(event: FormEvent) {
     event.preventDefault();
+    await runLookup(email);
+  }
+
+  async function runLookup(address: string) {
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      const res = await fetch(`/api/admin/user-lookup?email=${encodeURIComponent(email.trim())}`);
+      const res = await fetch(`/api/admin/user-lookup?email=${encodeURIComponent(address.trim())}`);
       const body = (await res.json()) as LookupResult & { error?: string };
       if (!res.ok) throw new Error(body.error ?? "Lookup failed.");
       setResult(body);

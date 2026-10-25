@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyAdminOfSellerApplication } from "@/lib/notifications/adminAlerts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
   if (!profile) {
     const { data: country } = await admin
       .from("african_countries")
-      .select("id")
+      .select("id, name")
       .eq("code", countryCode)
       .maybeSingle();
 
@@ -165,6 +166,19 @@ export async function POST(request: NextRequest) {
     }
 
     profile = inserted as SellerProfileRow;
+
+    // Tell the team a new farm is waiting for approval (after the response).
+    const countryName = (country as { name?: string }).name ?? countryCode;
+    after(() =>
+      notifyAdminOfSellerApplication({
+        email: authUser.email,
+        farmName,
+        country: countryName,
+        stateRegion,
+        localArea: body.localArea?.trim() || null,
+        documentType
+      })
+    );
   } else if (farmPhotoUrl) {
     // Resubmitting onboarding is also how an existing seller adds a photo.
     const { error: photoError } = await admin

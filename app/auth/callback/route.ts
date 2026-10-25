@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
+import { notifyAdminOfSignup } from "@/lib/notifications/adminAlerts";
 import { FIRST_TOUCH_COOKIE, firstTouchMetadata, parseFirstTouch } from "@/lib/campaigns";
 import { currencyForCountryCode, isKnownCountry } from "@/lib/data/buyer-countries";
 
@@ -152,6 +153,12 @@ export async function GET(request: NextRequest) {
         .eq("id", user.id);
       if (geoError) console.error("auth callback: country", geoError.message);
     }
+  }
+
+  // Let the team know about the new account (once; see adminAlerts).
+  if (user) {
+    const userId = user.id;
+    after(() => notifyAdminOfSignup(userId));
   }
 
   return response;
