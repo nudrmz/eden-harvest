@@ -358,23 +358,26 @@ export function ListingForm({
             <label className={label}>
               How much is in one {form.unit}? <span className="font-normal">(optional)</span>
             </label>
-            <div className="flex gap-3">
+            {/* Grid, not flex: .eden-field-input sets width:100%, which made the
+                number box collapse next to the unit picker. */}
+            <div className="grid grid-cols-[minmax(0,1fr)_8rem] gap-3">
               <input
                 name="unit_size"
                 value={form.unit_size}
                 onChange={handleChange}
                 type="number"
+                inputMode="decimal"
                 min="0"
                 step="any"
                 placeholder="e.g. 50"
-                className={`${field} flex-1`}
+                className={`${field} !w-full`}
                 aria-label={`Amount in one ${form.unit}`}
               />
               <select
                 name="unit_size_measure"
                 value={form.unit_size_measure}
                 onChange={handleChange}
-                className={`${field} w-28`}
+                className={`${field} !w-full`}
                 aria-label="Measured in"
               >
                 {SIZE_MEASURES.map((m) => (
