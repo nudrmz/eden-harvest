@@ -23,6 +23,7 @@ interface LookupResult {
     created_at: string;
   } | null;
   listingCount?: number;
+  sellerPrivate?: { whatsapp: string | null; documentType: string | null; documentValue: string | null } | null;
 }
 
 function when(iso: string | null | undefined): string {
@@ -156,6 +157,41 @@ export default function AdminUserLookupPage() {
       {result ? (
         <section className="glass-card mt-5 p-4">
           <p className="text-sm font-semibold text-eden-gold">{verdict(result)}</p>
+          {result.sellerPrivate ? (
+            <div className="mt-4 rounded-xl border border-eden-gold/40 bg-eden-gold/10 p-3">
+              <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-eden-gold">
+                Seller contact (admin only)
+              </p>
+              <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                <span className="text-[var(--text-tertiary)]">WhatsApp</span>
+                {result.sellerPrivate.whatsapp ? (
+                  <span className="flex items-center gap-3">
+                    <span className="font-semibold">{result.sellerPrivate.whatsapp}</span>
+                    <a
+                      href={`tel:${result.sellerPrivate.whatsapp}`}
+                      className="text-[#1D9E75] underline-offset-2 hover:underline"
+                    >
+                      Call
+                    </a>
+                    <a
+                      href={`https://wa.me/${result.sellerPrivate.whatsapp.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#1D9E75] underline-offset-2 hover:underline"
+                    >
+                      WhatsApp
+                    </a>
+                  </span>
+                ) : (
+                  <span>Not given</span>
+                )}
+              </div>
+              <div className="mt-2 flex justify-between gap-3 text-sm">
+                <span className="text-[var(--text-tertiary)]">{result.sellerPrivate.documentType || "ID number"}</span>
+                <span className="font-semibold">{result.sellerPrivate.documentValue || "—"}</span>
+              </div>
+            </div>
+          ) : null}
           {rows.length ? (
             <dl className="mt-4 space-y-2 text-sm">
               {rows.map(([label, value]) => (

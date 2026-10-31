@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/auth/admin";
+import { moveSellerPrivateDetails } from "@/lib/seller/privateDetails";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Admin-only: where is this person in sign-up? Finds the sign-in account by
  * email and reports whether they confirmed their email, last sign-in, their
- * app profile, and how far they got with seller set-up. No private numbers.
+ * app profile, how far they got with seller set-up, and (sellers only) their
+ * WhatsApp and ID number, which only admins can see.
  */
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -58,6 +60,25 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
   ]);
 
+  // Seller's private contact details (admins only). Move any still sitting
+  // in seller_profiles first, then read them from the protected account data.
+  let sellerPrivate: { whatsapp: string | null; documentType: string | null; documentValue: string | null } | null = null;
+  if (seller) {
+    await moveSellerPrivateDetails(admin);
+    const { data: fresh } = await admin.auth.admin.getUserById(account.id);
+    const stored = (fresh.user?.app_metadata?.seller_private ?? {}) as { whatsapp?: string; document_value?: string };
+    const { data: doc } = await admin
+      .from("seller_profiles")
+      .select("verification_document_type")
+      .eq("id", seller.id)
+      .maybeSingle();
+    sellerPrivate = {
+      whatsapp: stored.whatsapp ?? null,
+      documentType: (doc?.verification_document_type as string | null) ?? null,
+      documentValue: stored.document_value ?? null
+    };
+  }
+
   let listingCount = 0;
   if (seller?.id) {
     const { count } = await admin
@@ -79,6 +100,7 @@ export async function GET(request: NextRequest) {
     },
     profile: profile ?? null,
     seller: seller ?? null,
+    sellerPrivate,
     listingCount
   });
 }
