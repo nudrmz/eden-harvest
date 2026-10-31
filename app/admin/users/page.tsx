@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, MessageCircle, Phone, Search } from "lucide-react";
 
 interface LookupResult {
   found: boolean;
@@ -162,34 +162,34 @@ export default function AdminUserLookupPage() {
               <p className="text-[length:calc(11px*var(--fs-small))] font-semibold uppercase tracking-wide text-eden-gold">
                 Seller contact (admin only)
               </p>
-              <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                <span className="text-[var(--text-tertiary)]">WhatsApp</span>
-                {result.sellerPrivate.whatsapp ? (
-                  <span className="flex items-center gap-3">
-                    <span className="font-semibold">{result.sellerPrivate.whatsapp}</span>
+              <p className="mt-3 text-xs text-[var(--text-tertiary)]">WhatsApp</p>
+              {result.sellerPrivate.whatsapp ? (
+                <>
+                  <p className="mt-0.5 break-all text-lg font-semibold">{result.sellerPrivate.whatsapp}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${result.sellerPrivate.whatsapp}`}
-                      className="text-[#1D9E75] underline-offset-2 hover:underline"
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-[#1D9E75]/60 py-2.5 text-sm font-semibold text-[#1D9E75]"
                     >
-                      Call
+                      <Phone size={16} /> Call
                     </a>
                     <a
                       href={`https://wa.me/${result.sellerPrivate.whatsapp.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[#1D9E75] underline-offset-2 hover:underline"
+                      className="flex items-center justify-center gap-1.5 rounded-xl bg-[#1D9E75] py-2.5 text-sm font-semibold text-white"
                     >
-                      WhatsApp
+                      <MessageCircle size={16} /> WhatsApp
                     </a>
-                  </span>
-                ) : (
-                  <span>Not given</span>
-                )}
-              </div>
-              <div className="mt-2 flex justify-between gap-3 text-sm">
-                <span className="text-[var(--text-tertiary)]">{result.sellerPrivate.documentType || "ID number"}</span>
-                <span className="font-semibold">{result.sellerPrivate.documentValue || "—"}</span>
-              </div>
+                  </div>
+                </>
+              ) : (
+                <p className="mt-0.5 text-sm">Not given</p>
+              )}
+              <p className="mt-3 text-xs text-[var(--text-tertiary)]">
+                {(result.sellerPrivate.documentType || "ID").toUpperCase()} number
+              </p>
+              <p className="mt-0.5 break-all text-lg font-semibold">{result.sellerPrivate.documentValue || "—"}</p>
             </div>
           ) : null}
           {rows.length ? (
