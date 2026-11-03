@@ -86,8 +86,19 @@ function countOf(row: Record<string, unknown>): number {
   return 0;
 }
 
+/**
+ * One breakdown. Some dimensions (e.g. UTM on the Hobby plan) need a paid
+ * add-on; if Vercel refuses one, that section is just left empty.
+ */
 async function breakdown(by: string, since: string, until: string, token: string, limit = 8): Promise<Breakdown[]> {
-  const data = await call("aggregate", { by, since, until, limit: String(limit) }, token);
+  let data: unknown;
+  try {
+    data = await call("aggregate", { by, since, until, limit: String(limit) }, token);
+  } catch (error) {
+    if (error instanceof AnalyticsError && error.status === "not_enabled") throw error;
+    console.warn(`[analytics] ${by} breakdown unavailable:`, error instanceof Error ? error.message : error);
+    return [];
+  }
   if (!Array.isArray(data)) return [];
   return (data as Record<string, unknown>[])
     .map((row) => ({
