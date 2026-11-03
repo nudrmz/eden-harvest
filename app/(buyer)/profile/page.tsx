@@ -252,6 +252,7 @@ export default function ProfilePage() {
                 <ProfileRow label="Campaign links & QR codes" href="/admin/campaigns" goldArrow />
                 <ProfileRow label="Sellers (retire a farm)" href="/admin/sellers" goldArrow />
                 <ProfileRow label="Look up a user" href="/admin/users" goldArrow />
+                <ProfileRow label="Analytics" href="/admin/analytics" goldArrow />
               </div>
             </section>
           ) : null}
