@@ -11,6 +11,8 @@ interface Breakdown {
 
 interface AnalyticsData {
   days: number;
+  range: string;
+  rangeLabel: string;
   visits: {
     status: "ok" | "no_token" | "not_enabled" | "error";
     message?: string;
@@ -44,7 +46,13 @@ interface AnalyticsData {
   };
 }
 
-const RANGES = [7, 30, 90] as const;
+const RANGES = [
+  { key: "2h", label: "2 hrs" },
+  { key: "7", label: "7 days" },
+  { key: "30", label: "30 days" },
+  { key: "90", label: "90 days" }
+] as const;
+type RangeKey = (typeof RANGES)[number]["key"];
 const COUNTRY_NAMES = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
 
 function fmt(n: number): string {
@@ -60,7 +68,14 @@ function countryName(code: string): string {
   }
 }
 
+/** A day ("3 Nov"), or a time ("14:20") for hourly / ten-minute slots. */
 function shortDay(iso: string): string {
+  if (iso.length > 10 && !iso.endsWith("T00:00:00.000Z") && !iso.endsWith("T00:00:00Z")) {
+    const d = new Date(iso);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+    }
+  }
   const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -95,7 +110,7 @@ function DailyChart({ data, label }: { data: Breakdown[]; label: string }) {
       <p className="text-sm text-[var(--text-secondary)]">
         {shown ? (
           <>
-            <span className="font-semibold text-[var(--text-primary)]">{fmt(shown.count)}</span> {label} on {shortDay(shown.label)}
+            <span className="font-semibold text-[var(--text-primary)]">{fmt(shown.count)}</span> {label} {shown.label.length > 10 ? "at" : "on"} {shortDay(shown.label)}
           </>
         ) : (
           <>
@@ -183,16 +198,16 @@ function VisitorSetup({ status, message }: { status: AnalyticsData["visits"]["st
 }
 
 export default function AdminAnalyticsPage() {
-  const [days, setDays] = useState<(typeof RANGES)[number]>(30);
+  const [days, setDays] = useState<RangeKey>("30");
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function load(range: number) {
+  async function load(range: RangeKey) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/analytics?days=${range}`, { cache: "no-store" });
+      const res = await fetch(`/api/admin/analytics?range=${range}`, { cache: "no-store" });
       const body = (await res.json()) as AnalyticsData & { error?: string };
       if (!res.ok) throw new Error(body.error ?? "Couldn't load analytics.");
       setData(body);
@@ -232,8 +247,8 @@ export default function AdminAnalyticsPage() {
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-white/10 p-1" role="tablist">
-        {RANGES.map((r) => (
+      <div className="mt-4 grid grid-cols-4 gap-1 rounded-xl border border-white/10 p-1" role="tablist">
+        {RANGES.map(({ key: r, label }) => (
           <button
             key={r}
             type="button"
@@ -242,7 +257,7 @@ export default function AdminAnalyticsPage() {
             onClick={() => setDays(r)}
             className={`rounded-lg py-2 text-sm font-semibold ${days === r ? "bg-[#1D9E75] text-white" : "text-[var(--text-secondary)]"}`}
           >
-            {r} days
+            {label}
           </button>
         ))}
       </div>
@@ -252,7 +267,7 @@ export default function AdminAnalyticsPage() {
 
       {data && v && a ? (
         <div className={busy ? "opacity-60 transition-opacity" : "transition-opacity"}>
-          <Section title={`Website visits · last ${data.days} days`}>
+          <Section title={`Website visits · last ${data.rangeLabel}`}>
             {v.status === "ok" ? (
               <>
                 <div className="grid grid-cols-2 gap-2">
@@ -290,7 +305,7 @@ export default function AdminAnalyticsPage() {
             </>
           ) : null}
 
-          <Section title={`Sign-ups · last ${data.days} days`}>
+          <Section title={`Sign-ups · last ${data.rangeLabel}`}>
             <div className="grid grid-cols-3 gap-2">
               <Tile label="New" value={fmt(a.period.newUsers)} />
               <Tile label="Buyers" value={fmt(a.period.newBuyers)} />
@@ -306,7 +321,7 @@ export default function AdminAnalyticsPage() {
               <Tile label="Buyers" value={fmt(a.totals.buyers)} />
               <Tile label="Paying" value={fmt(a.totals.paying)} note={conversion !== null ? `${conversion}% of buyers` : undefined} />
               <Tile label="On free trial" value={fmt(a.totals.onTrial)} />
-              <Tile label="Enquiries" value={fmt(a.totals.enquiries)} note={`${fmt(a.period.newEnquiries)} in ${data.days} days`} />
+              <Tile label="Enquiries" value={fmt(a.totals.enquiries)} note={`${fmt(a.period.newEnquiries)} in ${data.rangeLabel}`} />
             </div>
           </Section>
 
@@ -336,7 +351,8 @@ export default function AdminAnalyticsPage() {
 
           <p className="mt-6 text-xs text-[var(--text-tertiary)]">
             Visitor numbers are cookie-free counts from Vercel, so age and gender aren&apos;t available. Everything else
-            comes from the Eden Harvest database.
+            comes from the Eden Harvest database. Admin accounts, admin pages and admins&apos; own devices are not
+            counted.
           </p>
         </div>
       ) : null}

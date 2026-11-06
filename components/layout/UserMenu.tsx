@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ClipboardCheck, LogOut, Settings, Shield, User, QrCode, Store } from "lucide-react";
 import { useAuth } from "@/lib/supabase/hooks";
 import { getInitials } from "@/lib/utils/helpers";
+import { markAdminDevice } from "@/lib/analytics/adminDevice";
 
 interface UserMenuProps {
   /** Hero header — light text on photo */
@@ -38,6 +39,7 @@ export function UserMenu({ variant = "hero" }: UserMenuProps) {
       try {
         const response = await fetch("/api/admin/me");
         const payload = (await response.json()) as { isAdmin?: boolean };
+        if (payload.isAdmin) markAdminDevice();
         if (!cancelled) setIsAdmin(Boolean(payload.isAdmin));
       } catch {
         if (!cancelled) setIsAdmin(false);

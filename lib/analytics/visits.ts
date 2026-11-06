@@ -105,22 +105,24 @@ async function breakdown(by: string, since: string, until: string, token: string
       label: String(row[by] ?? row.timestamp ?? "").trim() || "Unknown",
       count: countOf(row)
     }))
-    .filter((r) => r.count > 0 || by === "day");
+    .filter((r) => r.count > 0 || by === "day" || by === "hour");
 }
 
-export async function getVisitStats(days: number): Promise<VisitStats> {
+/** windowMs: how far back to look. Short windows are charted by hour instead of by day. */
+export async function getVisitStats(windowMs: number): Promise<VisitStats> {
   const token = process.env.VERCEL_ANALYTICS_TOKEN?.trim();
   if (!token) return { status: "no_token", ...EMPTY };
 
   const until = new Date();
-  const since = new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
+  const since = new Date(until.getTime() - windowMs);
+  const byHour = windowMs <= 2 * 24 * 60 * 60 * 1000;
   const s = since.toISOString();
   const u = until.toISOString();
 
   try {
     const [totals, daily, countries, referrers, devices, pages, utmSources] = await Promise.all([
       call("count", { since: s, until: u }, token),
-      breakdown("day", s, u, token, 100),
+      breakdown(byHour ? "hour" : "day", s, u, token, 100),
       breakdown("country", s, u, token),
       breakdown("referrerHostname", s, u, token),
       breakdown("deviceType", s, u, token, 5),
@@ -132,7 +134,7 @@ export async function getVisitStats(days: number): Promise<VisitStats> {
       status: "ok",
       pageviews: countOf({ pageviews: t.pageviews }),
       visitors: countOf({ visitors: t.visitors }),
-      daily: daily.map((d) => ({ ...d, label: d.label.slice(0, 10) })),
+      daily: byHour ? daily : daily.map((d) => ({ ...d, label: d.label.slice(0, 10) })),
       countries,
       referrers,
       devices,

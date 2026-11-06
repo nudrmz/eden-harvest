@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import { Analytics } from "@vercel/analytics/next";
+import { SiteAnalytics } from "@/components/layout/SiteAnalytics";
 import { Providers } from "@/components/layout/Providers";
 import { siteUrl } from "@/lib/site";
 import { DEFAULT_DESCRIPTION, SITE_NAME, sharePreview } from "@/lib/seo/share";
@@ -70,7 +70,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
-        <Analytics />
+        <SiteAnalytics />
       </body>
     </html>
   );
