@@ -47,7 +47,7 @@ interface AnalyticsData {
 }
 
 const RANGES = [
-  { key: "2h", label: "2 hrs" },
+  { key: "24h", label: "24 hrs" },
   { key: "7", label: "7 days" },
   { key: "30", label: "30 days" },
   { key: "90", label: "90 days" }

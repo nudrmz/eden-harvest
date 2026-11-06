@@ -18,9 +18,9 @@ interface Breakdown {
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
-/** Ranges the page offers. "2h" is for checking what's happening right now. */
+/** Ranges the page offers. "24h" is for checking what's happening today. */
 const RANGES: Record<string, { ms: number; label: string }> = {
-  "2h": { ms: 2 * HOUR, label: "2 hours" },
+  "24h": { ms: 24 * HOUR, label: "24 hours" },
   "7": { ms: 7 * DAY, label: "7 days" },
   "30": { ms: 30 * DAY, label: "30 days" },
   "90": { ms: 90 * DAY, label: "90 days" }
@@ -55,8 +55,8 @@ function perDay(dates: string[], days: number): Breakdown[] {
   return out;
 }
 
-/** Ten-minute slots for short windows, labelled with the slot's start time (ISO). */
-function perSlot(dates: string[], windowMs: number, slotMs = 10 * 60 * 1000): Breakdown[] {
+/** Hourly slots for short windows, labelled with the slot's start time (ISO). */
+function perSlot(dates: string[], windowMs: number, slotMs = HOUR): Breakdown[] {
   const now = Date.now();
   const first = Math.floor((now - windowMs) / slotMs) * slotMs;
   const out: Breakdown[] = [];
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
           newEnquiries: enquiries.filter(inWindow).length
         },
         signupsDaily:
-          windowMs < DAY
+          windowMs <= DAY
             ? perSlot(newUsers.map((u) => u.created_at as string), windowMs)
             : perDay(newUsers.map((u) => u.created_at as string), windowMs / DAY),
         buyerCountries: tally(buyers.map((b) => countryByCode(b.country_code as string)?.name ?? (b.country_code as string | null)), 10),
