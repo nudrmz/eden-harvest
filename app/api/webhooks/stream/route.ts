@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStreamServerClient } from "@/lib/stream/server";
 import { sendNewMessageEmail } from "@/lib/notifications/email";
+import { recordEnquiryFromMessage } from "@/lib/enquiries/record";
 import { readNotificationPrefs } from "@/lib/notifications/prefs";
 import { CONTACT_HIDDEN_TEXT, findContactInfo } from "@/lib/moderation/contactInfo";
 
@@ -128,6 +129,21 @@ async function handleNewMessage(event: StreamWebhookEvent): Promise<number> {
 
   const senderId = event.message?.user?.id ?? event.user?.id;
   const senderName = event.message?.user?.name ?? event.user?.name ?? "Someone";
+
+  // A buyer's first real message about a listing is what counts as an enquiry.
+  if (senderId) {
+    try {
+      await recordEnquiryFromMessage({
+        channelType: event.channel_type ?? "messaging",
+        channelId,
+        senderId,
+        listingIdFromEvent: (event as { channel?: { listing_id?: string } }).channel?.listing_id ?? null
+      });
+    } catch (error) {
+      console.error("enquiry logging failed:", error);
+    }
+  }
+
   const offline = offlineMemberIds(event.members ?? [], senderId);
   const targets = await firstUnreadRecipients(event.channel_type ?? "messaging", channelId, offline);
   const recipients = await lookupRecipients(targets);

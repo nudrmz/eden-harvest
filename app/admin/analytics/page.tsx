@@ -197,6 +197,137 @@ function VisitorSetup({ status, message }: { status: AnalyticsData["visits"]["st
   );
 }
 
+interface EnquiryChat {
+  exists?: boolean;
+  error?: string;
+  buyerMessages?: number;
+  sellerMessages?: number;
+  lastMessageAt?: string | null;
+  sellerLastReadAt?: string | null;
+  blockedMessages?: number;
+}
+
+interface EnquiriesData {
+  total: number;
+  replied: number;
+  awaitingReply: number;
+  noMessage: number;
+  checkedCount: number;
+  byFarm: Breakdown[];
+  items: { id: string; createdAt: string; buyer: string; listing: string; farm: string; chat: EnquiryChat | null }[];
+}
+
+function whenShort(iso: string | null | undefined): string {
+  if (!iso) return "never";
+  return new Date(iso).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London"
+  });
+}
+
+/** Plain-English verdict on one enquiry's chat. */
+function chatVerdict(c: EnquiryChat | null): { text: string; tone: string } {
+  if (!c || c.error) return { text: "Couldn't check this chat.", tone: "text-[var(--text-tertiary)]" };
+  if (c.exists === false) return { text: "No chat found.", tone: "text-[#F09595]" };
+  if (!c.buyerMessages) return { text: "Chat opened, but the buyer never sent a message.", tone: "text-[#F09595]" };
+  if (c.sellerMessages) return { text: "Seller replied.", tone: "text-[#1D9E75]" };
+  if (c.sellerLastReadAt && c.lastMessageAt && c.sellerLastReadAt >= c.lastMessageAt) {
+    return { text: "Seller has read it but not replied.", tone: "text-eden-gold" };
+  }
+  return { text: "Waiting: the seller hasn't opened it yet.", tone: "text-eden-gold" };
+}
+
+/** Enquiries in the chosen range, with what happened in each chat. Loads after the main numbers. */
+function EnquiriesSection({ range, rangeLabel }: { range: string; rangeLabel: string }) {
+  const [data, setData] = useState<EnquiriesData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(null);
+    setShowAll(false);
+    void (async () => {
+      try {
+        const res = await fetch(`/api/admin/analytics/enquiries?range=${range}`, { cache: "no-store" });
+        const body = (await res.json()) as EnquiriesData & { error?: string };
+        if (!res.ok) throw new Error(body.error ?? "Couldn't load enquiries.");
+        if (!cancelled) setData(body);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Couldn't load enquiries.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [range]);
+
+  const items = data ? (showAll ? data.items : data.items.slice(0, 5)) : [];
+  return (
+    <>
+      <Section title={`Enquiries · last ${rangeLabel}`}>
+        {error ? <p className="glass-card p-4 text-sm text-[#F09595]">{error}</p> : null}
+        {!data && !error ? <p className="glass-card p-4 text-sm text-[var(--text-secondary)]">Checking chats…</p> : null}
+        {data ? (
+          <>
+            <div className="grid grid-cols-3 gap-2">
+              <Tile label="Enquiries" value={fmt(data.total)} />
+              <Tile label="Replied" value={fmt(data.replied)} />
+              <Tile label="Waiting" value={fmt(data.awaitingReply)} />
+            </div>
+            {data.items.length ? (
+              <ul className="glass-card mt-2 divide-y divide-white/10 px-4">
+                {items.map((e) => {
+                  const v = chatVerdict(e.chat);
+                  return (
+                    <li key={e.id} className="py-3 text-sm">
+                      <p className="font-semibold">
+                        {e.listing} <span className="font-normal text-[var(--text-secondary)]">· {e.farm}</span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-[var(--text-tertiary)]">
+                        {e.buyer} · {whenShort(e.createdAt)}
+                        {e.chat?.exists
+                          ? ` · buyer sent ${e.chat.buyerMessages ?? 0}, seller sent ${e.chat.sellerMessages ?? 0}`
+                          : ""}
+                      </p>
+                      <p className={`mt-0.5 text-xs ${v.tone}`}>{v.text}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="glass-card mt-2 p-4 text-sm text-[var(--text-secondary)]">No enquiries in this period.</p>
+            )}
+            {data.items.length > 5 ? (
+              <button
+                type="button"
+                onClick={() => setShowAll((x) => !x)}
+                className="mt-2 w-full rounded-xl border border-white/10 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+              >
+                {showAll ? "Show fewer" : `Show all ${data.items.length}`}
+              </button>
+            ) : null}
+            {data.total > data.checkedCount ? (
+              <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                Showing the latest {data.checkedCount} of {data.total}.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </Section>
+      {data?.byFarm.length ? (
+        <Section title="Enquiries by farm">
+          <Bars data={data.byFarm} />
+        </Section>
+      ) : null}
+    </>
+  );
+}
+
 export default function AdminAnalyticsPage() {
   const [days, setDays] = useState<RangeKey>("30");
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -324,6 +455,8 @@ export default function AdminAnalyticsPage() {
               <Tile label="Enquiries" value={fmt(a.totals.enquiries)} note={`${fmt(a.period.newEnquiries)} in ${data.rangeLabel}`} />
             </div>
           </Section>
+
+          <EnquiriesSection range={days} rangeLabel={data.rangeLabel} />
 
           <Section title="Buyer countries">
             <Bars data={a.buyerCountries} />

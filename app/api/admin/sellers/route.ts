@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/auth/admin";
+import { adminUserIds } from "@/lib/enquiries/inspect";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +37,13 @@ export async function GET() {
       ? admin.from("listings").select("seller_id, is_active").in("seller_id", ids)
       : Promise.resolve({ data: [] as { seller_id: string; is_active: boolean }[] }),
     ids.length
-      ? admin.from("enquiries").select("seller_id").in("seller_id", ids)
-      : Promise.resolve({ data: [] as { seller_id: string }[] })
+      ? admin.from("enquiries").select("seller_id, buyer_id").in("seller_id", ids)
+      : Promise.resolve({ data: [] as { seller_id: string; buyer_id: string }[] })
   ]);
+
+  // Admins' own test chats don't count as enquiries.
+  const admins = await adminUserIds(admin);
+  const realEnquiries = (enquiries ?? []).filter((e) => !admins.has(e.buyer_id as string));
 
   const sellers = (profiles ?? []).map((p) => {
     const mine = (listings ?? []).filter((l) => l.seller_id === p.id);
@@ -46,7 +51,7 @@ export async function GET() {
       ...p,
       listingCount: mine.length,
       activeListingCount: mine.filter((l) => l.is_active).length,
-      enquiryCount: (enquiries ?? []).filter((e) => e.seller_id === p.id).length
+      enquiryCount: realEnquiries.filter((e) => e.seller_id === p.id).length
     };
   });
 
