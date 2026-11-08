@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, ChevronDown, RefreshCw } from "lucide-react";
 
 interface Breakdown {
   label: string;
@@ -213,7 +213,7 @@ interface EnquiriesData {
   awaitingReply: number;
   noMessage: number;
   checkedCount: number;
-  byFarm: Breakdown[];
+  byFarm: { sellerId: string; label: string; count: number }[];
   items: { id: string; createdAt: string; buyer: string; listing: string; farm: string; chat: EnquiryChat | null }[];
 }
 
@@ -240,17 +240,19 @@ function chatVerdict(c: EnquiryChat | null): { text: string; tone: string } {
   return { text: "Waiting: the seller hasn't opened it yet.", tone: "text-eden-gold" };
 }
 
-/** Enquiries in the chosen range, with what happened in each chat. Loads after the main numbers. */
+/** Enquiries in the chosen range: totals, then one row per farm that opens to show its enquiries. */
 function EnquiriesSection({ range, rangeLabel }: { range: string; rangeLabel: string }) {
   const [data, setData] = useState<EnquiriesData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [openFarm, setOpenFarm] = useState<string | null>(null);
+  const [farmItems, setFarmItems] = useState<Record<string, EnquiriesData["items"] | "loading" | { error: string }>>({});
 
   useEffect(() => {
     let cancelled = false;
     setData(null);
     setError(null);
-    setShowAll(false);
+    setOpenFarm(null);
+    setFarmItems({});
     void (async () => {
       try {
         const res = await fetch(`/api/admin/analytics/enquiries?range=${range}`, { cache: "no-store" });
@@ -266,65 +268,93 @@ function EnquiriesSection({ range, rangeLabel }: { range: string; rangeLabel: st
     };
   }, [range]);
 
-  const items = data ? (showAll ? data.items : data.items.slice(0, 5)) : [];
+  async function toggleFarm(sellerId: string) {
+    if (openFarm === sellerId) {
+      setOpenFarm(null);
+      return;
+    }
+    setOpenFarm(sellerId);
+    if (farmItems[sellerId] && farmItems[sellerId] !== "loading" && !("error" in (farmItems[sellerId] as object))) return;
+    setFarmItems((f) => ({ ...f, [sellerId]: "loading" }));
+    try {
+      const res = await fetch(`/api/admin/analytics/enquiries?range=${range}&seller=${sellerId}`, { cache: "no-store" });
+      const body = (await res.json()) as EnquiriesData & { error?: string };
+      if (!res.ok) throw new Error(body.error ?? "Couldn't load enquiries.");
+      setFarmItems((f) => ({ ...f, [sellerId]: body.items }));
+    } catch (err) {
+      setFarmItems((f) => ({ ...f, [sellerId]: { error: err instanceof Error ? err.message : "Couldn't load enquiries." } }));
+    }
+  }
+
   return (
-    <>
-      <Section title={`Enquiries · last ${rangeLabel}`}>
-        {error ? <p className="glass-card p-4 text-sm text-[#F09595]">{error}</p> : null}
-        {!data && !error ? <p className="glass-card p-4 text-sm text-[var(--text-secondary)]">Checking chats…</p> : null}
-        {data ? (
-          <>
-            <div className="grid grid-cols-3 gap-2">
-              <Tile label="Enquiries" value={fmt(data.total)} />
-              <Tile label="Replied" value={fmt(data.replied)} />
-              <Tile label="Waiting" value={fmt(data.awaitingReply)} />
-            </div>
-            {data.items.length ? (
-              <ul className="glass-card mt-2 divide-y divide-white/10 px-4">
-                {items.map((e) => {
-                  const v = chatVerdict(e.chat);
-                  return (
-                    <li key={e.id} className="py-3 text-sm">
-                      <p className="font-semibold">
-                        {e.listing} <span className="font-normal text-[var(--text-secondary)]">· {e.farm}</span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-[var(--text-tertiary)]">
-                        {e.buyer} · {whenShort(e.createdAt)}
-                        {e.chat?.exists
-                          ? ` · buyer sent ${e.chat.buyerMessages ?? 0}, seller sent ${e.chat.sellerMessages ?? 0}`
-                          : ""}
-                      </p>
-                      <p className={`mt-0.5 text-xs ${v.tone}`}>{v.text}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="glass-card mt-2 p-4 text-sm text-[var(--text-secondary)]">No enquiries in this period.</p>
-            )}
-            {data.items.length > 5 ? (
-              <button
-                type="button"
-                onClick={() => setShowAll((x) => !x)}
-                className="mt-2 w-full rounded-xl border border-white/10 py-2 text-sm font-semibold text-[var(--text-secondary)]"
-              >
-                {showAll ? "Show fewer" : `Show all ${data.items.length}`}
-              </button>
-            ) : null}
-            {data.total > data.checkedCount ? (
-              <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                Showing the latest {data.checkedCount} of {data.total}.
-              </p>
-            ) : null}
-          </>
-        ) : null}
-      </Section>
-      {data?.byFarm.length ? (
-        <Section title="Enquiries by farm">
-          <Bars data={data.byFarm} />
-        </Section>
+    <Section title={`Enquiries · last ${rangeLabel}`}>
+      {error ? <p className="glass-card p-4 text-sm text-[#F09595]">{error}</p> : null}
+      {!data && !error ? <p className="glass-card p-4 text-sm text-[var(--text-secondary)]">Checking chats…</p> : null}
+      {data ? (
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            <Tile label="Enquiries" value={fmt(data.total)} />
+            <Tile label="Replied" value={fmt(data.replied)} />
+            <Tile label="Waiting" value={fmt(data.awaitingReply)} />
+          </div>
+          {data.byFarm.length ? (
+            <ul className="glass-card mt-2 divide-y divide-white/10 px-4">
+              {data.byFarm.map((farm) => {
+                const open = openFarm === farm.sellerId;
+                const items = farmItems[farm.sellerId];
+                return (
+                  <li key={farm.sellerId} className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => void toggleFarm(farm.sellerId)}
+                      aria-expanded={open}
+                      className="flex w-full items-center justify-between gap-3 text-left text-sm"
+                    >
+                      <span className="min-w-0 truncate font-semibold">{farm.label}</span>
+                      <span className="flex shrink-0 items-center gap-2 text-eden-gold">
+                        <span className="font-semibold underline underline-offset-2">
+                          {fmt(farm.count)} {farm.count === 1 ? "enquiry" : "enquiries"}
+                        </span>
+                        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+                      </span>
+                    </button>
+                    {open ? (
+                      <div className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3">
+                        {!items || items === "loading" ? (
+                          <p className="py-3 text-xs text-[var(--text-secondary)]">Checking chats…</p>
+                        ) : "error" in items ? (
+                          <p className="py-3 text-xs text-[#F09595]">{items.error}</p>
+                        ) : (
+                          <ul className="divide-y divide-white/10">
+                            {items.map((e) => {
+                              const v = chatVerdict(e.chat);
+                              return (
+                                <li key={e.id} className="py-2.5 text-xs">
+                                  <p className="text-sm font-semibold">{e.listing}</p>
+                                  <p className="mt-0.5 text-[var(--text-tertiary)]">
+                                    {e.buyer} · {whenShort(e.createdAt)}
+                                    {e.chat?.exists
+                                      ? ` · buyer sent ${e.chat.buyerMessages ?? 0}, seller sent ${e.chat.sellerMessages ?? 0}`
+                                      : ""}
+                                  </p>
+                                  <p className={`mt-0.5 ${v.tone}`}>{v.text}</p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="glass-card mt-2 p-4 text-sm text-[var(--text-secondary)]">No enquiries in this period.</p>
+          )}
+        </>
       ) : null}
-    </>
+    </Section>
   );
 }
 

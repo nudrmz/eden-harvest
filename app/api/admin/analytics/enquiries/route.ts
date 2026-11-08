@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false }),
     adminUserIds(admin)
   ]);
-  const enquiries = (rows ?? []).filter((e) => !admins.has(e.buyer_id as string));
+  const allEnquiries = (rows ?? []).filter((e) => !admins.has(e.buyer_id as string));
+  // ?seller=<seller profile id> returns just that farm's enquiries (the expanded row).
+  const sellerFilter = request.nextUrl.searchParams.get("seller");
+  const enquiries = sellerFilter ? allEnquiries.filter((e) => e.seller_id === sellerFilter) : allEnquiries;
 
   const buyerIds = [...new Set(enquiries.map((e) => e.buyer_id as string))];
   const listingIds = [...new Set(enquiries.map((e) => e.listing_id as string).filter(Boolean))];
@@ -78,10 +81,12 @@ export async function GET(request: NextRequest) {
     })
   );
 
-  const farmCounts = new Map<string, number>();
+  const farmCounts = new Map<string, { sellerId: string; label: string; count: number }>();
   for (const e of enquiries) {
-    const farm = sellerMap.get(e.seller_id as string)?.farm_name ?? "Unknown farm";
-    farmCounts.set(farm, (farmCounts.get(farm) ?? 0) + 1);
+    const id = e.seller_id as string;
+    const row = farmCounts.get(id) ?? { sellerId: id, label: sellerMap.get(id)?.farm_name ?? "Unknown farm", count: 0 };
+    row.count += 1;
+    farmCounts.set(id, row);
   }
 
   return NextResponse.json(
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest) {
       awaitingReply: items.filter((i) => (i.chat?.buyerMessages ?? 0) > 0 && !(i.chat?.sellerMessages ?? 0)).length,
       noMessage: items.filter((i) => i.chat?.exists !== false && !i.chat?.error && !(i.chat?.buyerMessages ?? 0)).length,
       checkedCount: items.length,
-      byFarm: [...farmCounts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count),
+      byFarm: [...farmCounts.values()].sort((a, b) => b.count - a.count),
       items
     },
     { headers: { "Cache-Control": "no-store" } }
