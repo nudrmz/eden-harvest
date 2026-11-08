@@ -55,5 +55,6 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ sellers });
+  const adminTestEnquiries = (enquiries ?? []).length - realEnquiries.length;
+  return NextResponse.json({ sellers, adminTestEnquiries });
 }

@@ -31,6 +31,8 @@ export default function AdminSellersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [testEnquiries, setTestEnquiries] = useState(0);
+  const [clearing, setClearing] = useState(false);
   const [retiring, setRetiring] = useState<SellerRow | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,15 +42,32 @@ export default function AdminSellersPage() {
     setError(null);
     try {
       const res = await fetch("/api/admin/sellers");
-      const body = (await res.json()) as { sellers?: SellerRow[]; error?: string };
+      const body = (await res.json()) as { sellers?: SellerRow[]; adminTestEnquiries?: number; error?: string };
       if (!res.ok) throw new Error(body.error ?? "Could not load sellers.");
       setSellers(body.sellers ?? []);
+      setTestEnquiries(body.adminTestEnquiries ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load sellers.");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  async function clearTestEnquiries() {
+    setClearing(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/enquiries/clear-test", { method: "POST" });
+      const body = (await res.json()) as { deleted?: number; error?: string };
+      if (!res.ok) throw new Error(body.error ?? "Could not remove test enquiries.");
+      setNotice(`Removed ${body.deleted ?? 0} test enquiry record(s) made by admin accounts.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove test enquiries.");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   useEffect(() => {
     if (authLoading) return;
@@ -128,6 +147,23 @@ export default function AdminSellersPage() {
         <p className="mt-4 rounded-xl border border-[#E5484D55] bg-[#E5484D18] px-3 py-2.5 text-sm text-[#E5484D]">
           {error}
         </p>
+      ) : null}
+
+      {testEnquiries > 0 ? (
+        <div className="glass-card mt-6 rounded-2xl border border-eden-gold/40 p-4 text-sm">
+          <p className="text-[var(--text-secondary)]">
+            {testEnquiries} enquiry record(s) were made by admin accounts while testing. They&apos;re left out of the
+            counts here but still show on those sellers&apos; own dashboards.
+          </p>
+          <button
+            type="button"
+            disabled={clearing}
+            onClick={() => void clearTestEnquiries()}
+            className="mt-3 rounded-lg bg-eden-gold px-3 py-1.5 text-xs font-semibold text-[#0f1f0f] disabled:opacity-60"
+          >
+            {clearing ? "Removing…" : "Remove admin test enquiries"}
+          </button>
+        </div>
       ) : null}
 
       <ul className="mt-6 space-y-3">
