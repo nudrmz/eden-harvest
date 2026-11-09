@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       state: searchParams.get("state") ?? undefined,
       category: searchParams.get("category") ?? undefined,
       verifiedOnly: searchParams.get("verified") === "true",
-      sortBy: (searchParams.get("sort") as BrowseListingsParams["sortBy"]) ?? "newest",
+      sortBy: (searchParams.get("sort") as BrowseListingsParams["sortBy"]) ?? "discover",
       maxPriceGbp: searchParams.has("maxPrice")
         ? Number(searchParams.get("maxPrice"))
         : undefined,

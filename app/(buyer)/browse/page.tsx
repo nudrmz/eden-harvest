@@ -25,6 +25,7 @@ interface ListingsPage {
 const BrowseMap = dynamic(() => import("@/components/ui/BrowseMap"), { ssr: false });
 
 type SortKey =
+  | "discover"
   | "newest"
   | "most_enquired"
   | "highest_rated"
@@ -32,6 +33,7 @@ type SortKey =
   | "price_high_low";
 
 const sortPills: Array<{ key: SortKey; label: string }> = [
+  { key: "discover", label: "Discover" },
   { key: "newest", label: "Newest" },
   { key: "most_enquired", label: "Most enquired" },
   { key: "highest_rated", label: "Highest rated" },
@@ -54,7 +56,7 @@ function BrowsePageContent() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [countryClusters, setCountryClusters] = useState<CountrySellerCluster[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(() => searchParams.get("filters") === "open");
-  const [sortBy, setSortBy] = useState<SortKey>("newest");
+  const [sortBy, setSortBy] = useState<SortKey>("discover");
 
   const [selectedCountry, setSelectedCountry] = useState("");
   const [countrySearch, setCountrySearch] = useState("");

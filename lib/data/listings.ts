@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { rotateListings } from "@/lib/data/shuffle";
 import { COUNTRY_COORDINATES } from "@/lib/data/country-coordinates";
 import {
   convertCurrency,
@@ -63,7 +64,7 @@ export interface BrowseListingsParams {
   state?: string;
   category?: string;
   verifiedOnly?: boolean;
-  sortBy?: "newest" | "highest_rated" | "most_enquired" | "price_low_high" | "price_high_low";
+  sortBy?: "discover" | "newest" | "highest_rated" | "most_enquired" | "price_low_high" | "price_high_low";
   maxPriceGbp?: number;
   minOrder?: number;
   /** Page size (default 20). */
@@ -452,7 +453,9 @@ export async function fetchListingsForBrowse(
     listings = listings.filter((listing) => listing.minOrderValue >= params.minOrder!);
   }
 
-  if (params.sortBy === "price_low_high") {
+  if (!params.sortBy || params.sortBy === "discover") {
+    listings = rotateListings(listings);
+  } else if (params.sortBy === "price_low_high") {
     listings.sort((a, b) => a.buyerPriceValue - b.buyerPriceValue);
   } else if (params.sortBy === "price_high_low") {
     listings.sort((a, b) => b.buyerPriceValue - a.buyerPriceValue);
@@ -647,8 +650,11 @@ export async function fetchHomePageData() {
   ]);
 
   const buyerCurrency = location.currency;
-  const homeRows = await fetchRawListings({ limit: 8 });
-  const listings = mapRows(homeRows, buyerCurrency, rates);
+  // A rotating mix (changes every few hours) rather than always the newest 8.
+  const recentRows = await fetchRawListings({ limit: 120 });
+  const rotated = rotateListings(mapRows(recentRows, buyerCurrency, rates));
+  const listings = rotated.slice(0, 8);
+  const homeRows = recentRows.filter((r) => r.id === listings[0]?.id);
 
   let featuredRows = await fetchRawListings({ featuredOnly: true, limit: 1 });
   if (!featuredRows.length) {
