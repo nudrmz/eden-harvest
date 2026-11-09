@@ -23,6 +23,7 @@ interface AnalyticsData {
     referrers: Breakdown[];
     devices: Breakdown[];
     pages: Breakdown[];
+    campaigns?: Breakdown[];
     utmSources: Breakdown[];
   };
   app: {
@@ -459,6 +460,13 @@ export default function AdminAnalyticsPage() {
               ) : null}
               <Section title="Devices">
                 <Bars data={v.devices} format={(s) => s.charAt(0).toUpperCase() + s.slice(1)} />
+              </Section>
+              <Section title="Ad & campaign links">
+                <Bars
+                  data={v.campaigns ?? []}
+                  empty="No visits from tracking links yet. Use edenharvest.app/go/youtube, /go/tiktok and so on in ads and bios."
+                  format={(s) => `edenharvest.app/go/${s}`}
+                />
               </Section>
               <Section title="Most viewed pages">
                 <Bars data={v.pages} />

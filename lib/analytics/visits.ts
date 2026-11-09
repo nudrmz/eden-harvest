@@ -33,6 +33,8 @@ export interface VisitStats {
   referrers: Breakdown[];
   devices: Breakdown[];
   pages: Breakdown[];
+  /** Visits to edenharvest.app/go/<source> tracking links, by source. */
+  campaigns: Breakdown[];
   utmSources: Breakdown[];
 }
 
@@ -44,6 +46,7 @@ const EMPTY: Omit<VisitStats, "status"> = {
   referrers: [],
   devices: [],
   pages: [],
+  campaigns: [],
   utmSources: []
 };
 
@@ -126,7 +129,7 @@ export async function getVisitStats(windowMs: number): Promise<VisitStats> {
       breakdown("country", s, u, token),
       breakdown("referrerHostname", s, u, token),
       breakdown("deviceType", s, u, token, 5),
-      breakdown("requestPath", s, u, token),
+      breakdown("requestPath", s, u, token, 60),
       breakdown("utmSource", s, u, token)
     ]);
     const t = (totals ?? {}) as Record<string, unknown>;
@@ -138,7 +141,10 @@ export async function getVisitStats(windowMs: number): Promise<VisitStats> {
       countries,
       referrers,
       devices,
-      pages,
+      pages: pages.filter((p) => !p.label.startsWith("/go/")).slice(0, 8),
+      campaigns: pages
+        .filter((p) => p.label.startsWith("/go/"))
+        .map((p) => ({ label: p.label.slice(4) || "link", count: p.count })),
       utmSources: utmSources.filter((r) => r.label !== "Unknown")
     };
   } catch (error) {
