@@ -53,6 +53,9 @@ export interface ListingFormValues {
   min_order_unit: string;
   description: string;
   stock_status: StockStatus;
+  /** Delivery charge per order, in the listing's currency ("0" = free / included). */
+  delivery_fee: string;
+  delivery_note: string;
 }
 
 /** What the page saves: form fields parsed for the listings table. */
@@ -67,6 +70,8 @@ export interface ListingSavePayload {
   description: string | null;
   stock_status: StockStatus;
   photo_url: string | null;
+  delivery_fee: number;
+  delivery_note: string | null;
 }
 
 export const EMPTY_LISTING: ListingFormValues = {
@@ -80,7 +85,9 @@ export const EMPTY_LISTING: ListingFormValues = {
   min_order_quantity: "",
   min_order_unit: "kg",
   description: "",
-  stock_status: "in_season"
+  stock_status: "in_season",
+  delivery_fee: "",
+  delivery_note: ""
 };
 
 // Theme-aware (CSS variables), so text stays readable in both light and dark mode.
@@ -201,7 +208,9 @@ export function ListingForm({
       min_order_unit: form.unit,
       description: form.description.trim() || null,
       stock_status: form.stock_status,
-      photo_url: photoUrl
+      photo_url: photoUrl,
+      delivery_fee: Math.max(parseFloat(form.delivery_fee) || 0, 0),
+      delivery_note: form.delivery_note.trim() || null
     });
 
     if (saveError) {
@@ -393,6 +402,34 @@ export function ListingForm({
             </p>
           </div>
         ) : null}
+
+        <div>
+          <label className={label}>
+            Delivery fee per order ({form.price_currency_code}) <span className="font-normal">(optional)</span>
+          </label>
+          <input
+            name="delivery_fee"
+            value={form.delivery_fee}
+            onChange={handleChange}
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            placeholder="0 = free or included in price"
+            className={field}
+          />
+          <input
+            name="delivery_note"
+            value={form.delivery_note}
+            onChange={handleChange}
+            maxLength={160}
+            placeholder="Where you deliver and how long it takes, e.g. Lagos 2–3 days, other states 4–5 days"
+            className={`${field} mt-2`}
+          />
+          <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+            You arrange delivery. Buyers pay this fee at checkout along with the price.
+          </p>
+        </div>
 
         <div>
           <label className={label}>Description</label>

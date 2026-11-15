@@ -16,7 +16,14 @@ import { trialEndsAt } from "@/lib/access/trial";
  * Admins (ADMIN_EMAILS) always have access, for testing and support.
  */
 
-export type AccessReason = "paid" | "trial" | "admin" | "none";
+export type AccessReason = "paid" | "trial" | "admin" | "free" | "none";
+
+/**
+ * Eden Harvest is free for buyers: the business earns a commission on
+ * in-app orders instead (lib/orders/config). While this is true every
+ * signed-in buyer can message farmers. Set to false to bring the paywall back.
+ */
+export const FREE_FOR_BUYERS = true;
 
 export interface BuyerAccess {
   verified: boolean;
@@ -103,7 +110,15 @@ export async function getBuyerAccess(user: User): Promise<BuyerAccess> {
   const trialActive = Boolean(ends && ends.getTime() > Date.now());
   const admin = isAdminUser(user);
 
-  const reason: AccessReason = paid ? "paid" : admin ? "admin" : trialActive ? "trial" : "none";
+  const reason: AccessReason = paid
+    ? "paid"
+    : admin
+      ? "admin"
+      : FREE_FOR_BUYERS
+        ? "free"
+        : trialActive
+          ? "trial"
+          : "none";
 
   return {
     verified: reason !== "none",

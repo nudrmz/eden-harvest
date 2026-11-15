@@ -9,7 +9,7 @@
 
 export const PHOTO_BUCKET = "produce-photos";
 
-export type PhotoKind = "farm" | "listing";
+export type PhotoKind = "farm" | "listing" | "proof";
 
 /** Vercel rejects function request bodies over ~4.5 MB, so stay under that. */
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;

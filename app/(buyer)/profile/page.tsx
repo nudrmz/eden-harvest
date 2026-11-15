@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const { user, loading, isVerifiedAccess, isSeller, signOut, access } = useAuth();
   // Paid (or admin) shows "Verified Access"; a buyer's free trial gets its own badge.
   const onTrial = !isSeller && access?.reason === "trial";
-  const fullAccess = isVerifiedAccess && !onTrial;
+  const fullAccess = isVerifiedAccess && !onTrial && access?.reason !== "free";
   const trialDays = onTrial ? trialDaysLeft(access?.trialEndsAt ?? null) : 0;
   const [isAdmin, setIsAdmin] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
@@ -220,6 +220,7 @@ export default function ProfilePage() {
               Account
             </p>
             <div className="glass-card px-4">
+              <ProfileRow label="My orders" href="/orders" />
               <ProfileRow label="Edit profile" href="/settings#profile" />
               <ProfileRow label="Notification preferences" href="/settings#notifications" />
               {/* Selling is free: sellers never see upgrade prompts. Anyone who
@@ -231,7 +232,7 @@ export default function ProfilePage() {
                   busy={managingSubscription}
                   goldArrow
                 />
-              ) : !isSeller && access?.reason !== "admin" ? (
+              ) : !isSeller && access?.reason !== "admin" && access?.reason !== "free" ? (
                 <ProfileRow
                   label={onTrial ? "Subscribe to Verified Access" : "Upgrade to Verified Access"}
                   href="/upgrade"
@@ -254,6 +255,7 @@ export default function ProfilePage() {
                 <ProfileRow label="Campaign links & QR codes" href="/admin/campaigns" goldArrow />
                 <ProfileRow label="Sellers (retire a farm)" href="/admin/sellers" goldArrow />
                 <ProfileRow label="Look up a user" href="/admin/users" goldArrow />
+                <ProfileRow label="Orders & payouts" href="/admin/orders" goldArrow />
                 <ProfileRow label="Analytics" href="/admin/analytics" goldArrow />
                 <ProfileRow label="Set up database" href="/admin/setup" goldArrow />
               </div>

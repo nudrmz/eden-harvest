@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   const file = form.get("file");
   const kind = form.get("kind") as PhotoKind | null;
 
-  if (!(file instanceof File) || (kind !== "farm" && kind !== "listing")) {
+  if (!(file instanceof File) || (kind !== "farm" && kind !== "listing" && kind !== "proof")) {
     return NextResponse.json({ error: "Invalid upload." }, { status: 400 });
   }
 

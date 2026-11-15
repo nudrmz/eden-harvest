@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageSquare, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageSquare, Pencil, ShoppingBag } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -322,6 +322,21 @@ export default function ListingDetailPage() {
             <Pencil size={15} />
             {user?.id === seller.user_id ? "Edit listing" : "Edit listing (admin)"}
           </Link>
+        </section>
+      ) : null}
+
+      {/* In-app checkout (Naira listings for now); not on your own listing. */}
+      {seller && user?.id !== seller.user_id && listing.price_currency_code === "NGN" ? (
+        <section className="px-4 pt-4">
+          <Link
+            href={`/checkout/${listing.id}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-eden-gold py-3.5 text-sm font-semibold text-[#0f1f0f]"
+          >
+            <ShoppingBag size={16} /> Buy now
+          </Link>
+          <p className="mt-2 text-center text-[length:calc(11px*var(--fs-small))] text-white/45">
+            Pay securely in the app. Your money is held until you confirm delivery.
+          </p>
         </section>
       ) : null}
 

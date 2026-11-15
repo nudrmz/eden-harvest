@@ -16,7 +16,7 @@ import type { EdenUser } from "@/lib/types/user";
 /** Mirrors BuyerAccess in lib/access/server.ts (worked out on the server). */
 export interface AccessState {
   verified: boolean;
-  reason: "paid" | "trial" | "admin" | "none";
+  reason: "paid" | "trial" | "admin" | "free" | "none";
   paid: boolean;
   trialEndsAt: string | null;
   trialActive: boolean;

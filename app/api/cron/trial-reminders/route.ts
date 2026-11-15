@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { setAppMetadata } from "@/lib/access/server";
+import { FREE_FOR_BUYERS, setAppMetadata } from "@/lib/access/server";
 import { trialEndsAt } from "@/lib/access/trial";
 import { sendTrialEndingEmail } from "@/lib/notifications/trialEmail";
 import { moveSellerPrivateDetails } from "@/lib/seller/privateDetails";
@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
   }
 
   await moveSellerPrivateDetails(admin);
+
+  // Messaging is free for buyers now, so there's no trial ending to warn about.
+  if (FREE_FOR_BUYERS) return NextResponse.json({ skipped: "free for buyers" });
 
   const now = Date.now();
   const due: { id: string; email: string; endsAt: string; meta: Record<string, unknown> }[] = [];

@@ -195,6 +195,17 @@ export default function SellerDashboardPage() {
           </div>
         </section>
 
+        <section className="grid grid-cols-2 gap-2">
+          <Link href="/orders" className={`${glass} p-3 text-sm font-semibold ${textPrimary}`}>
+            Orders
+            <span className={`mt-0.5 block text-xs font-normal ${textTertiary}`}>Dispatch &amp; track payouts</span>
+          </Link>
+          <Link href="/seller/payouts" className={`${glass} p-3 text-sm font-semibold ${textPrimary}`}>
+            Payout account
+            <span className={`mt-0.5 block text-xs font-normal ${textTertiary}`}>Where we pay you</span>
+          </Link>
+        </section>
+
         <Link
           href="/seller/listings/new"
           className={`${glass} flex min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#1D9E75]/55 p-6 text-center transition hover:border-[#1D9E75] hover:bg-[rgba(12,26,14,0.55)]`}

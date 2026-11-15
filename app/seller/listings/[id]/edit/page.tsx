@@ -28,6 +28,8 @@ interface ListingRow {
   photo_url: string | null;
   stock_status: StockStatus;
   is_active: boolean;
+  delivery_fee?: number | null;
+  delivery_note?: string | null;
 }
 
 type LoadState =
@@ -55,7 +57,9 @@ function toFormValues(l: ListingRow): ListingFormValues {
     min_order_quantity: l.min_order_quantity != null ? String(l.min_order_quantity) : "",
     min_order_unit: unit.base,
     description: l.description ?? "",
-    stock_status: l.stock_status
+    stock_status: l.stock_status,
+    delivery_fee: l.delivery_fee ? String(l.delivery_fee) : "",
+    delivery_note: l.delivery_note ?? ""
   };
 }
 
@@ -85,7 +89,7 @@ export default function EditListingPage() {
         supabase
           .from("listings")
           .select(
-            "id, seller_id, product_name, category, description, price_local, price_currency_code, unit, min_order_quantity, min_order_unit, photo_url, stock_status, is_active"
+            "id, seller_id, product_name, category, description, price_local, price_currency_code, unit, min_order_quantity, min_order_unit, photo_url, stock_status, is_active, delivery_fee, delivery_note"
           )
           .eq("id", id)
           .maybeSingle()
