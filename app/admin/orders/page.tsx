@@ -45,6 +45,10 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Inline confirm instead of window.confirm/prompt, which installed apps and
+  // some in-app browsers silently block (the buttons looked dead).
+  const [pending, setPending] = useState<{ id: string; action: "refund_full" | "refund_partial" | "release" | "payout" } | null>(null);
+  const [amount, setAmount] = useState("");
 
   const load = useCallback(async () => {
     setOrders(null);
@@ -58,8 +62,9 @@ export default function AdminOrdersPage() {
     void load();
   }, [load]);
 
-  async function post(id: string, path: string, payload?: unknown, confirmText?: string) {
-    if (confirmText && !window.confirm(confirmText)) return;
+  async function post(id: string, path: string, payload?: unknown) {
+    setPending(null);
+    setAmount("");
     setBusyId(id);
     setError(null);
     setNotice(null);
@@ -133,21 +138,13 @@ export default function AdminOrdersPage() {
 
               {["paid", "dispatched", "disputed"].includes(o.status) ? (
                 <div className="mt-3 grid grid-cols-3 gap-2">
-                  <button type="button" disabled={busy} onClick={() => void post(o.id, "resolve", { resolution: "refund_full" }, `Refund ${money(o.total, o.currency)} in full to the buyer?`)} className="rounded-lg border border-[#F09595]/50 py-2 text-xs font-semibold text-[#F09595]">
+                  <button type="button" disabled={busy} onClick={() => setPending({ id: o.id, action: "refund_full" })} className="rounded-lg border border-[#F09595]/50 py-2 text-xs font-semibold text-[#F09595]">
                     Full refund
                   </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      const v = window.prompt(`Partial refund amount (${o.currency}), less than ${o.total}:`);
-                      if (v) void post(o.id, "resolve", { resolution: "refund_partial", amount: Number(v) });
-                    }}
-                    className="rounded-lg border border-eden-gold/50 py-2 text-xs font-semibold text-eden-gold"
-                  >
+                  <button type="button" disabled={busy} onClick={() => setPending({ id: o.id, action: "refund_partial" })} className="rounded-lg border border-eden-gold/50 py-2 text-xs font-semibold text-eden-gold">
                     Part refund
                   </button>
-                  <button type="button" disabled={busy} onClick={() => void post(o.id, "resolve", { resolution: "release_to_seller" }, "Close this and pay the farmer?")} className="rounded-lg border border-[#1D9E75]/50 py-2 text-xs font-semibold text-[#1D9E75]">
+                  <button type="button" disabled={busy} onClick={() => setPending({ id: o.id, action: "release" })} className="rounded-lg border border-[#1D9E75]/50 py-2 text-xs font-semibold text-[#1D9E75]">
                     Pay farmer
                   </button>
                 </div>
@@ -159,11 +156,56 @@ export default function AdminOrdersPage() {
                   <button
                     type="button"
                     disabled={busy || !o.payout_account}
-                    onClick={() => void post(o.id, "payout", {}, `Send ${money(o.seller_payout, o.currency)} to ${o.payout_account}?`)}
+                    onClick={() => setPending({ id: o.id, action: "payout" })}
                     className="mt-2 w-full rounded-lg bg-[#1D9E75] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     {busy ? "Sending…" : `Send payout ${money(o.seller_payout, o.currency)}`}
                   </button>
+                </div>
+              ) : null}
+
+              {pending?.id === o.id ? (
+                <div className="mt-3 rounded-xl border border-white/15 bg-black/30 p-3">
+                  <p className="text-sm font-semibold">
+                    {pending.action === "refund_full"
+                      ? `Refund ${money(o.total, o.currency)} in full to the buyer?`
+                      : pending.action === "refund_partial"
+                        ? `How much should the buyer get back? (less than ${money(o.total, o.currency)})`
+                        : pending.action === "release"
+                          ? "Close this order in the farmer's favour? Their payout becomes due."
+                          : `Send ${money(o.seller_payout, o.currency)} to ${o.payout_account}?`}
+                  </p>
+                  {pending.action === "refund_partial" ? (
+                    <input
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      placeholder={`Amount in ${o.currency}`}
+                      className="eden-field-input mt-2 !px-3 !py-2"
+                    />
+                  ) : null}
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setPending(null)} className="rounded-lg border border-white/15 py-2 text-sm">
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || (pending.action === "refund_partial" && !(Number(amount) > 0))}
+                      onClick={() =>
+                        pending.action === "payout"
+                          ? void post(o.id, "payout")
+                          : void post(o.id, "resolve", {
+                              resolution: pending.action === "release" ? "release_to_seller" : pending.action,
+                              amount: pending.action === "refund_partial" ? Number(amount) : undefined
+                            })
+                      }
+                      className="rounded-lg bg-[#1D9E75] py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    >
+                      {busy ? "Working…" : "Confirm"}
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </li>
