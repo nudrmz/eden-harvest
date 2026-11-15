@@ -249,6 +249,13 @@ export default function SellerProfilePage() {
             <MessageSquare size={16} />
             {messaging ? "Starting conversation…" : "Message on Eden Harvest"}
           </button>
+        ) : !user ? (
+          <Link
+            href={`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-eden-gold/40 bg-eden-gold/10 py-3 text-sm font-medium text-eden-gold"
+          >
+            Sign in to message the farmer
+          </Link>
         ) : (
           <Link
             href="/upgrade"
