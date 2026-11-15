@@ -255,6 +255,7 @@ export default function ProfilePage() {
                 <ProfileRow label="Sellers (retire a farm)" href="/admin/sellers" goldArrow />
                 <ProfileRow label="Look up a user" href="/admin/users" goldArrow />
                 <ProfileRow label="Analytics" href="/admin/analytics" goldArrow />
+                <ProfileRow label="Set up database" href="/admin/setup" goldArrow />
               </div>
             </section>
           ) : null}
