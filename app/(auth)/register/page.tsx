@@ -17,6 +17,7 @@ import { CountrySelect } from "@/components/ui/CountrySelect";
 import { getPasswordStrength } from "@/lib/utils/helpers";
 import type { UserRole } from "@/lib/types/user";
 import { firstTouchMetadata, readFirstTouchFromDocument } from "@/lib/campaigns";
+import { trackEvent } from "@/lib/analytics/google";
 
 function RegisterForm() {
   const router = useRouter();
@@ -164,6 +165,8 @@ function RegisterForm() {
       setSubmitting(false);
       return;
     }
+
+    trackEvent("sign_up", { method: "email" });
 
     // Tell the team about the new sign-up (fire and forget).
     void fetch("/api/signup-alert", {

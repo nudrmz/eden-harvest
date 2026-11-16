@@ -9,6 +9,7 @@ import { useTheme } from "@/components/layout/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/hooks";
 import { priceUnitLabel } from "@/lib/listings/units";
+import { trackEvent } from "@/lib/analytics/google";
 
 interface SellerProfile {
   id: string;
@@ -147,6 +148,7 @@ export default function SellerProfilePage() {
         return;
       }
 
+      trackEvent("generate_lead", { method: "in_app_message" });
       router.push(`/messages?channel=${data.channelId}`);
     } catch {
       setMessageError("Could not start conversation.");

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/supabase/hooks";
 import { money } from "@/lib/orders/format";
 import { COMMISSION_RATE, orderAmounts } from "@/lib/orders/config";
 import { pluralise } from "@/lib/listings/units";
+import { trackEvent } from "@/lib/analytics/google";
 
 interface CheckoutListing {
   id: string;
@@ -85,6 +86,11 @@ export default function CheckoutPage() {
       return;
     }
     setBusy(true);
+    trackEvent("begin_checkout", {
+      currency,
+      value: amounts?.total ?? 0,
+      items: [{ item_id: listing.id, item_name: listing.product_name, price: Number(listing.price_local), quantity: qty }]
+    });
     try {
       const res = await fetch("/api/orders", {
         method: "POST",

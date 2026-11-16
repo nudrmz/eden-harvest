@@ -3,6 +3,7 @@ import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { SiteAnalytics } from "@/components/layout/SiteAnalytics";
+import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { Providers } from "@/components/layout/Providers";
 import { siteUrl } from "@/lib/site";
 import { DEFAULT_DESCRIPTION, SITE_NAME, sharePreview } from "@/lib/seo/share";
@@ -71,6 +72,7 @@ export default function RootLayout({
       >
         <Providers>{children}</Providers>
         <SiteAnalytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );

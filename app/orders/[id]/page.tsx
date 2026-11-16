@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, ShieldCheck, Truck } from "lucide-react";
 import { money, when } from "@/lib/orders/format";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/config";
 import { uploadPhoto } from "@/lib/storage/photos";
+import { trackOnce } from "@/lib/analytics/google";
 
 interface Order {
   id: string;
@@ -77,6 +78,19 @@ function OrderDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Google Ads / Analytics conversion: once per order, when the buyer lands back after paying.
+  useEffect(() => {
+    if (!justPaid || !data || data.role !== "buyer" || data.order.status === "pending_payment") return;
+    const o = data.order;
+    trackOnce(`purchase:${o.id}`, "purchase", {
+      transaction_id: o.order_number,
+      currency: o.currency,
+      value: Number(o.total),
+      shipping: Number(o.delivery_fee),
+      items: [{ item_id: o.listing_id ?? o.id, item_name: o.product_name, price: Number(o.unit_price), quantity: Number(o.quantity) }]
+    });
+  }, [justPaid, data]);
 
   async function act(path: string, payload?: unknown) {
     setBusy(true);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bullets, LegalPage, SUPPORT_EMAIL } from "@/components/legal/LegalPage";
+import { CookieSettingsButton } from "@/components/layout/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: "Privacy Policy · Eden Harvest",
@@ -123,6 +124,8 @@ export default function PrivacyPage() {
                   <>{strong("Vercel")}: hosts the website, and provides anonymous visitor statistics without cookies.</>,
                   <>{strong("Stream")}: powers in-app chat and stores your messages.</>,
                   <>{strong("Stripe")}: processes Verified Access payments.</>,
+                  <>{strong("Paystack")}: processes order payments, refunds and payouts to farmers.</>,
+                  <>{strong("Google")} (Analytics and Ads): only if you accept analytics cookies, to measure how people find and use Eden Harvest and how our adverts perform.</>,
                   <>{strong("Resend")} and {strong("Zoho")}: send our emails and handle our support inbox.</>
                 ]}
               />
@@ -200,7 +203,7 @@ export default function PrivacyPage() {
           title: "Cookies and similar technologies",
           body: (
             <>
-              <p>We keep this to a minimum and use no advertising or tracking cookies:</p>
+              <p>We keep cookies to a minimum. Only the essential ones run unless you say yes:</p>
               <Bullets
                 items={[
                   <>{strong("Sign-in cookies")} keep you logged in. They are essential.</>,
@@ -208,7 +211,15 @@ export default function PrivacyPage() {
                   <>{strong("Your browser’s local storage")} remembers small preferences, such as light or dark theme and whether you dismissed the “install app” prompt.</>
                 ]}
               />
-              <p>Our visitor statistics are anonymous and do not use cookies.</p>
+              <p>
+                {strong("Google Analytics and Google Ads cookies")} (for example _ga and _gcl_au) are used only if you tap
+                Accept in our cookie banner. They help us understand how visitors find and use Eden Harvest and measure
+                whether our adverts lead to sign-ups and orders. If you tap Reject, or make no choice, they are not set.
+              </p>
+              <p>Our own visitor statistics (provided by Vercel) are anonymous and do not use cookies.</p>
+              <p>
+                You can change your choice at any time: <CookieSettingsButton />
+              </p>
             </>
           )
         },
