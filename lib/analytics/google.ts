@@ -52,9 +52,27 @@ export function applyConsent(value: Consent): void {
   });
 }
 
-/** Send a GA4 event (only does anything once GA is loaded and the visitor accepted). */
+const ECOMMERCE_EVENTS = new Set(["begin_checkout", "purchase", "add_to_cart", "view_item"]);
+
+/**
+ * Send an event once the Google tag is loaded and the visitor accepted.
+ * With a Tag Manager container (GTM-…) it's pushed to the dataLayer as a
+ * custom event (ecommerce fields under "ecommerce", GA4's standard shape),
+ * which GA4 / Google Ads tags in Tag Manager pick up with a Custom Event
+ * trigger. With a plain gtag ID (G-… / AW-…) it's sent with gtag().
+ */
 export function trackEvent(name: string, params: Record<string, unknown> = {}): void {
   if (typeof window === "undefined" || !window.gtag || readConsent() !== "granted") return;
+  if (GOOGLE_TAG_ID.startsWith("GTM-")) {
+    const dl = (window.dataLayer = window.dataLayer || []);
+    if (ECOMMERCE_EVENTS.has(name)) {
+      dl.push({ ecommerce: null });
+      dl.push({ event: name, ecommerce: params });
+    } else {
+      dl.push({ event: name, ...params });
+    }
+    return;
+  }
   window.gtag("event", name, params);
 }
 
