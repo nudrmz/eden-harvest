@@ -7,7 +7,7 @@ import { ArrowLeft, Lock, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/hooks";
 import { money } from "@/lib/orders/format";
-import { COMMISSION_RATE, orderAmounts } from "@/lib/orders/config";
+import { orderAmounts } from "@/lib/orders/config";
 import { pluralise } from "@/lib/listings/units";
 import { trackEvent } from "@/lib/analytics/google";
 
@@ -181,7 +181,6 @@ export default function CheckoutPage() {
           <div className="flex justify-between border-t border-white/10 pt-2 text-base font-bold">
             <span>Total</span><span className="text-eden-gold">{money(amounts.total, currency)}</span>
           </div>
-          <p className="text-xs text-[var(--text-tertiary)]">No fees for buyers. Eden Harvest&apos;s {Math.round(COMMISSION_RATE * 100)}% is paid by the farmer.</p>
         </section>
       ) : null}
 
