@@ -546,6 +546,12 @@ export default function SellerOnboardingPage() {
                         : "Choose one option above first"
                     }
                   />
+                  {picked?.id === "nin" ? (
+                    <p className={`mt-2 text-[length:calc(11px*var(--fs-small))] ${textTertiary}`}>
+                      We&apos;ll check your NIN with the national identity database (NIMC) to confirm it&apos;s you.
+                      Your NIN is never shown to buyers.
+                    </p>
+                  ) : null}
                 </div>
               );
             })()}

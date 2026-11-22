@@ -15,20 +15,33 @@ const KEY = "seller_private";
 export interface SellerPrivateDetails {
   whatsapp: string | null;
   documentValue: string | null;
+  ninCheck: NinCheckSummary | null;
+}
+
+/** The last NIN check an admin ran. The NIMC photo is never stored. */
+export interface NinCheckSummary {
+  checkedAt: string;
+  sandbox: boolean;
+  result: "match" | "partial" | "mismatch" | "unknown" | "not_found";
+  ninName: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
 }
 
 function readFrom(meta: Record<string, unknown> | undefined): SellerPrivateDetails {
-  const stored = (meta?.[KEY] ?? {}) as Partial<Record<"whatsapp" | "document_value", unknown>>;
+  const stored = (meta?.[KEY] ?? {}) as Partial<Record<"whatsapp" | "document_value" | "nin_check", unknown>>;
+  const check = stored.nin_check;
   return {
     whatsapp: typeof stored.whatsapp === "string" ? stored.whatsapp : null,
-    documentValue: typeof stored.document_value === "string" ? stored.document_value : null
+    documentValue: typeof stored.document_value === "string" ? stored.document_value : null,
+    ninCheck: check && typeof check === "object" ? (check as NinCheckSummary) : null
   };
 }
 
 export async function saveSellerPrivateDetails(
   admin: SupabaseClient,
   userId: string,
-  details: { whatsapp?: string | null; documentValue?: string | null }
+  details: { whatsapp?: string | null; documentValue?: string | null; ninCheck?: NinCheckSummary }
 ): Promise<boolean> {
   const { data, error } = await admin.auth.admin.getUserById(userId);
   if (error || !data.user) return false;
@@ -39,7 +52,8 @@ export async function saveSellerPrivateDetails(
     {
       [KEY]: {
         whatsapp: details.whatsapp ?? current.whatsapp,
-        document_value: details.documentValue ?? current.documentValue
+        document_value: details.documentValue ?? current.documentValue,
+        nin_check: details.ninCheck ?? current.ninCheck
       }
     },
     meta

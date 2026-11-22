@@ -2,8 +2,25 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, BadgeCheck, ShieldX } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Fingerprint, ShieldX } from "lucide-react";
 import { useAuth } from "@/lib/supabase/hooks";
+
+interface NinCheck {
+  checkedAt: string;
+  sandbox: boolean;
+  result: "match" | "partial" | "mismatch" | "unknown" | "not_found";
+  ninName: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+}
+
+const RESULT_TEXT: Record<NinCheck["result"], { label: string; tone: string }> = {
+  match: { label: "Name matches NIMC", tone: "border-[#1D9E7560] bg-[#1D9E7518] text-[#5DCAA5]" },
+  partial: { label: "Name partly matches — check carefully", tone: "border-[#FAC77560] bg-[#FAC77518] text-[#FAC775]" },
+  mismatch: { label: "Name does NOT match NIMC", tone: "border-[#F0959560] bg-[#F0959518] text-[#F09595]" },
+  unknown: { label: "No name on the account to compare", tone: "border-white/15 bg-white/5 text-[var(--text-secondary)]" },
+  not_found: { label: "NIMC has no record of this NIN", tone: "border-[#F0959560] bg-[#F0959518] text-[#F09595]" }
+};
 
 interface PendingSeller {
   id: string;
@@ -14,6 +31,7 @@ interface PendingSeller {
   verification_document_type: string;
   verification_document_value: string;
   verification_status?: string;
+  nin_check?: NinCheck | null;
   is_verified: boolean;
   created_at: string;
   african_countries:
@@ -38,6 +56,11 @@ export default function AdminVerificationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [migrationRequired, setMigrationRequired] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [ninEnabled, setNinEnabled] = useState(false);
+  const [checkingId, setCheckingId] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<Record<string, string | null>>({});
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
   const loadQueue = useCallback(async () => {
     setLoading(true);
@@ -48,6 +71,7 @@ export default function AdminVerificationsPage() {
         sellers?: PendingSeller[];
         error?: string;
         migrationRequired?: boolean;
+        ninChecksEnabled?: boolean;
       };
 
       if (!response.ok) {
@@ -58,6 +82,7 @@ export default function AdminVerificationsPage() {
 
       setSellers(payload.sellers ?? []);
       setMigrationRequired(Boolean(payload.migrationRequired));
+      setNinEnabled(Boolean(payload.ninChecksEnabled));
     } catch {
       setError("Could not load verification queue.");
       setSellers([]);
@@ -95,8 +120,29 @@ export default function AdminVerificationsPage() {
     }
   }
 
-  async function reject(id: string, farmName: string) {
-    const note = window.prompt(`Optional note for rejecting ${farmName}:`) ?? "";
+  async function checkNin(id: string) {
+    setCheckingId(id);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/verifications/${id}/nin-check`, { method: "POST" });
+      const payload = (await response.json()) as { check?: NinCheck; photo?: string | null; error?: string };
+      if (!response.ok || !payload.check) {
+        setError(payload.error ?? "NIN check failed.");
+        return;
+      }
+      setSellers((prev) => prev.map((s) => (s.id === id ? { ...s, nin_check: payload.check } : s)));
+      setPhotos((prev) => ({ ...prev, [id]: payload.photo ?? null }));
+    } catch {
+      setError("NIN check failed.");
+    } finally {
+      setCheckingId(null);
+    }
+  }
+
+  async function reject(id: string) {
+    const note = rejectNote;
+    setRejectingId(null);
+    setRejectNote("");
     setActingId(id);
     setError(null);
     try {
@@ -221,6 +267,49 @@ export default function AdminVerificationsPage() {
                   </p>
                 </div>
 
+                {seller.verification_document_type?.toLowerCase() === "nin" ? (
+                  <NinPanel
+                    check={seller.nin_check ?? null}
+                    photo={photos[seller.id]}
+                    enabled={ninEnabled}
+                    busy={checkingId === seller.id}
+                    onCheck={() => void checkNin(seller.id)}
+                  />
+                ) : null}
+
+                {rejectingId === seller.id ? (
+                  <div className="space-y-2 rounded-xl border border-[#F0959540] bg-[#F0959510] p-3">
+                    <label className="block text-xs text-[var(--text-secondary)]">
+                      Optional note for {seller.farm_name}
+                      <input
+                        value={rejectNote}
+                        onChange={(e) => setRejectNote(e.target.value)}
+                        placeholder="e.g. NIN name doesn't match"
+                        className="mt-1.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-[var(--text-primary)]"
+                      />
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void reject(seller.id)}
+                        className="flex-1 rounded-lg bg-[#C0504D] py-2 text-sm font-semibold text-white"
+                      >
+                        Confirm reject
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRejectingId(null);
+                          setRejectNote("");
+                        }}
+                        className="flex-1 rounded-lg border border-white/15 py-2 text-sm text-[var(--text-secondary)]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -234,7 +323,10 @@ export default function AdminVerificationsPage() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => void reject(seller.id, seller.farm_name)}
+                    onClick={() => {
+                      setRejectingId(seller.id);
+                      setRejectNote("");
+                    }}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#F0959540] bg-[#F0959518] py-2.5 text-sm font-semibold text-[#F09595] disabled:opacity-60"
                   >
                     <ShieldX size={16} />
@@ -247,5 +339,81 @@ export default function AdminVerificationsPage() {
         </ul>
       )}
     </main>
+  );
+}
+
+function NinPanel({
+  check,
+  photo,
+  enabled,
+  busy,
+  onCheck
+}: {
+  check: NinCheck | null;
+  photo: string | null | undefined;
+  enabled: boolean;
+  busy: boolean;
+  onCheck: () => void;
+}) {
+  const result = check ? RESULT_TEXT[check.result] : null;
+  return (
+    <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-[var(--text-secondary)]">
+      {check && result ? (
+        <>
+          <p className={`rounded-lg border px-2.5 py-1.5 font-semibold ${result.tone}`}>
+            {result.label}
+            {check.sandbox ? " (sandbox test data)" : ""}
+          </p>
+          <div className="flex gap-3">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`data:image/jpeg;base64,${photo}`}
+                alt="NIMC photo"
+                className="h-20 w-16 flex-none rounded-md object-cover"
+              />
+            ) : null}
+            <div className="space-y-0.5">
+              {check.ninName ? (
+                <p>
+                  <span className="text-[var(--text-tertiary)]">NIMC name:</span> {check.ninName}
+                </p>
+              ) : null}
+              {check.dateOfBirth ? (
+                <p>
+                  <span className="text-[var(--text-tertiary)]">Date of birth:</span> {check.dateOfBirth}
+                </p>
+              ) : null}
+              {check.gender ? (
+                <p>
+                  <span className="text-[var(--text-tertiary)]">Gender:</span> {check.gender}
+                </p>
+              ) : null}
+              <p className="text-[var(--text-tertiary)]">Checked {new Date(check.checkedAt).toLocaleString()}</p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p>NIN not checked yet.</p>
+      )}
+      {enabled ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onCheck}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#1D9E7560] bg-[#1D9E7518] py-2 text-sm font-semibold text-[#5DCAA5] disabled:opacity-60"
+        >
+          <Fingerprint size={15} />
+          {busy ? "Checking with NIMC…" : check ? "Check again" : "Check NIN with NIMC"}
+        </button>
+      ) : (
+        <p className="text-[var(--text-tertiary)]">
+          NIN checks switch on once DOJAH_APP_ID and DOJAH_SECRET_KEY are added in Vercel.
+        </p>
+      )}
+      {enabled ? (
+        <p className="text-[var(--text-tertiary)]">Each live check is charged to the Dojah wallet.</p>
+      ) : null}
+    </div>
   );
 }

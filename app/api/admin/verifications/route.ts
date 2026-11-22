@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/auth/admin";
+import { isDojahConfigured } from "@/lib/identity/dojah";
 import { getSellerPrivateDetails, moveSellerPrivateDetails } from "@/lib/seller/privateDetails";
 
 interface QueueRow {
@@ -23,7 +24,8 @@ async function withPrivateDetails(
       return {
         ...row,
         whatsapp_number: details.whatsapp ?? row.whatsapp_number ?? "",
-        verification_document_value: details.documentValue ?? row.verification_document_value ?? ""
+        verification_document_value: details.documentValue ?? row.verification_document_value ?? "",
+        nin_check: details.ninCheck
       };
     })
   );
@@ -112,6 +114,7 @@ export async function GET() {
 
   return NextResponse.json({
     sellers: await withPrivateDetails(admin, (data ?? []) as QueueRow[]),
-    migrationRequired: false
+    migrationRequired: false,
+    ninChecksEnabled: isDojahConfigured()
   });
 }
